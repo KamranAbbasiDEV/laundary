@@ -353,7 +353,7 @@ Jot.enhanceVisualPreviews = function (root, ui) {
     el.parentNode.insertBefore(h, el);
   });
 
-  const livePrev = ui.querySelector('#prev, .preview-box');
+  const livePrev = ui.querySelector('#prev, #preview, .preview-box');
   const textIn = ui.querySelector('textarea#in, textarea:first-of-type');
   const genBtn = ui.querySelector('#go, #gen, #render');
   if (livePrev && textIn && genBtn && !textIn.dataset.livePreview) {
@@ -435,6 +435,130 @@ Jot._wireHiddenCanvasPreview = function (ui, fileInput, canvas) {
   ui.querySelectorAll('#go, .btn-row .btn:not(.btn-secondary)').forEach(btn => {
     btn.addEventListener('click', () => setTimeout(syncResult, 100));
   });
+};
+
+/**
+ * Drag-to-select + drag-to-move crop on #source-wrap / #prev-orig.
+ * Expects #x #y #w #h inputs and calls render() after changes.
+ */
+Jot.setupInteractiveCrop = function (ui, getImg, render) {
+  const wrap = Jot.$('#source-wrap', ui);
+  if (!wrap || wrap.dataset.cropInteractive) return;
+  wrap.dataset.cropInteractive = '1';
+
+  let active = false;
+  let mode = 'draw';
+  let anchor = { x: 0, y: 0 };
+  let startCrop = null;
+
+  function imgScale() {
+    const img = getImg();
+    const el = Jot.$('#prev-orig', ui);
+    if (!img || !el?.clientWidth) return 1;
+    return el.clientWidth / img.width;
+  }
+
+  function pointerToImage(clientX, clientY) {
+    const rect = wrap.getBoundingClientRect();
+    const s = imgScale();
+    return {
+      x: Math.round((clientX - rect.left) / s),
+      y: Math.round((clientY - rect.top) / s),
+    };
+  }
+
+  function aspectRatio() {
+    const sel = Jot.$('#aspect', ui);
+    if (!sel || !sel.value || sel.value === 'free') return null;
+    const [a, b] = sel.value.split(':').map(Number);
+    return b ? a / b : null;
+  }
+
+  function constrainAspect(w, h) {
+    const r = aspectRatio();
+    if (!r) return { w, h };
+    if (w / h >= r) return { w: Math.round(h * r), h };
+    return { w, h: Math.round(w / r) };
+  }
+
+  function setCrop(x, y, w, h, opts = {}) {
+    const img = getImg();
+    if (!img) return;
+    if (opts.applyAspect !== false) ({ w, h } = constrainAspect(w, h));
+    x = Math.max(0, Math.min(Math.round(x), img.width - 1));
+    y = Math.max(0, Math.min(Math.round(y), img.height - 1));
+    w = Math.max(1, Math.min(Math.round(w), img.width - x));
+    h = Math.max(1, Math.min(Math.round(h), img.height - y));
+    Jot.$('#x', ui).value = x;
+    Jot.$('#y', ui).value = y;
+    Jot.$('#w', ui).value = w;
+    Jot.$('#h', ui).value = h;
+    render();
+  }
+
+  function insideCrop(px, py) {
+    const x = +Jot.$('#x', ui).value;
+    const y = +Jot.$('#y', ui).value;
+    const w = +Jot.$('#w', ui).value;
+    const h = +Jot.$('#h', ui).value;
+    return px >= x && px <= x + w && py >= y && py <= y + h;
+  }
+
+  wrap.setAttribute('role', 'application');
+  wrap.setAttribute('aria-label', 'Crop image: drag to select an area, drag inside the selection to move it');
+  wrap.tabIndex = 0;
+
+  wrap.addEventListener('pointerdown', e => {
+    const img = getImg();
+    if (!img || e.button > 0) return;
+    e.preventDefault();
+    wrap.setPointerCapture(e.pointerId);
+    wrap.classList.add('crop-source-wrap--active');
+    active = true;
+    const pt = pointerToImage(e.clientX, e.clientY);
+    if (insideCrop(pt.x, pt.y)) {
+      mode = 'move';
+      startCrop = {
+        x: +Jot.$('#x', ui).value,
+        y: +Jot.$('#y', ui).value,
+        w: +Jot.$('#w', ui).value,
+        h: +Jot.$('#h', ui).value,
+      };
+      anchor = pt;
+    } else {
+      mode = 'draw';
+      anchor = pt;
+      setCrop(pt.x, pt.y, 1, 1);
+    }
+  });
+
+  wrap.addEventListener('pointermove', e => {
+    if (!active) return;
+    const pt = pointerToImage(e.clientX, e.clientY);
+    if (mode === 'draw') {
+      const x = Math.min(anchor.x, pt.x);
+      const y = Math.min(anchor.y, pt.y);
+      let w = Math.abs(pt.x - anchor.x);
+      let h = Math.abs(pt.y - anchor.y);
+      ({ w, h } = constrainAspect(w, h));
+      setCrop(x, y, w, h);
+    } else if (startCrop) {
+      const dx = pt.x - anchor.x;
+      const dy = pt.y - anchor.y;
+      setCrop(startCrop.x + dx, startCrop.y + dy, startCrop.w, startCrop.h, { applyAspect: false });
+    }
+  });
+
+  const end = e => {
+    if (!active) return;
+    active = false;
+    mode = 'draw';
+    startCrop = null;
+    wrap.classList.remove('crop-source-wrap--active');
+    try { wrap.releasePointerCapture(e.pointerId); } catch {}
+  };
+  wrap.addEventListener('pointerup', end);
+  wrap.addEventListener('pointercancel', end);
 };
 
 Jot.fillToolGaps = function (ui, primaryFile) {

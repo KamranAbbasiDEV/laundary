@@ -255,20 +255,36 @@ JotTools['image-cropper'] = function (root) {
   const ui = Jot.ui(`<input type="file" accept="image/*" id="file">
     <div class="tool-panel tool-panel--locked" id="settings">
       <p class="tool-panel-title">Crop area</p>
-      <p class="tool-panel-note" id="settings-note">Upload an image above to set crop coordinates.</p>
+      <p class="tool-panel-note" id="settings-note">Upload an image, then drag on it to draw a crop box. Drag inside the box to move it.</p>
+      <div class="row">
+        <label>Aspect ratio
+          <select id="aspect" disabled>
+            <option value="free" selected>Free</option>
+            <option value="1:1">1:1 Square</option>
+            <option value="4:3">4:3</option>
+            <option value="16:9">16:9</option>
+            <option value="3:2">3:2 Photo</option>
+          </select>
+        </label>
+      </div>
       <div class="row">
         <label>X <input type="number" id="x" value="0" min="0" disabled></label>
         <label>Y <input type="number" id="y" value="0" min="0" disabled></label>
         <label>Width <input type="number" id="w" value="200" min="1" disabled></label>
         <label>Height <input type="number" id="h" value="200" min="1" disabled></label>
       </div>
+      <div class="btn-row crop-presets">
+        <button type="button" class="btn btn-secondary btn-sm" id="crop-full" disabled>Full image</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="crop-square" disabled>Center square</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="crop-wide" disabled>Center 16:9</button>
+      </div>
       <p class="estimate-line" id="crop-info">Crop size will appear here after upload.</p>
     </div>
     <div class="compare-grid" id="compare" style="display:none">
       <div class="compare-card">
-        <p class="compare-label">Original (crop area)</p>
+        <p class="compare-label">Drag to select · drag inside to move</p>
         <div class="crop-source-wrap" id="source-wrap">
-          <img id="prev-orig" alt="Original">
+          <img id="prev-orig" alt="Original" draggable="false">
           <div class="crop-overlay" id="crop-box"></div>
         </div>
       </div>
@@ -281,10 +297,9 @@ JotTools['image-cropper'] = function (root) {
   root.appendChild(ui);
 
   let img = null;
-  let scale = 1;
 
   function clampCrop() {
-    if (!img) return;
+    if (!img) return { x: 0, y: 0, w: 1, h: 1 };
     let x = Math.max(0, +Jot.$('#x', ui).value || 0);
     let y = Math.max(0, +Jot.$('#y', ui).value || 0);
     let w = Math.max(1, +Jot.$('#w', ui).value || 1);
@@ -308,14 +323,32 @@ JotTools['image-cropper'] = function (root) {
 
     const box = Jot.$('#crop-box', ui);
     const orig = Jot.$('#prev-orig', ui);
-    scale = orig.clientWidth / img.width || 1;
+    const scale = orig.clientWidth / img.width || 1;
     box.style.left = (x * scale) + 'px';
     box.style.top = (y * scale) + 'px';
     box.style.width = (w * scale) + 'px';
     box.style.height = (h * scale) + 'px';
 
-    Jot.$('#crop-info', ui).textContent = `Crop: ${w}×${h}px from ${img.width}×${img.height}px original · region at (${x}, ${y})`;
+    Jot.$('#crop-info', ui).textContent = `Crop: ${w}×${h}px · from ${img.width}×${img.height}px image · top-left at (${x}, ${y})`;
     Jot.$('#dl', ui).disabled = false;
+  }
+
+  function unlockAll() {
+    Jot.unlockPanel(ui, '#settings', Jot.$$('#x,#y,#w,#h,#aspect', ui));
+    Jot.$$('#crop-full,#crop-square,#crop-wide', ui).forEach(b => { b.disabled = false; });
+  }
+
+  function centerCrop(w, h) {
+    if (!img) return;
+    w = Math.min(w, img.width);
+    h = Math.min(h, img.height);
+    const x = Math.round((img.width - w) / 2);
+    const y = Math.round((img.height - h) / 2);
+    Jot.$('#x', ui).value = x;
+    Jot.$('#y', ui).value = y;
+    Jot.$('#w', ui).value = w;
+    Jot.$('#h', ui).value = h;
+    renderCrop();
   }
 
   Jot.$('#file', ui).addEventListener('change', e => {
@@ -323,8 +356,10 @@ JotTools['image-cropper'] = function (root) {
     if (!f) { Jot.toast('Please upload a file first'); return; }
     Jot._loadImg(f, i => {
       img = i;
-      Jot.unlockPanel(ui, '#settings', Jot.$$('#x,#y,#w,#h', ui));
+      unlockAll();
       Jot.$('#prev-orig', ui).src = i.src;
+      Jot.$('#x', ui).value = 0;
+      Jot.$('#y', ui).value = 0;
       Jot.$('#w', ui).value = i.width;
       Jot.$('#h', ui).value = i.height;
       Jot.$('#compare', ui).style.display = '';
@@ -332,8 +367,32 @@ JotTools['image-cropper'] = function (root) {
     });
   });
 
+  Jot.setupInteractiveCrop(ui, () => img, renderCrop);
+
   Jot.$$('#x,#y,#w,#h', ui).forEach(el => el.addEventListener('input', renderCrop));
+  Jot.$('#aspect', ui).addEventListener('change', renderCrop);
   window.addEventListener('resize', () => { if (img) renderCrop(); });
+
+  Jot.$('#crop-full', ui).onclick = () => {
+    if (!img) return;
+    Jot.$('#x', ui).value = 0;
+    Jot.$('#y', ui).value = 0;
+    Jot.$('#w', ui).value = img.width;
+    Jot.$('#h', ui).value = img.height;
+    renderCrop();
+  };
+  Jot.$('#crop-square', ui).onclick = () => {
+    if (!img) return;
+    const s = Math.min(img.width, img.height);
+    centerCrop(s, s);
+  };
+  Jot.$('#crop-wide', ui).onclick = () => {
+    if (!img) return;
+    let w = img.width;
+    let h = Math.round(w * 9 / 16);
+    if (h > img.height) { h = img.height; w = Math.round(h * 16 / 9); }
+    centerCrop(w, h);
+  };
 
   Jot.$('#dl', ui).onclick = () => {
     if (!img) return;
