@@ -349,7 +349,6 @@ function layout({ title, description, canonical, bodyClass = '', content, script
         <a href="/#tools">All tools</a>
         <a href="/privacy/">Privacy</a>
         <a href="/terms/">Terms</a>
-        <a href="mailto:${esc(site.contactEmail)}">Contact</a>
       </div>
       <p class="footer-copy">&copy; ${new Date().getFullYear()} ${esc(site.name)}. Free utilities, built for the browser.</p>
     </div>
