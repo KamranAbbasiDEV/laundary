@@ -242,6 +242,198 @@ Jot.loadImageFromDataUrl = function (dataUrl) {
   });
 };
 
+Jot.ensureCompareGrid = function (ui, canvas, labels = {}) {
+  if (ui.querySelector('.compare-grid')) {
+    return {
+      grid: ui.querySelector('.compare-grid'),
+      orig: ui.querySelector('.preview-orig, #prev-orig'),
+      canvas,
+      show() { ui.querySelector('.compare-grid').style.display = ''; },
+    };
+  }
+  const origLabel = labels.original || 'Original';
+  const resultLabel = labels.result || 'Preview';
+  const grid = document.createElement('div');
+  grid.className = 'compare-grid';
+  grid.style.display = 'none';
+  const origCard = document.createElement('div');
+  origCard.className = 'compare-card';
+  origCard.innerHTML = `<p class="compare-label">${origLabel}</p>`;
+  const origImg = document.createElement('img');
+  origImg.className = 'preview-orig';
+  origImg.id = 'prev-orig';
+  origImg.alt = 'Original';
+  origCard.appendChild(origImg);
+  const resultCard = document.createElement('div');
+  resultCard.className = 'compare-card';
+  resultCard.innerHTML = `<p class="compare-label">${resultLabel}</p>`;
+  const anchor = canvas.parentNode;
+  anchor.insertBefore(grid, canvas);
+  grid.appendChild(origCard);
+  grid.appendChild(resultCard);
+  resultCard.appendChild(canvas);
+  canvas.style.maxWidth = '100%';
+  return {
+    grid,
+    orig: origImg,
+    canvas,
+    show() { grid.style.display = ''; },
+  };
+};
+
+Jot.unlockPanel = function (ui, panelSel, fields) {
+  const panel = Jot.$(panelSel, ui);
+  if (panel) panel.classList.remove('tool-panel--locked');
+  const note = ui.querySelector('.tool-panel-note');
+  if (note) note.style.display = 'none';
+  (fields || Jot.$$('#settings input, #settings select, #settings button', ui)).forEach(el => { el.disabled = false; });
+};
+
+Jot.imageEffectTool = function (root, extraHtml, applyFn, downloadName) {
+  const ui = Jot.ui(`<input type="file" accept="image/*" id="file">${extraHtml || ''}
+    <div class="compare-grid" id="compare" style="display:none">
+      <div class="compare-card"><p class="compare-label">Original</p><img id="prev-orig" alt="Original"></div>
+      <div class="compare-card"><p class="compare-label">Preview</p><canvas id="c"></canvas></div>
+    </div>
+    <div class="btn-row"><button class="btn" id="go" disabled>Update preview</button><button class="btn btn-secondary" id="dl" disabled>Download</button></div>`);
+  root.appendChild(ui);
+  let img;
+  function run() {
+    if (!img) return;
+    applyFn(img, Jot.$('#c', ui), ui);
+    Jot.$('#dl', ui).disabled = false;
+  }
+  Jot.$('#file', ui).addEventListener('change', e => {
+    const f = e.target.files?.[0];
+    if (!f) { Jot.toast('Please upload a file first'); return; }
+    Jot._loadImg(f, i => {
+      img = i;
+      Jot.$('#prev-orig', ui).src = i.src;
+      Jot.$('#compare', ui).style.display = '';
+      Jot.$('#go', ui).disabled = false;
+      run();
+    });
+  });
+  Jot.$('#go', ui).onclick = run;
+  Jot.$('#dl', ui).onclick = () => {
+    const a = document.createElement('a');
+    a.href = Jot.$('#c', ui).toDataURL('image/png');
+    a.download = downloadName || 'output.png';
+    a.click();
+  };
+  ui.querySelectorAll('input[type="range"], input[type="number"], input[type="color"], .row input').forEach(el => {
+    el.addEventListener('input', () => { if (img) run(); });
+  });
+  return ui;
+};
+
+Jot.enhanceVisualPreviews = function (root, ui) {
+  if (ui.dataset.previewEnhanced) return;
+  const toolId = root.dataset.tool || '';
+  const fileInput = ui.querySelector('input[type="file"]#file')
+    || ui.querySelector('input[type="file"][accept*="image"]:not([data-logo-upload]):not([data-no-drop])');
+  const canvas = ui.querySelector('canvas');
+  const skipAuto = new Set(['signature-pad', 'drawing-canvas', 'whiteboard']);
+
+  if (fileInput && canvas && !skipAuto.has(toolId) && !ui.querySelector('.compare-grid')) {
+    const hidden = canvas.style.display === 'none';
+    if (hidden) Jot._wireHiddenCanvasPreview(ui, fileInput, canvas);
+    else Jot._wireImageCanvasPreview(ui, fileInput, canvas, toolId);
+    ui.dataset.previewEnhanced = '1';
+  }
+
+  Jot.$$('[id="preview"], [id="prev"], .preview-box, #qr-wrap, .invoice-preview-wrap', ui).forEach(el => {
+    if (el.dataset.previewLabeled) return;
+    el.dataset.previewLabeled = '1';
+    const prev = el.previousElementSibling;
+    if (prev?.classList?.contains('preview-heading') || prev?.classList?.contains('tool-panel-title')) return;
+    const h = document.createElement('p');
+    h.className = 'preview-heading';
+    h.textContent = el.id === 'qr-wrap' ? 'QR preview' : 'Live preview';
+    el.parentNode.insertBefore(h, el);
+  });
+
+  const livePrev = ui.querySelector('#prev, .preview-box');
+  const textIn = ui.querySelector('textarea#in, textarea:first-of-type');
+  const genBtn = ui.querySelector('#go, #gen, #render');
+  if (livePrev && textIn && genBtn && !textIn.dataset.livePreview) {
+    textIn.dataset.livePreview = '1';
+    const run = () => { try { genBtn.click(); } catch {} };
+    let t;
+    textIn.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(run, 350);
+    });
+  }
+};
+
+Jot._wireImageCanvasPreview = function (ui, fileInput, canvas, toolId) {
+  const cmp = Jot.ensureCompareGrid(ui, canvas);
+  let ready = false;
+
+  const triggerPreview = () => {
+    if (!ready) return;
+    const go = ui.querySelector('#go');
+    if (go && !go.disabled) go.click();
+  };
+
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files?.[0];
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      cmp.orig.src = img.src;
+      cmp.show();
+      ready = true;
+      setTimeout(triggerPreview, 50);
+    };
+    img.src = URL.createObjectURL(f);
+  });
+
+  ui.querySelectorAll('.row input, .tool-panel input, input[type="range"], input[type="color"]').forEach(el => {
+    el.addEventListener('input', triggerPreview);
+    el.addEventListener('change', triggerPreview);
+  });
+  ui.querySelectorAll('.btn[data-a], #flip').forEach(btn => {
+    btn.addEventListener('click', () => setTimeout(triggerPreview, 50));
+  });
+};
+
+Jot._wireHiddenCanvasPreview = function (ui, fileInput, canvas) {
+  const wrap = document.createElement('div');
+  wrap.className = 'compare-grid';
+  wrap.style.display = 'none';
+  wrap.innerHTML = '<div class="compare-card"><p class="compare-label">Original</p><img class="preview-orig" alt="Original"></div><div class="compare-card"><p class="compare-label">Preview</p><img class="preview-result-img" alt="Preview"></div>';
+  canvas.parentNode.insertBefore(wrap, canvas);
+  const origImg = wrap.querySelector('.preview-orig');
+  const resultImg = wrap.querySelector('.preview-result-img');
+
+  const syncResult = () => {
+    if (canvas.width > 0 && canvas.height > 0) {
+      resultImg.src = canvas.toDataURL('image/png');
+      wrap.style.display = '';
+    }
+  };
+
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files?.[0];
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      origImg.src = img.src;
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      syncResult();
+    };
+    img.src = URL.createObjectURL(f);
+  });
+
+  ui.querySelectorAll('#go, .btn-row .btn:not(.btn-secondary)').forEach(btn => {
+    btn.addEventListener('click', () => setTimeout(syncResult, 100));
+  });
+};
+
 Jot._toolHint = function (ui, desc, category) {
   const hasPrimaryFile = ui.querySelector('input[type="file"]#file')
     || ui.querySelector('input[type="file"]:not([data-logo-upload]):not([data-no-drop])');
@@ -415,6 +607,8 @@ Jot.polishToolUx = function (root) {
     badge.textContent = 'Private · Processed locally in your browser';
     ui.appendChild(badge);
   }
+
+  Jot.enhanceVisualPreviews(root, ui);
 };
 
 Jot.setStatus = function (el, msg, type = 'success') {

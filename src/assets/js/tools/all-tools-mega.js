@@ -246,35 +246,23 @@ JotTools['avif-converter'] = function (root) {
 };
 
 JotTools['image-sharpen'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><label>Amount <input type="range" id="amt" min="0" max="200" value="100"></label><div class="btn-row"><button class="btn" id="go">Sharpen</button><button class="btn btn-secondary" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
-  root.appendChild(ui);
-  Jot.$('#go', ui).onclick = () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
-    Jot._loadImg(f, img => {
-      const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
-      const ctx = c.getContext('2d');
-      ctx.filter = 'contrast(' + (+Jot.$('#amt', ui).value / 100 + 1).toFixed(2) + ') saturate(1.2)';
-      ctx.drawImage(img, 0, 0);
-    });
-  };
-  Jot.$('#dl', ui).onclick = () => { const a = document.createElement('a'); a.href = Jot.$('#c', ui).toDataURL('image/png'); a.download = 'sharpened.png'; a.click(); };
+  Jot.imageEffectTool(root, '<label>Amount <input type="range" id="amt" min="0" max="200" value="100"></label>', (img, c, ui) => {
+    c.width = img.width; c.height = img.height;
+    const ctx = c.getContext('2d');
+    ctx.filter = 'contrast(' + (+Jot.$('#amt', ui).value / 100 + 1).toFixed(2) + ') saturate(1.2)';
+    ctx.drawImage(img, 0, 0);
+  }, 'sharpened.png');
 };
 
 JotTools['image-border'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="row"><label>Border px <input type="number" id="b" value="20"></label><label>Color <input type="color" id="col" value="#2563eb"></label></div><div class="btn-row"><button class="btn" id="go">Apply</button><button class="btn btn-secondary" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
-  root.appendChild(ui);
-  Jot.$('#go', ui).onclick = () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
-    Jot._loadImg(f, img => {
-      const b = +Jot.$('#b', ui).value;
-      const c = Jot.$('#c', ui); c.width = img.width + b * 2; c.height = img.height + b * 2;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = Jot.$('#col', ui).value;
-      ctx.fillRect(0, 0, c.width, c.height);
-      ctx.drawImage(img, b, b);
-    });
-  };
-  Jot.$('#dl', ui).onclick = () => { const a = document.createElement('a'); a.href = Jot.$('#c', ui).toDataURL('image/png'); a.download = 'bordered.png'; a.click(); };
+  Jot.imageEffectTool(root, '<div class="row"><label>Border px <input type="number" id="b" value="20"></label><label>Color <input type="color" id="col" value="#2563eb"></label></div>', (img, c, ui) => {
+    const b = +Jot.$('#b', ui).value;
+    c.width = img.width + b * 2; c.height = img.height + b * 2;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = Jot.$('#col', ui).value;
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, b, b);
+  }, 'bordered.png');
 };
 
 JotTools['gif-maker'] = function (root) {
@@ -292,23 +280,17 @@ JotTools['gif-maker'] = function (root) {
 };
 
 JotTools['transparent-png'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><label>Key color <input type="color" id="col" value="#ffffff"></label><label>Tolerance <input type="number" id="tol" value="40"></label><div class="btn-row"><button class="btn" id="go">Remove background</button><button class="btn btn-secondary" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
-  root.appendChild(ui);
   const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-  Jot.$('#go', ui).onclick = () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
-    Jot._loadImg(f, img => {
-      const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
-      const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
-      const d = ctx.getImageData(0, 0, c.width, c.height);
-      const [kr, kg, kb] = hex(Jot.$('#col', ui).value), tol = +Jot.$('#tol', ui).value;
-      for (let i = 0; i < d.data.length; i += 4) {
-        if (Math.abs(d.data[i] - kr) + Math.abs(d.data[i + 1] - kg) + Math.abs(d.data[i + 2] - kb) < tol * 3) d.data[i + 3] = 0;
-      }
-      ctx.putImageData(d, 0, 0);
-    });
-  };
-  Jot.$('#dl', ui).onclick = () => { const a = document.createElement('a'); a.href = Jot.$('#c', ui).toDataURL('image/png'); a.download = 'transparent.png'; a.click(); };
+  Jot.imageEffectTool(root, '<label>Key color <input type="color" id="col" value="#ffffff"></label><label>Tolerance <input type="number" id="tol" value="40"></label>', (img, c, ui) => {
+    c.width = img.width; c.height = img.height;
+    const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
+    const d = ctx.getImageData(0, 0, c.width, c.height);
+    const [kr, kg, kb] = hex(Jot.$('#col', ui).value), tol = +Jot.$('#tol', ui).value;
+    for (let i = 0; i < d.data.length; i += 4) {
+      if (Math.abs(d.data[i] - kr) + Math.abs(d.data[i + 1] - kg) + Math.abs(d.data[i + 2] - kb) < tol * 3) d.data[i + 3] = 0;
+    }
+    ctx.putImageData(d, 0, 0);
+  }, 'transparent.png');
 };
 
 JotTools['image-collage'] = function (root) {

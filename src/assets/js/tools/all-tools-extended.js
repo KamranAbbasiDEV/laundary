@@ -209,12 +209,28 @@ Jot._canvasFromImg = function (img, w, h) {
 };
 
 JotTools['background-remover'] = function (root) {
-  const ui = Jot.ui('<input type="file" id="file" accept="image/*"><div class="btn-row"><button class="btn" id="go">Remove background</button></div><p style="font-size:.8125rem;color:var(--text-muted)">Processing runs locally. First use downloads an AI model (~40MB).</p><canvas id="c" style="max-width:100%;margin-top:1rem"></canvas><div class="output output--empty" id="out">Results will appear here.</div>');
+  const ui = Jot.ui(`<input type="file" id="file" accept="image/*">
+    <div class="btn-row"><button class="btn" id="go" disabled>Remove background</button><button class="btn btn-secondary" id="dl" disabled>Download PNG</button></div>
+    <p class="hint" style="margin-top:0">First use downloads an AI model (~40MB). Processing runs locally.</p>
+    <div class="compare-grid" id="compare" style="display:none">
+      <div class="compare-card"><p class="compare-label">Original</p><img id="prev-orig" alt="Original"></div>
+      <div class="compare-card"><p class="compare-label">Result preview</p><canvas id="c"></canvas></div>
+    </div>
+    <div class="output output--empty" id="out">Upload an image to preview the result.</div>`);
   root.appendChild(ui);
   let file;
-  Jot.$('#file', ui).onchange = e => { file = e.target.files[0]; Jot.$('#out', ui).textContent = file ? file.name : ''; };
-  Jot.$('#go', ui).onclick = async () => {
+  Jot.$('#file', ui).onchange = e => {
+    file = e.target.files?.[0];
     if (!file) return;
+    Jot._loadImg(file, img => {
+      Jot.$('#prev-orig', ui).src = img.src;
+      Jot.$('#compare', ui).style.display = '';
+      Jot.$('#go', ui).disabled = false;
+      Jot.$('#out', ui).textContent = `Ready to process ${file.name}`;
+    });
+  };
+  Jot.$('#go', ui).onclick = async () => {
+    if (!file) { Jot.toast('Please upload a file first'); return; }
     Jot.$('#out', ui).textContent = 'Loading AI model…';
     try {
       await Jot.loadScript('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/index.min.js');
@@ -224,9 +240,11 @@ JotTools['background-remover'] = function (root) {
       img.onload = () => {
         const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
         c.getContext('2d').drawImage(img, 0, 0);
-        Jot.$('#out', ui).textContent = 'Done — right-click canvas to save, or:';
-        const a = document.createElement('a'); a.href = url; a.download = 'no-bg.png'; a.textContent = ' Download PNG'; a.className = 'btn btn-secondary'; a.style.marginTop = '.5rem'; a.style.display = 'inline-block';
-        if (!Jot.$('#dl', ui)) { a.id = 'dl'; ui.appendChild(a); }
+        Jot.$('#out', ui).textContent = 'Done — download your transparent PNG below.';
+        Jot.$('#dl', ui).disabled = false;
+        Jot.$('#dl', ui).onclick = () => {
+          const a = document.createElement('a'); a.href = url; a.download = 'no-bg.png'; a.click();
+        };
       };
       img.src = url;
     } catch (e) { Jot.$('#out', ui).textContent = 'Error: ' + e.message; }
@@ -234,63 +252,180 @@ JotTools['background-remover'] = function (root) {
 };
 
 JotTools['image-cropper'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="row"><label>X <input type="number" id="x" value="0"></label><label>Y <input type="number" id="y" value="0"></label><label>W <input type="number" id="w" value="200"></label><label>H <input type="number" id="h" value="200"></label></div><div class="btn-row"><button class="btn" id="go">Crop & Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
+  const ui = Jot.ui(`<input type="file" accept="image/*" id="file">
+    <div class="tool-panel tool-panel--locked" id="settings">
+      <p class="tool-panel-title">Crop area</p>
+      <p class="tool-panel-note" id="settings-note">Upload an image above to set crop coordinates.</p>
+      <div class="row">
+        <label>X <input type="number" id="x" value="0" min="0" disabled></label>
+        <label>Y <input type="number" id="y" value="0" min="0" disabled></label>
+        <label>Width <input type="number" id="w" value="200" min="1" disabled></label>
+        <label>Height <input type="number" id="h" value="200" min="1" disabled></label>
+      </div>
+      <p class="estimate-line" id="crop-info">Crop size will appear here after upload.</p>
+    </div>
+    <div class="compare-grid" id="compare" style="display:none">
+      <div class="compare-card">
+        <p class="compare-label">Original (crop area)</p>
+        <div class="crop-source-wrap" id="source-wrap">
+          <img id="prev-orig" alt="Original">
+          <div class="crop-overlay" id="crop-box"></div>
+        </div>
+      </div>
+      <div class="compare-card">
+        <p class="compare-label">Cropped preview</p>
+        <canvas id="c"></canvas>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn" id="dl" disabled>Download cropped image</button></div>`);
   root.appendChild(ui);
-  let img;
-  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; } Jot._loadImg(f, i => { img = i; Jot.$('#w', ui).value = i.width; Jot.$('#h', ui).value = i.height; }); };
-  Jot.$('#go', ui).onclick = () => {
+
+  let img = null;
+  let scale = 1;
+
+  function clampCrop() {
     if (!img) return;
-    const x = +Jot.$('#x', ui).value, y = +Jot.$('#y', ui).value, w = +Jot.$('#w', ui).value, h = +Jot.$('#h', ui).value;
-    const c = Jot.$('#c', ui); c.width = w; c.height = h;
+    let x = Math.max(0, +Jot.$('#x', ui).value || 0);
+    let y = Math.max(0, +Jot.$('#y', ui).value || 0);
+    let w = Math.max(1, +Jot.$('#w', ui).value || 1);
+    let h = Math.max(1, +Jot.$('#h', ui).value || 1);
+    if (x + w > img.width) w = img.width - x;
+    if (y + h > img.height) h = img.height - y;
+    Jot.$('#x', ui).value = x;
+    Jot.$('#y', ui).value = y;
+    Jot.$('#w', ui).value = w;
+    Jot.$('#h', ui).value = h;
+    return { x, y, w, h };
+  }
+
+  function renderCrop() {
+    if (!img) return;
+    const { x, y, w, h } = clampCrop();
+    const c = Jot.$('#c', ui);
+    c.width = w;
+    c.height = h;
     c.getContext('2d').drawImage(img, x, y, w, h, 0, 0, w, h);
-    const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = 'cropped.png'; a.click();
+
+    const box = Jot.$('#crop-box', ui);
+    const orig = Jot.$('#prev-orig', ui);
+    scale = orig.clientWidth / img.width || 1;
+    box.style.left = (x * scale) + 'px';
+    box.style.top = (y * scale) + 'px';
+    box.style.width = (w * scale) + 'px';
+    box.style.height = (h * scale) + 'px';
+
+    Jot.$('#crop-info', ui).textContent = `Crop: ${w}×${h}px from ${img.width}×${img.height}px original · region at (${x}, ${y})`;
+    Jot.$('#dl', ui).disabled = false;
+  }
+
+  Jot.$('#file', ui).addEventListener('change', e => {
+    const f = e.target.files?.[0];
+    if (!f) { Jot.toast('Please upload a file first'); return; }
+    Jot._loadImg(f, i => {
+      img = i;
+      Jot.unlockPanel(ui, '#settings', Jot.$$('#x,#y,#w,#h', ui));
+      Jot.$('#prev-orig', ui).src = i.src;
+      Jot.$('#w', ui).value = i.width;
+      Jot.$('#h', ui).value = i.height;
+      Jot.$('#compare', ui).style.display = '';
+      renderCrop();
+    });
+  });
+
+  Jot.$$('#x,#y,#w,#h', ui).forEach(el => el.addEventListener('input', renderCrop));
+  window.addEventListener('resize', () => { if (img) renderCrop(); });
+
+  Jot.$('#dl', ui).onclick = () => {
+    if (!img) return;
+    const a = document.createElement('a');
+    a.href = Jot.$('#c', ui).toDataURL('image/png');
+    a.download = 'cropped.png';
+    a.click();
+    Jot.toast('Download started');
   };
 };
 
 JotTools['image-rotate'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="btn-row"><button class="btn btn-secondary" data-a="90">Rotate 90°</button><button class="btn btn-secondary" data-a="180">180°</button><button class="btn btn-secondary" data-a="270">270°</button><button class="btn btn-secondary" id="flip">Flip H</button><button class="btn" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
+  const ui = Jot.ui(`<input type="file" accept="image/*" id="file">
+    <div class="btn-row"><button class="btn btn-secondary" data-a="90">Rotate 90°</button><button class="btn btn-secondary" data-a="180">180°</button><button class="btn btn-secondary" data-a="270">270°</button><button class="btn btn-secondary" id="flip">Flip H</button><button class="btn" id="go" disabled>Update preview</button><button class="btn btn-secondary" id="dl" disabled>Download</button></div>
+    <div class="compare-grid" id="compare" style="display:none">
+      <div class="compare-card"><p class="compare-label">Original</p><img id="prev-orig" alt="Original"></div>
+      <div class="compare-card"><p class="compare-label">Preview</p><canvas id="c"></canvas></div>
+    </div>`);
   root.appendChild(ui);
-  let img, flip = false;
-  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; } Jot._loadImg(f, i => { img = i; draw(0); }); };
+  let img, flip = false, lastDeg = 0;
+  Jot.$('#file', ui).onchange = e => {
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
+    Jot._loadImg(f, i => {
+      img = i;
+      Jot.$('#prev-orig', ui).src = i.src;
+      Jot.$('#compare', ui).style.display = '';
+      Jot.$('#go', ui).disabled = false;
+      draw(0);
+    });
+  };
   function draw(deg) {
     if (!img) return;
+    lastDeg = deg;
     const c = Jot.$('#c', ui), rad = deg * Math.PI / 180;
     const w = deg % 180 ? img.height : img.width, h = deg % 180 ? img.width : img.height;
     c.width = w; c.height = h;
     const ctx = c.getContext('2d');
-    ctx.translate(w/2, h/2); ctx.rotate(rad); ctx.scale(flip ? -1 : 1, 1);
-    ctx.drawImage(img, -img.width/2, -img.height/2);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(rad);
+    ctx.scale(flip ? -1 : 1, 1);
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    Jot.$('#dl', ui).disabled = false;
   }
   Jot.$$('.btn[data-a]', ui).forEach(b => b.onclick = () => draw(+b.dataset.a));
-  Jot.$('#flip', ui).onclick = () => { flip = !flip; draw(0); };
+  Jot.$('#flip', ui).onclick = () => { flip = !flip; draw(lastDeg); };
+  Jot.$('#go', ui).onclick = () => draw(lastDeg);
   Jot.$('#dl', ui).onclick = () => { const a = document.createElement('a'); a.href = Jot.$('#c', ui).toDataURL('image/png'); a.download = 'rotated.png'; a.click(); };
 };
 
 ['image-grayscale','image-blur','invert-image','pixelate-image'].forEach(id => {
   JotTools[id] = function (root) {
-    const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="btn-row"><button class="btn" id="go">Apply</button><button class="btn btn-secondary" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
+    const ui = Jot.ui(`<input type="file" accept="image/*" id="file">
+      <div class="compare-grid" id="compare" style="display:none">
+        <div class="compare-card"><p class="compare-label">Original</p><img id="prev-orig" alt="Original"></div>
+        <div class="compare-card"><p class="compare-label">Preview</p><canvas id="c"></canvas></div>
+      </div>
+      <div class="btn-row"><button class="btn" id="go" disabled>Apply effect</button><button class="btn btn-secondary" id="dl" disabled>Download</button></div>`);
     root.appendChild(ui);
-    Jot.$('#go', ui).onclick = () => {
-      const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
-      Jot._loadImg(f, img => {
-        const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
-        const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
-        if (id === 'image-blur') { ctx.filter = 'blur(6px)'; ctx.drawImage(img, 0, 0); }
-        else if (id === 'pixelate-image') {
-          const s = 14; const tw = Math.ceil(c.width/s), th = Math.ceil(c.height/s);
-          const t = document.createElement('canvas'); t.width = tw; t.height = th;
-          t.getContext('2d').drawImage(c, 0, 0, tw, th);
-          ctx.imageSmoothingEnabled = false; ctx.drawImage(t, 0, 0, tw, th, 0, 0, c.width, c.height);
-        } else {
-          const d = ctx.getImageData(0, 0, c.width, c.height), p = d.data;
-          for (let i = 0; i < p.length; i += 4) {
-            if (id === 'image-grayscale') { const g = p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114; p[i]=p[i+1]=p[i+2]=g; }
-            if (id === 'invert-image') { p[i]=255-p[i]; p[i+1]=255-p[i+1]; p[i+2]=255-p[i+2]; }
-          }
-          ctx.putImageData(d, 0, 0);
+    let img;
+    function apply() {
+      if (!img) return;
+      const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d'); ctx.filter = 'none'; ctx.drawImage(img, 0, 0);
+      if (id === 'image-blur') { ctx.filter = 'blur(6px)'; ctx.drawImage(img, 0, 0); }
+      else if (id === 'pixelate-image') {
+        const s = 14; const tw = Math.ceil(c.width / s), th = Math.ceil(c.height / s);
+        const t = document.createElement('canvas'); t.width = tw; t.height = th;
+        t.getContext('2d').drawImage(c, 0, 0, tw, th);
+        ctx.imageSmoothingEnabled = false; ctx.drawImage(t, 0, 0, tw, th, 0, 0, c.width, c.height);
+      } else {
+        const d = ctx.getImageData(0, 0, c.width, c.height), p = d.data;
+        for (let i = 0; i < p.length; i += 4) {
+          if (id === 'image-grayscale') { const g = p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114; p[i] = p[i + 1] = p[i + 2] = g; }
+          if (id === 'invert-image') { p[i] = 255 - p[i]; p[i + 1] = 255 - p[i + 1]; p[i + 2] = 255 - p[i + 2]; }
         }
+        ctx.putImageData(d, 0, 0);
+      }
+      Jot.$('#dl', ui).disabled = false;
+    }
+    Jot.$('#file', ui).addEventListener('change', e => {
+      const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
+      Jot._loadImg(f, i => {
+        img = i;
+        Jot.$('#prev-orig', ui).src = i.src;
+        Jot.$('#compare', ui).style.display = '';
+        Jot.$('#go', ui).disabled = false;
+        apply();
       });
-    };
+    });
+    Jot.$('#go', ui).onclick = apply;
     Jot.$('#dl', ui).onclick = () => { const a = document.createElement('a'); a.href = Jot.$('#c', ui).toDataURL('image/png'); a.download = id + '.png'; a.click(); };
   };
 });
@@ -353,15 +488,34 @@ JotTools['image-watermark'] = function (root) {
 };
 
 JotTools['webp-converter'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="btn-row"><button class="btn" id="png">PNG</button><button class="btn btn-secondary" id="jpg">JPG</button><button class="btn btn-secondary" id="webp">WebP</button></div><canvas id="c" style="display:none"></canvas>');
+  const ui = Jot.ui(`<input type="file" accept="image/*" id="file">
+    <div class="compare-grid" id="compare" style="display:none">
+      <div class="compare-card"><p class="compare-label">Original</p><img id="prev-orig" alt="Original"></div>
+      <div class="compare-card"><p class="compare-label">Converted preview</p><img id="prev-out" alt="Preview"></div>
+    </div>
+    <div class="btn-row"><button class="btn" id="png" disabled>Download PNG</button><button class="btn btn-secondary" id="jpg" disabled>Download JPG</button><button class="btn btn-secondary" id="webp" disabled>Download WebP</button></div>
+    <canvas id="c" style="display:none"></canvas>`);
   root.appendChild(ui);
   let img;
-  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (f) Jot._loadImg(f, i => img = i); };
+  Jot.$('#file', ui).onchange = e => {
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
+    Jot._loadImg(f, i => {
+      img = i;
+      Jot.$('#prev-orig', ui).src = i.src;
+      Jot.$('#compare', ui).style.display = '';
+      const c = Jot.$('#c', ui); c.width = i.width; c.height = i.height;
+      c.getContext('2d').drawImage(i, 0, 0);
+      Jot.$('#prev-out', ui).src = c.toDataURL('image/png');
+      Jot.$$('#png,#jpg,#webp', ui).forEach(b => { b.disabled = false; });
+    });
+  };
   function save(type, ext) {
     if (!img) return;
     const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
     c.getContext('2d').drawImage(img, 0, 0);
-    const a = document.createElement('a'); a.href = c.toDataURL(type, 0.92); a.download = 'out.' + ext; a.click();
+    const url = c.toDataURL(type, 0.92);
+    Jot.$('#prev-out', ui).src = url;
+    const a = document.createElement('a'); a.href = url; a.download = 'out.' + ext; a.click();
   }
   Jot.$('#png', ui).onclick = () => save('image/png', 'png');
   Jot.$('#jpg', ui).onclick = () => save('image/jpeg', 'jpg');
