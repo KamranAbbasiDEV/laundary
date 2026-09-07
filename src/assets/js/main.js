@@ -104,6 +104,7 @@
         window.JotTools[id](root);
         requestAnimationFrame(() => {
           if (window.Jot?.enhanceFileInputs) Jot.enhanceFileInputs(root);
+          if (window.Jot?.polishToolUx) Jot.polishToolUx(root);
           focusToolInput(root);
         });
       } catch (err) {

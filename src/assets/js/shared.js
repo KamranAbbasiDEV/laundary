@@ -80,9 +80,23 @@ Jot.assignFiles = function (input, files) {
   return true;
 };
 
+Jot.shouldSkipFileDrop = function (input) {
+  if (!input || input.type !== 'file') return true;
+  if (input.dataset.noDrop !== undefined) return true;
+  if (input.hidden || input.hasAttribute('hidden')) return true;
+  if (input.closest('.file-drop-zone')) return true;
+  const parent = input.parentElement;
+  if (parent?.querySelector(':scope > .drop-zone')) return true;
+  return false;
+};
+
 Jot.enhanceFileInputs = function (root) {
   if (!root) return;
   Jot.$$(('input[type="file"]:not([data-drop-enhanced])'), root).forEach(input => {
+    if (Jot.shouldSkipFileDrop(input)) {
+      input.dataset.dropEnhanced = '1';
+      return;
+    }
     input.dataset.dropEnhanced = '1';
     if (input.closest('.file-drop-zone')) return;
 
@@ -158,6 +172,249 @@ Jot.enhanceFileInputs = function (root) {
 
     showName();
   });
+};
+
+Jot.logoUploadHtml = function (prefix = 'logo') {
+  return `<div class="logo-upload-block">
+    <label>Logo / image (optional)<input type="file" id="${prefix}" accept="image/*" data-logo-upload></label>
+    <div class="logo-preview" id="${prefix}-preview"></div>
+    <button type="button" class="btn btn-secondary btn-sm" id="${prefix}-clear" style="display:none">Remove logo</button>
+  </div>`;
+};
+
+Jot.bindLogoUpload = function (root, opts = {}) {
+  const prefix = opts.prefix || 'logo';
+  const input = opts.input || Jot.$(`#${prefix}`, root) || Jot.$('input[data-logo-upload]', root);
+  const preview = opts.preview || Jot.$(`#${prefix}-preview`, root);
+  const clearBtn = opts.clearBtn || Jot.$(`#${prefix}-clear`, root);
+  if (!input) return { get: () => '' };
+
+  let dataUrl = '';
+  const notify = () => { if (opts.onChange) opts.onChange(dataUrl); };
+
+  input.addEventListener('change', e => {
+    const f = e.target.files?.[0];
+    if (!f || !f.type.startsWith('image/')) {
+      dataUrl = '';
+      if (preview) preview.innerHTML = '';
+      if (clearBtn) clearBtn.style.display = 'none';
+      notify();
+      return;
+    }
+    const r = new FileReader();
+    r.onload = () => {
+      dataUrl = r.result;
+      if (preview) preview.innerHTML = `<img src="${dataUrl}" alt="Logo preview">`;
+      if (clearBtn) clearBtn.style.display = '';
+      notify();
+    };
+    r.readAsDataURL(f);
+  });
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      dataUrl = '';
+      input.value = '';
+      if (preview) preview.innerHTML = '';
+      clearBtn.style.display = 'none';
+      notify();
+    });
+  }
+
+  return { get: () => dataUrl };
+};
+
+Jot.drawFitImage = function (ctx, img, x, y, maxW, maxH) {
+  const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+  const w = img.width * ratio;
+  const h = img.height * ratio;
+  ctx.drawImage(img, x, y, w, h);
+  return { w, h };
+};
+
+Jot.loadImageFromDataUrl = function (dataUrl) {
+  return new Promise((resolve, reject) => {
+    if (!dataUrl) { resolve(null); return; }
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+};
+
+Jot._toolHint = function (ui, desc, category) {
+  const hasPrimaryFile = ui.querySelector('input[type="file"]#file')
+    || ui.querySelector('input[type="file"]:not([data-logo-upload]):not([data-no-drop])');
+  const hasTextarea = ui.querySelector('textarea');
+  const hasNumberInputs = ui.querySelector('input[type="number"]');
+  const hasCanvas = ui.querySelector('canvas');
+  const action = hasPrimaryFile
+    ? ' Upload your file to begin.'
+    : hasTextarea
+      ? ' Enter or paste below, then run the tool.'
+      : hasNumberInputs
+        ? ' Adjust the values, then run the tool.'
+        : hasCanvas
+          ? ' Configure options and render your result.'
+          : ' Fill in the fields and run the tool.';
+  if (desc) return desc.replace(/\s*\.$/, '') + '.' + action;
+  const catHints = {
+    pdf: 'Upload a PDF to process it locally in your browser.',
+    image: 'Upload an image to edit or convert it locally.',
+    video: 'Upload a video file. First use may download a browser encoder (~25MB).',
+    audio: 'Upload an audio file to process it locally.',
+    developer: 'Enter your input below. Nothing is sent to a server.',
+    text: 'Type or paste your text below.',
+    finance: 'Enter your numbers below to calculate results instantly.',
+    security: 'Enter text or upload a file. Hashing runs locally in your browser.',
+  };
+  return (catHints[category] || 'Free online tool — runs locally in your browser, no signup required.') + action;
+};
+
+Jot.polishToolUx = function (root) {
+  if (!root) return;
+  const ui = root.querySelector('.tool-ui') || root;
+  if (ui.dataset.polished) return;
+  ui.dataset.polished = '1';
+
+  const desc = root.dataset.toolDesc || '';
+  const category = root.dataset.toolCategory || '';
+  const isOptionalFile = input => input.dataset.noDrop !== undefined || input.hasAttribute('data-logo-upload');
+  const fileInputs = Jot.$$('input[type="file"]:not([data-no-drop])', ui);
+  const primaryFile = ui.querySelector('input[type="file"]#file')
+    || fileInputs.find(i => !isOptionalFile(i))
+    || null;
+
+  if (!ui.querySelector('.hint')) {
+    const hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.textContent = Jot._toolHint(ui, desc, category);
+    ui.insertBefore(hint, ui.firstChild);
+  }
+
+  ui.querySelectorAll('textarea:not([placeholder])').forEach(el => {
+    if (!el.placeholder) el.placeholder = 'Enter or paste text here…';
+  });
+  ui.querySelectorAll('input[type="text"]:not([placeholder]), input[type="url"]:not([placeholder])').forEach(el => {
+    if (!el.placeholder && !el.value) el.placeholder = 'Enter value…';
+  });
+
+  ui.querySelectorAll('label').forEach(label => {
+    const control = label.querySelector('input, select, textarea');
+    if (control && !control.id) {
+      control.id = 'fld-' + Math.random().toString(36).slice(2, 9);
+    }
+    if (control && !label.querySelector('input[type="checkbox"]') && label.textContent.trim() && !control.getAttribute('aria-label')) {
+      control.setAttribute('aria-label', label.textContent.trim());
+    }
+  });
+
+  const gateBtn = (btn, testFn) => {
+    if (!btn || btn.dataset.fileGated) return;
+    btn.dataset.fileGated = '1';
+    const update = () => { btn.disabled = !testFn(); };
+    update();
+    primaryFile.addEventListener('change', update);
+  };
+
+  if (primaryFile) {
+    const needsMulti = primaryFile.multiple;
+    const fileTest = () => {
+      const n = primaryFile.files?.length || 0;
+      return needsMulti ? n >= 2 : n >= 1;
+    };
+    gateBtn(ui.querySelector('#go'), fileTest);
+    if (!ui.querySelector('#go')) {
+      Jot.$$('.btn-row .btn:not(.btn-secondary)', ui).forEach(btn => gateBtn(btn, fileTest));
+    }
+    const dl = ui.querySelector('#dl');
+    if (dl && !ui.querySelector('canvas')) gateBtn(dl, fileTest);
+  }
+
+  const outEl = ui.querySelector('#out, .output');
+  const copyBtn = ui.querySelector('#copy');
+  if (copyBtn && outEl && !copyBtn.dataset.copyPolished) {
+    copyBtn.dataset.copyPolished = '1';
+    const readOut = () => (outEl.value !== undefined ? outEl.value : outEl.textContent || '').trim();
+    const syncCopy = () => { copyBtn.disabled = !readOut(); };
+    syncCopy();
+    outEl.addEventListener('input', syncCopy);
+    if (outEl.tagName !== 'TEXTAREA' && outEl.tagName !== 'INPUT') {
+      new MutationObserver(syncCopy).observe(outEl, { childList: true, characterData: true, subtree: true });
+    }
+    copyBtn.addEventListener('click', e => {
+      if (!readOut()) { e.preventDefault(); Jot.toast('Nothing to copy yet — run the tool first'); }
+    }, true);
+  }
+
+  const canvas = ui.querySelector('canvas');
+  const dlBtn = ui.querySelector('#dl');
+  if (canvas && dlBtn && !dlBtn.dataset.canvasPolished) {
+    dlBtn.dataset.canvasPolished = '1';
+    const syncDl = () => { dlBtn.disabled = !(canvas.width > 0 && canvas.height > 0); };
+    syncDl();
+    const goBtn = ui.querySelector('#go');
+    if (goBtn) goBtn.addEventListener('click', () => setTimeout(syncDl, 50));
+    primaryFile?.addEventListener('change', () => setTimeout(syncDl, 300));
+  }
+
+  ui.querySelectorAll('input[type="range"]').forEach(range => {
+    if (range.dataset.rangePolished || range.disabled) return;
+    range.dataset.rangePolished = '1';
+    const vid = range.id ? range.id + 'v' : null;
+    if (vid && ui.querySelector('#' + vid)) return;
+    const val = document.createElement('span');
+    val.className = 'range-value';
+    val.id = vid || '';
+    const pct = range.max > 1 && range.max <= 100 && range.min >= 0;
+    const update = () => {
+      val.textContent = pct ? `${Math.round(+range.value)}%` : range.value;
+    };
+    update();
+    range.addEventListener('input', update);
+    const label = range.closest('label');
+    if (label) label.insertBefore(val, range);
+    else range.parentNode.insertBefore(val, range);
+  });
+
+  const goBtn = ui.querySelector('#go');
+  const textIn = ui.querySelector('textarea#in, textarea:first-of-type');
+  if (goBtn && textIn && !primaryFile && !ui.querySelector('input[type="number"]') && !goBtn.dataset.validPolished) {
+    goBtn.dataset.validPolished = '1';
+    goBtn.addEventListener('click', e => {
+      if (!textIn.value.trim()) {
+        e.stopImmediatePropagation();
+        Jot.toast('Please enter some text first');
+      }
+    }, true);
+  }
+
+  if (goBtn && textIn) {
+    textIn.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        goBtn.click();
+      }
+    });
+  }
+
+  ui.querySelectorAll('.output, #out').forEach(el => {
+    if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') return;
+    if (!el.dataset.emptyPolished) {
+      el.dataset.emptyPolished = '1';
+      if (!el.textContent.trim()) el.classList.add('output--empty');
+      new MutationObserver(() => {
+        el.classList.toggle('output--empty', !el.textContent.trim());
+      }).observe(el, { childList: true, characterData: true, subtree: true });
+    }
+  });
+
+  if (!ui.querySelector('.local-badge')) {
+    const badge = document.createElement('p');
+    badge.className = 'local-badge';
+    badge.textContent = 'Private · Processed locally in your browser';
+    ui.appendChild(badge);
+  }
 };
 
 Jot.setStatus = function (el, msg, type = 'success') {

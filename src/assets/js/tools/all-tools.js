@@ -180,7 +180,7 @@ JotTools['html-entities'] = function (root) {
 };
 
 JotTools['slugify'] = function (root) {
-  const ui = Jot.ui(`<input type="text" id="in" placeholder="My Blog Post Title!"><div class="btn-row"><button class="btn" id="go">Slugify</button><button class="btn btn-secondary" id="copy">Copy</button></div><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="text" id="in" placeholder="My Blog Post Title!"><div class="btn-row"><button class="btn" id="go">Slugify</button><button class="btn btn-secondary" id="copy">Copy</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   const run = () => Jot.$('#out', ui).textContent = Jot.slugify(Jot.$('#in', ui).value);
   Jot.$('#in', ui).oninput = run;
@@ -351,7 +351,7 @@ JotTools['morse-code'] = function (root) {
 };
 
 JotTools['number-to-words'] = function (root) {
-  const ui = Jot.ui(`<input type="number" id="in" placeholder="1234"><div class="btn-row"><button class="btn" id="go">Convert</button></div><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="number" id="in" placeholder="1234"><div class="btn-row"><button class="btn" id="go">Convert</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => Jot.$('#out', ui).textContent = Jot.numberToWords(+Jot.$('#in', ui).value);
 };
@@ -394,7 +394,7 @@ JotTools['vtt-to-srt'] = function (root) {
 
 JotTools['diff-checker'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Text A<textarea id="a" rows="8"></textarea></label><label>Text B<textarea id="b" rows="8"></textarea></label></div>
-    <div class="btn-row"><button class="btn" id="go">Compare</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Compare</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const a = Jot.$('#a', ui).value.split('\n'), b = Jot.$('#b', ui).value.split('\n');
@@ -414,7 +414,7 @@ JotTools['epoch-converter'] = function (root) {
     <div class="btn-row"><button class="btn" id="toDate">Timestamp â†’ Date</button><button class="btn btn-secondary" id="toEpoch">Now â†’ Timestamp</button></div>
     <div class="row"><label>Date/time<input type="datetime-local" id="dt"></label></div>
     <div class="btn-row"><button class="btn btn-secondary" id="fromDate">Date â†’ Timestamp</button></div>
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#toDate', ui).onclick = () => {
     const n = +Jot.$('#epoch', ui).value;
@@ -428,9 +428,11 @@ JotTools['epoch-converter'] = function (root) {
 };
 
 JotTools['hash-generator'] = function (root) {
-  const ui = Jot.ui(`<textarea id="in" placeholder="Text or use file below" rows="4"></textarea>
-    <input type="file" id="file"><div class="btn-row"><button class="btn" id="sha256">SHA-256</button><button class="btn btn-secondary" id="sha1">SHA-1</button></div>
-    <div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<p class="hint">Paste text below, or hash a file instead.</p>
+    <textarea id="in" placeholder="Enter text to hash…" rows="4"></textarea>
+    <label class="file-input-compact">Or choose a file <input type="file" id="file" data-no-drop></label>
+    <div class="btn-row"><button class="btn" id="sha256">SHA-256</button><button class="btn btn-secondary" id="sha1">SHA-1</button></div>
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   async function run(algo) {
     try {
@@ -450,7 +452,7 @@ JotTools['regex-tester'] = function (root) {
   const ui = Jot.ui(`<input type="text" id="pat" placeholder="Pattern (without slashes)" value="\\w+">
     <input type="text" id="flags" placeholder="Flags" value="g" style="max-width:100px">
     <textarea id="text" rows="6" placeholder="Test string...">Hello world 123</textarea>
-    <div id="err" class="error"></div><div class="output" id="out"></div>`);
+    <div id="err" class="error"></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   function run() {
     try {
@@ -486,7 +488,7 @@ JotTools['markdown-editor'] = function (root) {
 
 JotTools['cron-parser'] = function (root) {
   const ui = Jot.ui(`<input type="text" id="in" placeholder="*/15 * * * *" value="0 9 * * 1-5">
-    <div class="btn-row"><button class="btn" id="go">Explain</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Explain</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     try { Jot.$('#out', ui).textContent = Jot.cronExplain(Jot.$('#in', ui).value); }
@@ -507,7 +509,7 @@ JotTools['random-number'] = function (root) {
 
 JotTools['random-string'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Length<input type="number" id="len" value="16"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Generate</button><button class="btn btn-secondary" id="copy">Copy</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Generate</button><button class="btn btn-secondary" id="copy">Copy</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
   Jot.$('#go', ui).onclick = () => {
@@ -521,7 +523,7 @@ JotTools['random-string'] = function (root) {
 JotTools['roman-numerals'] = function (root) {
   const ui = Jot.ui(`<input type="text" id="in" placeholder="2024 or MMXXIV"><div class="btn-row">
     <button class="btn" id="toR">Number â†’ Roman</button><button class="btn btn-secondary" id="toN">Roman â†’ Number</button></div>
-    <div class="output" id="out"></div><div id="err" class="error"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div><div id="err" class="error"></div>`);
   root.appendChild(ui);
   Jot.$('#toR', ui).onclick = () => { Jot.$('#out', ui).textContent = Jot.intToRoman(+Jot.$('#in', ui).value); };
   Jot.$('#toN', ui).onclick = () => {
@@ -532,7 +534,7 @@ JotTools['roman-numerals'] = function (root) {
 
 JotTools['percentage-calculator'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Value A<input type="number" id="a" value="50"></label><label>Value B<input type="number" id="b" value="200"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const a = +Jot.$('#a', ui).value, b = +Jot.$('#b', ui).value;
@@ -545,7 +547,7 @@ JotTools['percentage-calculator'] = function (root) {
 
 JotTools['age-calculator'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Birth date<input type="date" id="birth"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate Age</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate Age</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const b = new Date(Jot.$('#birth', ui).value), now = new Date();
@@ -558,7 +560,7 @@ JotTools['age-calculator'] = function (root) {
 
 JotTools['date-duration'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Start<input type="date" id="s"></label><label>End<input type="date" id="e"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const s = new Date(Jot.$('#s', ui).value), e = new Date(Jot.$('#e', ui).value);
@@ -568,7 +570,7 @@ JotTools['date-duration'] = function (root) {
 };
 
 JotTools['password-strength'] = function (root) {
-  const ui = Jot.ui(`<input type="text" id="in" placeholder="Enter password..."><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="text" id="in" placeholder="Enter password..."><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#in', ui).oninput = () => {
     const r = Jot.passwordScore(Jot.$('#in', ui).value);
@@ -577,11 +579,30 @@ JotTools['password-strength'] = function (root) {
 };
 
 JotTools['qr-code'] = function (root) {
-  const ui = Jot.ui(`<input type="text" id="in" placeholder="https://jotnexus.com" value="https://jotnexus.com">
+  const ui = Jot.ui(`<p class="hint">Enter a URL or text, optionally add a center logo, then download your QR code.</p>
+    <input type="text" id="in" placeholder="https://jotnexus.com" value="https://jotnexus.com">
+    ${Jot.logoUploadHtml('qrlogo')}
     <div class="btn-row"><button class="btn" id="go">Generate QR</button><button class="btn btn-secondary" id="dl">Download PNG</button></div>
     <div id="qr-wrap" style="margin:1rem 0"></div>`);
   root.appendChild(ui);
   let lastCanvas = null;
+  let logoDataUrl = '';
+  Jot.bindLogoUpload(ui, { prefix: 'qrlogo', onChange: url => { logoDataUrl = url; } });
+
+  async function overlayLogo(canvas) {
+    if (!logoDataUrl) return canvas;
+    const logo = await Jot.loadImageFromDataUrl(logoDataUrl);
+    if (!logo) return canvas;
+    const ctx = canvas.getContext('2d');
+    const size = Math.round(canvas.width * 0.22);
+    const x = (canvas.width - size) / 2;
+    const y = (canvas.height - size) / 2;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x - 4, y - 4, size + 8, size + 8);
+    Jot.drawFitImage(ctx, logo, x, y, size, size);
+    return canvas;
+  }
+
   async function draw() {
     const wrap = Jot.$('#qr-wrap', ui);
     wrap.textContent = 'Generating...';
@@ -589,9 +610,9 @@ JotTools['qr-code'] = function (root) {
       await Jot.loadScript('https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js');
       wrap.innerHTML = '';
       await new Promise((resolve, reject) => {
-        QRCode.toCanvas(Jot.$('#in', ui).value || ' ', { width: 220, margin: 2 }, (err, canvas) => {
+        QRCode.toCanvas(Jot.$('#in', ui).value || ' ', { width: 220, margin: 2, errorCorrectionLevel: logoDataUrl ? 'H' : 'M' }, async (err, canvas) => {
           if (err) reject(err);
-          else { lastCanvas = canvas; wrap.appendChild(canvas); resolve(); }
+          else { lastCanvas = await overlayLogo(canvas); wrap.appendChild(lastCanvas); resolve(); }
         });
       });
     } catch (e) {
@@ -599,7 +620,7 @@ JotTools['qr-code'] = function (root) {
       const cv = document.createElement('canvas');
       wrap.appendChild(cv);
       Jot.drawQR(cv, Jot.$('#in', ui).value || ' ');
-      lastCanvas = cv;
+      lastCanvas = await overlayLogo(cv);
     }
   }
   Jot.$('#go', ui).onclick = draw;
@@ -653,7 +674,7 @@ JotTools['binary-text'] = function (root) {
 
 JotTools['base-converter'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Decimal<input type="number" id="dec" value="255"></label></div>
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   const run = () => {
     const n = +Jot.$('#dec', ui).value;
@@ -664,7 +685,7 @@ JotTools['base-converter'] = function (root) {
 
 JotTools['color-picker'] = function (root) {
   const ui = Jot.ui(`<input type="color" id="c" value="#6366f1"><div class="row">
-    <label>Hex<input id="hex" value="#6366f1"></label></div><div class="output" id="out"></div>`);
+    <label>Hex<input id="hex" value="#6366f1"></label></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   function sync(from) {
     let hex = from==='picker' ? Jot.$('#c',ui).value : Jot.$('#hex',ui).value;
@@ -692,7 +713,7 @@ JotTools['css-box-shadow'] = function (root) {
     <label>Blur<input type="number" id="blur" value="24"></label><label>Spread<input type="number" id="spread" value="0"></label>
     <label>Color<input type="color" id="color" value="#000000"></label></div>
     <div id="box" style="width:120px;height:120px;background:#6366f1;border-radius:12px;margin:1rem auto"></div>
-    <div class="output" id="out"></div><button class="btn" id="copy">Copy CSS</button>`);
+    <div class="output output--empty" id="out">Results will appear here.</div><button class="btn" id="copy">Copy CSS</button>`);
   root.appendChild(ui);
   function upd() {
     const css = `${Jot.$('#x',ui).value}px ${Jot.$('#y',ui).value}px ${Jot.$('#blur',ui).value}px ${Jot.$('#spread',ui).value}px ${Jot.$('#color',ui).value}88`;
@@ -708,7 +729,7 @@ JotTools['css-gradient'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Color 1<input type="color" id="c1" value="#6366f1"></label><label>Color 2<input type="color" id="c2" value="#22d3ee"></label></div>
     <div class="row"><label>Angle<input type="number" id="ang" value="135"></label></div>
     <div id="box" style="height:100px;border-radius:12px;margin:1rem 0"></div>
-    <div class="output" id="out"></div><button class="btn" id="copy">Copy CSS</button>`);
+    <div class="output output--empty" id="out">Results will appear here.</div><button class="btn" id="copy">Copy CSS</button>`);
   root.appendChild(ui);
   function upd() {
     const css = `linear-gradient(${Jot.$('#ang',ui).value}deg, ${Jot.$('#c1',ui).value}, ${Jot.$('#c2',ui).value})`;
@@ -724,7 +745,7 @@ JotTools['gradient-text'] = function (root) {
   const ui = Jot.ui(`<input type="text" id="txt" value="Gradient Text"><div class="row">
     <label>C1<input type="color" id="c1" value="#6366f1"></label><label>C2<input type="color" id="c2" value="#22d3ee"></label></div>
     <div id="preview" style="font-size:2.5rem;font-weight:800;margin:1rem 0"></div>
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   function upd() {
     const css = `background: linear-gradient(90deg, ${Jot.$('#c1',ui).value}, ${Jot.$('#c2',ui).value}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`;
@@ -736,7 +757,7 @@ JotTools['gradient-text'] = function (root) {
 
 JotTools['pixel-to-rem'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Pixels<input type="number" id="px" value="16"></label><label>Root font (px)<input type="number" id="root" value="16"></label></div>
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   const run = () => Jot.$('#out', ui).textContent = `${(+Jot.$('#px',ui).value / +Jot.$('#root',ui).value).toFixed(4)} rem`;
   Jot.$('#px', ui).oninput = run; Jot.$('#root', ui).oninput = run; run();
@@ -744,7 +765,7 @@ JotTools['pixel-to-rem'] = function (root) {
 
 JotTools['aspect-ratio'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Width<input type="number" id="w" value="1920"></label><label>Ratio W<input type="number" id="rw" value="16"></label><label>Ratio H<input type="number" id="rh" value="9"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate Height</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate Height</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const h = (+Jot.$('#w',ui).value * +Jot.$('#rh',ui).value / +Jot.$('#rw',ui).value).toFixed(2);
@@ -824,7 +845,7 @@ JotTools['bmr-calculator'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Sex<select id="sex"><option value="m">Male</option><option value="f">Female</option></select></label>
     <label>Age<input type="number" id="age" value="30"></label><label>Weight (kg)<input type="number" id="kg" value="70"></label><label>Height (cm)<input type="number" id="cm" value="175"></label>
     <label>Activity<select id="act"><option value="1.2">Sedentary</option><option value="1.55" selected>Moderate</option><option value="1.9">Very active</option></select></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const age=+Jot.$('#age',ui).value, kg=+Jot.$('#kg',ui).value, cm=+Jot.$('#cm',ui).value;
@@ -837,7 +858,7 @@ JotTools['bmr-calculator'] = function (root) {
 JotTools['loan-calculator'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Loan amount<input type="number" id="p" value="200000"></label>
     <label>Annual rate %<input type="number" id="r" value="6.5" step="0.1"></label><label>Years<input type="number" id="y" value="30"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const P=+Jot.$('#p',ui).value, r=+Jot.$('#r',ui).value/100/12, n=+Jot.$('#y',ui).value*12;
@@ -849,7 +870,7 @@ JotTools['loan-calculator'] = function (root) {
 JotTools['compound-interest'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Initial $<input type="number" id="p" value="1000"></label>
     <label>Monthly $<input type="number" id="m" value="100"></label><label>Rate %<input type="number" id="r" value="7" step="0.1"></label><label>Years<input type="number" id="y" value="10"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Forecast</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Forecast</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     let bal=+Jot.$('#p',ui).value; const m=+Jot.$('#m',ui).value, rate=+Jot.$('#r',ui).value/100/12, months=+Jot.$('#y',ui).value*12;
@@ -861,7 +882,7 @@ JotTools['compound-interest'] = function (root) {
 JotTools['sales-tax'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Amount<input type="number" id="amt" value="100"></label><label>Tax rate %<input type="number" id="tax" value="8.25" step="0.01"></label></div>
     <div class="btn-row"><button class="btn" id="add">Add tax</button><button class="btn btn-secondary" id="rem">Remove tax</button></div>
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#add', ui).onclick = () => {
     const a=+Jot.$('#amt',ui).value, t=+Jot.$('#tax',ui).value/100;
@@ -875,7 +896,7 @@ JotTools['sales-tax'] = function (root) {
 
 JotTools['etsy-fee'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Sale price $<input type="number" id="price" value="35"></label><label>Shipping $<input type="number" id="ship" value="5"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate fees</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate fees</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const total = +Jot.$('#price',ui).value + +Jot.$('#ship',ui).value;
@@ -888,7 +909,7 @@ JotTools['etsy-fee'] = function (root) {
 JotTools['break-even'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Fixed costs $<input type="number" id="fixed" value="5000"></label>
     <label>Price per unit $<input type="number" id="price" value="50"></label><label>Variable cost $<input type="number" id="var" value="20"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const margin = +Jot.$('#price',ui).value - +Jot.$('#var',ui).value;
@@ -900,7 +921,7 @@ JotTools['break-even'] = function (root) {
 JotTools['meeting-cost'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Attendees<input type="number" id="n" value="6"></label>
     <label>Avg hourly rate $<input type="number" id="rate" value="75"></label><label>Duration (min)<input type="number" id="min" value="60"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const cost = +Jot.$('#n',ui).value * +Jot.$('#rate',ui).value * (+Jot.$('#min',ui).value/60);
@@ -911,7 +932,7 @@ JotTools['meeting-cost'] = function (root) {
 JotTools['equation-solver'] = function (root) {
   const ui = Jot.ui(`<p style="color:var(--muted);font-size:.9rem">Quadratic axÂ² + bx + c = 0</p>
     <div class="row"><label>a<input type="number" id="a" value="1"></label><label>b<input type="number" id="b" value="-3"></label><label>c<input type="number" id="c" value="2"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Solve</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Solve</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const a=+Jot.$('#a',ui).value, b=+Jot.$('#b',ui).value, c=+Jot.$('#c',ui).value;
@@ -946,7 +967,7 @@ JotTools['stopwatch'] = function (root) {
 
 JotTools['timezone-converter'] = function (root) {
   const zones = ['America/New_York','America/Los_Angeles','Europe/London','Europe/Paris','Asia/Tokyo','Asia/Karachi','Australia/Sydney'];
-  const ui = Jot.ui(`<div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   function upd() {
     const now = new Date();
@@ -980,13 +1001,14 @@ JotTools['audio-generator'] = function (root) {
 
 JotTools['image-compressor'] = function (root) {
   const ui = Jot.ui(`
-    <p class="hint">Compress JPG, PNG, or WebP images locally. Adjust quality and max width, then compare before and after.</p>
+    <p class="hint">Upload an image, then adjust quality and max width. Estimated file size updates as you move the slider.</p>
     <input type="file" id="file" accept="image/*">
-    <div class="tool-panel">
-      <p class="tool-panel-title">Settings</p>
+    <div class="tool-panel tool-panel--locked" id="settings">
+      <p class="tool-panel-title">Compression settings</p>
+      <p class="tool-panel-note" id="settings-note">Upload an image above to unlock these controls.</p>
       <div class="row">
         <label>Max width (px)
-          <select id="maxw">
+          <select id="maxw" disabled>
             <option value="0">Original size</option>
             <option value="3840">3840</option>
             <option value="2560">2560</option>
@@ -996,7 +1018,7 @@ JotTools['image-compressor'] = function (root) {
           </select>
         </label>
         <label>Output format
-          <select id="fmt">
+          <select id="fmt" disabled>
             <option value="image/jpeg" selected>JPEG</option>
             <option value="image/webp">WebP</option>
             <option value="image/png">PNG</option>
@@ -1005,8 +1027,9 @@ JotTools['image-compressor'] = function (root) {
       </div>
       <label>Quality <span id="qv" class="range-value">80%</span></label>
       <div class="range-row">
-        <input type="range" id="q" min="0.1" max="1" step="0.05" value="0.8">
+        <input type="range" id="q" min="0.1" max="1" step="0.05" value="0.8" disabled>
       </div>
+      <p class="estimate-line" id="estimate">Estimated output will appear here after you upload an image.</p>
     </div>
     <div class="stats" id="stats" style="display:none">
       <div class="stat"><strong id="orig-size">—</strong>Original</div>
@@ -1036,6 +1059,22 @@ JotTools['image-compressor'] = function (root) {
 
   function updateQualityLabel() {
     Jot.$('#qv', ui).textContent = `${Math.round(+Jot.$('#q', ui).value * 100)}%`;
+  }
+
+  function unlockSettings() {
+    Jot.$('#settings', ui).classList.remove('tool-panel--locked');
+    Jot.$('#settings-note', ui).style.display = 'none';
+    Jot.$$('#maxw,#fmt,#q', ui).forEach(el => { el.disabled = false; });
+  }
+
+  function updateEstimate(newBytes, saved) {
+    const el = Jot.$('#estimate', ui);
+    if (!sourceFile || !loadedImg) {
+      el.textContent = 'Estimated output will appear here after you upload an image.';
+      return;
+    }
+    const savedBytes = Math.max(0, sourceFile.size - newBytes);
+    el.textContent = `Estimated: ${Jot.formatBytes(newBytes)} — about ${saved.toFixed(0)}% smaller (${Jot.formatBytes(sourceFile.size)} → ${Jot.formatBytes(newBytes)}, saves ${Jot.formatBytes(savedBytes)})`;
   }
 
   function compress() {
@@ -1070,14 +1109,16 @@ JotTools['image-compressor'] = function (root) {
     const saved = sourceFile ? Math.max(0, (1 - newBytes / sourceFile.size) * 100) : 0;
     Jot.$('#orig-size', ui).textContent = Jot.formatBytes(sourceFile?.size);
     Jot.$('#new-size', ui).textContent = Jot.formatBytes(newBytes);
-    Jot.$('#saved', ui).textContent = `${saved.toFixed(0)}%`;
+    Jot.$('#saved', ui).textContent = `${saved.toFixed(0)}% · ${Jot.formatBytes(Math.max(0, sourceFile.size - newBytes))} saved`;
+    updateEstimate(newBytes, saved);
     Jot.$('#dl', ui).disabled = false;
   }
 
   Jot.$('#file', ui).addEventListener('change', e => {
     const f = e.target.files?.[0];
-    if (!f) return;
+    if (!f) { Jot.toast('Please upload a file first'); return; }
     sourceFile = f;
+    unlockSettings();
     const img = new Image();
     img.onload = () => { loadedImg = img; compress(); };
     img.src = URL.createObjectURL(f);
@@ -1099,14 +1140,18 @@ JotTools['image-compressor'] = function (root) {
 };
 
 JotTools['data-url'] = function (root) {
-  const ui = Jot.ui(`<div class="drop-zone" id="dz">Upload image â†’ data URL</div><input type="file" id="file" accept="image/*" hidden>
-    <textarea id="out" readonly rows="6"></textarea><button class="btn" id="copy">Copy</button>`);
+  const ui = Jot.ui(`<p class="hint">Upload an image to convert it into a base64 data URL for HTML, CSS, or email.</p>
+    <input type="file" id="file" accept="image/*">
+    <textarea id="out" readonly rows="6" placeholder="Your data URL will appear here…"></textarea>
+    <div class="btn-row"><button class="btn" id="copy" disabled>Copy data URL</button></div>`);
   root.appendChild(ui);
-  Jot.$('#dz', ui).onclick = () => Jot.$('#file', ui).click();
   Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const r = new FileReader();
-    r.onload = () => Jot.$('#out', ui).value = r.result;
+    r.onload = () => {
+      Jot.$('#out', ui).value = r.result;
+      Jot.$('#copy', ui).disabled = false;
+    };
     r.readAsDataURL(f);
   };
   Jot.$('#copy', ui).onclick = () => Jot.copy(Jot.$('#out', ui).value, Jot.$('#copy', ui));
@@ -1125,7 +1170,7 @@ JotTools['palette-picker'] = function (root) {
   const ui = Jot.ui(`<input type="file" id="file" accept="image/*"><div class="palette" id="pal"></div>`);
   root.appendChild(ui);
   Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const img = new Image();
     img.onload = () => {
       const cv = document.createElement('canvas'), ctx = cv.getContext('2d');
@@ -1167,7 +1212,7 @@ JotTools['barcode'] = function (root) {
 
 JotTools['bip39'] = function (root) {
   const ui = Jot.ui(`<textarea id="in" rows="4" placeholder="Enter 12-24 seed words separated by spaces"></textarea>
-    <div class="btn-row"><button class="btn" id="go">Validate</button></div><div id="out" class="output"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Validate</button></div><div id="out" class="output output--empty">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const words = Jot.$('#in', ui).value.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -1188,7 +1233,7 @@ JotTools['currency-rates'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Amount<input type="number" id="amt" value="100"></label>
     <label>From<select id="from"><option USD selected>USD</option><option EUR>EUR</option><option GBP>GBP</option><option PKR>PKR</option><option JPY>JPY</option></select></label>
     <label>To<select id="to"><option EUR selected>EUR</option><option USD>USD</option><option GBP>GBP</option><option PKR>PKR</option><option JPY>JPY</option></select></label></div>
-    <div class="btn-row"><button class="btn" id="go">Convert</button></div><div id="out" class="output"></div><p class="success-msg">Uses free Frankfurter API for daily rates.</p>`);
+    <div class="btn-row"><button class="btn" id="go">Convert</button></div><div id="out" class="output output--empty">Results will appear here.</div><p class="success-msg">Uses free Frankfurter API for daily rates.</p>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
     Jot.$('#out', ui).textContent = 'Loading rates...';
@@ -1259,13 +1304,16 @@ JotTools['ip-lookup'] = function (root) {
 
 JotTools['invoice-pdf'] = function (root) {
   const ui = Jot.ui(`
-    <p class="hint">Fill in your details below. Preview updates live. Download a PDF or print when ready.</p>
+    <p class="hint">Fill in your details — preview updates live. Download a PDF or print when ready.</p>
     <div class="tool-panel">
       <p class="tool-panel-title">Your business</p>
+      ${Jot.logoUploadHtml('logo')}
       <div class="invoice-form-grid">
         <label>Business name<input type="text" id="biz" value="Your Company LLC"></label>
         <label>Email<input type="email" id="email" value="you@example.com"></label>
         <label>Phone<input type="text" id="phone" value="+1 (555) 000-0000"></label>
+        <label>Website<input type="url" id="website" value="https://example.com"></label>
+        <label>Tax ID / VAT<input type="text" id="taxid" value=""></label>
         <label>Address<textarea id="bizaddr" rows="2">123 Main Street&#10;City, State 10001</textarea></label>
       </div>
     </div>
@@ -1277,14 +1325,35 @@ JotTools['invoice-pdf'] = function (root) {
         <label>Client address<textarea id="toaddr" rows="2">456 Client Ave&#10;City, State 20002</textarea></label>
       </div>
     </div>
+    <div class="tool-panel" id="ship-panel" style="display:none">
+      <p class="tool-panel-title">Ship to</p>
+      <div class="invoice-form-grid">
+        <label>Recipient<input type="text" id="shipname" value=""></label>
+        <label>Shipping address<textarea id="shipaddr" rows="2"></textarea></label>
+      </div>
+    </div>
     <div class="tool-panel">
       <p class="tool-panel-title">Invoice details</p>
       <div class="row">
         <label>Invoice #<input type="text" id="num" value="INV-001"></label>
+        <label>PO / reference #<input type="text" id="po" value=""></label>
+        <label>Project name<input type="text" id="project" value=""></label>
+        <label>Currency
+          <select id="currency">
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="CAD">CAD (C$)</option>
+            <option value="AUD">AUD (A$)</option>
+            <option value="INR">INR (₹)</option>
+          </select>
+        </label>
         <label>Issue date<input type="date" id="date"></label>
         <label>Due date<input type="date" id="due"></label>
+        <label>Discount %<input type="number" id="discount" value="0" min="0" max="100" step="0.1"></label>
         <label>Tax %<input type="number" id="tax" value="0" min="0" step="0.1"></label>
       </div>
+      <label class="checkbox-label"><input type="checkbox" id="show-ship"> Include separate ship-to address</label>
       <label>Line items</label>
       <table class="line-items-table">
         <thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th></th></tr></thead>
@@ -1298,7 +1367,16 @@ JotTools['invoice-pdf'] = function (root) {
         </tbody>
       </table>
       <div class="btn-row"><button type="button" class="btn btn-secondary" id="add-line">+ Add line item</button></div>
-      <label>Notes / payment terms<textarea id="notes" rows="2">Payment due within 14 days. Thank you for your business.</textarea></label>
+    </div>
+    <div class="tool-panel">
+      <p class="tool-panel-title">Payment details</p>
+      <div class="invoice-form-grid">
+        <label>Payment method<input type="text" id="paymethod" value="Bank transfer"></label>
+        <label>Bank / account name<input type="text" id="bank" value=""></label>
+        <label>Account / routing<input type="text" id="acct" value=""></label>
+        <label>PayPal / other<input type="text" id="paypal" value=""></label>
+        <label>Notes / payment terms<textarea id="notes" rows="2">Payment due within 14 days. Thank you for your business.</textarea></label>
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn" id="pdf">Download PDF</button>
@@ -1314,8 +1392,23 @@ JotTools['invoice-pdf'] = function (root) {
   Jot.$('#date', ui).value = today.toISOString().slice(0, 10);
   Jot.$('#due', ui).value = due.toISOString().slice(0, 10);
 
+  let logoDataUrl = '';
+  Jot.bindLogoUpload(ui, { onChange: url => { logoDataUrl = url; render(); } });
+
+  const currencySymbols = { USD: '$', EUR: '€', GBP: '£', CAD: 'C$', AUD: 'A$', INR: '₹' };
+
   function money(n) {
-    return `$${Number(n || 0).toFixed(2)}`;
+    const code = Jot.$('#currency', ui).value;
+    const sym = currencySymbols[code] || code + ' ';
+    return `${sym}${Number(n || 0).toFixed(2)}`;
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function nl2br(s) {
+    return esc(s).replace(/\n/g, '<br>');
   }
 
   function getLines() {
@@ -1329,31 +1422,66 @@ JotTools['invoice-pdf'] = function (root) {
   function render() {
     const lines = getLines();
     const subtotal = lines.reduce((s, l) => s + l.qty * l.rate, 0);
+    const discountPct = +Jot.$('#discount', ui).value || 0;
+    const discountAmt = subtotal * (discountPct / 100);
+    const afterDiscount = subtotal - discountAmt;
     const taxPct = +Jot.$('#tax', ui).value || 0;
-    const taxAmt = subtotal * (taxPct / 100);
-    const total = subtotal + taxAmt;
+    const taxAmt = afterDiscount * (taxPct / 100);
+    const total = afterDiscount + taxAmt;
+    const showShip = Jot.$('#show-ship', ui).checked;
+    Jot.$('#ship-panel', ui).style.display = showShip ? '' : 'none';
 
-    const rows = lines.map(l => `<tr><td>${l.desc}</td><td>${l.qty}</td><td>${money(l.rate)}</td><td>${money(l.qty * l.rate)}</td></tr>`).join('');
+    const rows = lines.map(l => `<tr><td>${esc(l.desc)}</td><td>${l.qty}</td><td>${money(l.rate)}</td><td>${money(l.qty * l.rate)}</td></tr>`).join('');
+
+    const meta = [];
+    if (Jot.$('#po', ui).value.trim()) meta.push(`PO: ${esc(Jot.$('#po', ui).value)}`);
+    if (Jot.$('#project', ui).value.trim()) meta.push(`Project: ${esc(Jot.$('#project', ui).value)}`);
+    const metaLine = meta.length ? `<p>${meta.join(' · ')}</p>` : '';
+
+    const website = Jot.$('#website', ui).value.trim();
+    const taxId = Jot.$('#taxid', ui).value.trim();
+    const bizExtra = [
+      website ? `<a href="${esc(website)}">${esc(website.replace(/^https?:\/\//, ''))}</a>` : '',
+      taxId ? `Tax ID: ${esc(taxId)}` : ''
+    ].filter(Boolean).join('<br>');
+
+    const payParts = [
+      Jot.$('#paymethod', ui).value.trim(),
+      Jot.$('#bank', ui).value.trim(),
+      Jot.$('#acct', ui).value.trim(),
+      Jot.$('#paypal', ui).value.trim() ? `PayPal: ${esc(Jot.$('#paypal', ui).value)}` : ''
+    ].filter(Boolean);
+
+    const shipBlock = showShip && (Jot.$('#shipname', ui).value.trim() || Jot.$('#shipaddr', ui).value.trim())
+      ? `<p><strong>Ship to</strong><br>${nl2br(Jot.$('#shipname', ui).value)}<br>${nl2br(Jot.$('#shipaddr', ui).value)}</p>`
+      : '';
+
+    const totals = [
+      `<div><span>Subtotal</span><span>${money(subtotal)}</span></div>`,
+      discountPct > 0 ? `<div><span>Discount (${discountPct}%)</span><span>-${money(discountAmt)}</span></div>` : '',
+      `<div><span>Tax (${taxPct}%)</span><span>${money(taxAmt)}</span></div>`,
+      `<div class="grand"><span>Total due</span><span>${money(total)}</span></div>`
+    ].filter(Boolean).join('');
 
     Jot.$('#preview', ui).innerHTML = `
-      <header>
-        <div>
+      <header class="invoice-header">
+        ${logoDataUrl ? `<img src="${logoDataUrl}" class="invoice-logo" alt="">` : ''}
+        <div class="invoice-header-main">
           <h2>INVOICE</h2>
-          <p><strong>${Jot.$('#biz', ui).value}</strong><br>${Jot.$('#bizaddr', ui).value.replace(/\n/g, '<br>')}<br>${Jot.$('#email', ui).value}<br>${Jot.$('#phone', ui).value}</p>
+          <p><strong>${esc(Jot.$('#biz', ui).value)}</strong><br>${nl2br(Jot.$('#bizaddr', ui).value)}<br>${esc(Jot.$('#email', ui).value)}<br>${esc(Jot.$('#phone', ui).value)}${bizExtra ? '<br>' + bizExtra : ''}</p>
         </div>
-        <div style="text-align:right">
-          <p><strong>#${Jot.$('#num', ui).value}</strong></p>
-          <p>Issued: ${Jot.$('#date', ui).value}<br>Due: ${Jot.$('#due', ui).value}</p>
+        <div class="invoice-header-meta">
+          <p><strong>#${esc(Jot.$('#num', ui).value)}</strong></p>
+          ${metaLine}
+          <p>Issued: ${esc(Jot.$('#date', ui).value)}<br>Due: ${esc(Jot.$('#due', ui).value)}</p>
         </div>
       </header>
-      <p><strong>Bill to</strong><br>${Jot.$('#to', ui).value}<br>${Jot.$('#toaddr', ui).value.replace(/\n/g, '<br>')}<br>${Jot.$('#toemail', ui).value}</p>
+      <p><strong>Bill to</strong><br>${esc(Jot.$('#to', ui).value)}<br>${nl2br(Jot.$('#toaddr', ui).value)}<br>${esc(Jot.$('#toemail', ui).value)}</p>
+      ${shipBlock}
       <table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="totals">
-        <div><span>Subtotal</span><span>${money(subtotal)}</span></div>
-        <div><span>Tax (${taxPct}%)</span><span>${money(taxAmt)}</span></div>
-        <div class="grand"><span>Total</span><span>${money(total)}</span></div>
-      </div>
-      <p style="margin-top:1.5rem;color:#555">${Jot.$('#notes', ui).value.replace(/\n/g, '<br>')}</p>`;
+      <div class="totals">${totals}</div>
+      ${payParts.length ? `<p style="margin-top:1.25rem"><strong>Payment</strong><br>${payParts.map(p => esc(p)).join('<br>')}</p>` : ''}
+      <p style="margin-top:1.5rem;color:#555">${nl2br(Jot.$('#notes', ui).value)}</p>`;
   }
 
   function bindLine(row) {
@@ -1376,6 +1504,7 @@ JotTools['invoice-pdf'] = function (root) {
   };
 
   Jot.$$('input,textarea,select', ui).forEach(el => el.addEventListener('input', render));
+  Jot.$('#show-ship', ui).addEventListener('change', render);
   render();
 
   Jot.$('#print', ui).onclick = () => {
@@ -1451,7 +1580,7 @@ JotTools['js-deobfuscator'] = function (root) {
 
 JotTools['bcrypt-tester'] = function (root) {
   const ui = Jot.ui(`<input type="text" id="pw" placeholder="Password"><div class="btn-row"><button class="btn" id="hash">Hash (bcrypt)</button></div>
-    <div class="output" id="out"></div><input type="text" id="chk" placeholder="Verify hash"><button class="btn btn-secondary" id="verify">Verify</button><div id="ver" class="output"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div><input type="text" id="chk" placeholder="Verify hash"><button class="btn btn-secondary" id="verify">Verify</button><div id="ver" class="output"></div>`);
   root.appendChild(ui);
   let lastHash = '';
   Jot.$('#hash', ui).onclick = async () => {
@@ -1530,13 +1659,20 @@ JotTools['link-opener'] = function (root) {
 };
 
 JotTools['email-signature'] = function (root) {
-  const ui = Jot.ui(`<div class="row"><label>Name<input id="n" value="Jane Doe"></label><label>Title<input id="t" value="Designer"></label></div>
+  const ui = Jot.ui(`<p class="hint">Fill in your details and optionally upload a logo for a professional email signature.</p>
+    ${Jot.logoUploadHtml('logo')}
+    <div class="row"><label>Name<input id="n" value="Jane Doe"></label><label>Title<input id="t" value="Designer"></label></div>
     <div class="row"><label>Email<input id="e" value="jane@jotnexus.com"></label><label>Phone<input id="p" value="+1 555 0100"></label></div>
+    <label>Website<input id="web" value="https://jotnexus.com"></label>
     <div class="btn-row"><button class="btn" id="go">Generate</button><button class="btn btn-secondary" id="copy">Copy HTML</button></div>
     <div id="prev" class="preview-box"></div><textarea id="out" readonly></textarea>`);
   root.appendChild(ui);
+  let logoDataUrl = '';
+  Jot.bindLogoUpload(ui, { onChange: url => { logoDataUrl = url; Jot.$('#go', ui).click(); } });
   Jot.$('#go', ui).onclick = () => {
-    const html = `<table><tr><td><strong>${Jot.$('#n',ui).value}</strong><br>${Jot.$('#t',ui).value}<br><a href="mailto:${Jot.$('#e',ui).value}">${Jot.$('#e',ui).value}</a><br>${Jot.$('#p',ui).value}</td></tr></table>`;
+    const logo = logoDataUrl ? `<img src="${logoDataUrl}" alt="" style="max-height:48px;max-width:120px;display:block;margin-bottom:8px">` : '';
+    const web = Jot.$('#web', ui).value.trim();
+    const html = `<table cellpadding="0" cellspacing="0"><tr><td>${logo}<strong>${Jot.$('#n', ui).value}</strong><br>${Jot.$('#t', ui).value}<br><a href="mailto:${Jot.$('#e', ui).value}">${Jot.$('#e', ui).value}</a><br>${Jot.$('#p', ui).value}${web ? `<br><a href="${web}">${web.replace(/^https?:\/\//, '')}</a>` : ''}</td></tr></table>`;
     Jot.$('#prev', ui).innerHTML = html;
     Jot.$('#out', ui).value = html;
   };
@@ -1559,7 +1695,7 @@ JotTools['meta-ad-checker'] = function (root) {
 
 JotTools['ad-text-checker'] = function (root) {
   const ui = Jot.ui(`<input type="text" id="h" placeholder="Headline (max 30)"><input type="text" id="d" placeholder="Description (max 90)">
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   function chk() {
     const h = Jot.$('#h', ui).value.length, d = Jot.$('#d', ui).value.length;
@@ -1603,7 +1739,7 @@ JotTools['svg-tracer'] = function (root) {
   const ui = Jot.ui(`<input type="file" id="file" accept="image/*"><div class="btn-row"><button class="btn" id="go">Wrap as SVG</button><button class="btn btn-secondary" id="copy">Copy SVG</button></div><textarea id="out" readonly></textarea>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const r = new FileReader();
     r.onload = () => {
       Jot.$('#out', ui).value = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><image href="${r.result}" width="100%" height="100%"/></svg>`;
@@ -1614,27 +1750,38 @@ JotTools['svg-tracer'] = function (root) {
 };
 
 JotTools['favicon-generator'] = function (root) {
-  const ui = Jot.ui(`<input type="file" id="file" accept="image/*"><div class="row"><label>Size<select id="sz"><option>16</option><option selected>32</option><option>48</option></select></label></div>
-    <canvas id="cv"></canvas><div class="btn-row"><button class="btn" id="dl">Download PNG</button></div>`);
+  const ui = Jot.ui(`<p class="hint">Upload a logo or image to generate favicon PNGs at common sizes.</p>
+    <input type="file" id="file" accept="image/*">
+    <div class="row"><label>Size<select id="sz"><option>16</option><option selected>32</option><option>48</option><option>64</option><option>128</option></select></label></div>
+    <canvas id="cv" style="margin-top:1rem;border:1px solid var(--border);image-rendering:pixelated"></canvas>
+    <div class="btn-row"><button class="btn" id="dl" disabled>Download PNG</button></div>`);
   root.appendChild(ui);
-  Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+  let ready = false;
+  function render() {
+    const f = Jot.$('#file', ui).files?.[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const sz = +Jot.$('#sz', ui).value;
     const img = new Image();
     img.onload = () => {
       const cv = Jot.$('#cv', ui); cv.width = cv.height = sz;
       cv.getContext('2d').drawImage(img, 0, 0, sz, sz);
+      ready = true;
+      Jot.$('#dl', ui).disabled = false;
     };
     img.src = URL.createObjectURL(f);
+  }
+  Jot.$('#file', ui).onchange = render;
+  Jot.$('#sz', ui).onchange = render;
+  Jot.$('#dl', ui).onclick = () => {
+    if (!ready) return;
+    const a = document.createElement('a'); a.download = `favicon-${Jot.$('#sz', ui).value}.png`; a.href = Jot.$('#cv', ui).toDataURL(); a.click();
   };
-  Jot.$('#dl', ui).onclick = () => { const a = document.createElement('a'); a.download='favicon.png'; a.href=Jot.$('#cv',ui).toDataURL(); a.click(); };
 };
 
 JotTools['ase-converter'] = function (root) {
   const ui = Jot.ui(`<input type="file" id="file" accept=".ase,.aco"><div class="output" id="out">Upload ASE/ACO swatch file to extract hex colors from binary data.</div><div class="palette" id="pal"></div>`);
   root.appendChild(ui);
   Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const r = new FileReader();
     r.onload = () => {
       const bytes = new Uint8Array(r.result);
@@ -1656,7 +1803,7 @@ JotTools['billionaire-sim'] = function (root) {
   const fortunes = [['Elon Musk', 250e9], ['Jeff Bezos', 200e9], ['Bill Gates', 130e9]];
   const ui = Jot.ui(`<select id="who">${fortunes.map(f=>`<option value="${f[1]}">${f[0]}</option>`).join('')}</select>
     <div class="row"><label>Spend per second $<input type="number" id="rate" value="1000"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Simulate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Simulate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const wealth = +Jot.$('#who', ui).value, rate = +Jot.$('#rate', ui).value;
@@ -1684,7 +1831,7 @@ JotTools['knot-guide'] = function (root) {
 };
 
 JotTools['business-names'] = function (root) {
-  const ui = Jot.ui(`<input type="text" id="kw" placeholder="Keyword e.g. cloud"><div class="btn-row"><button class="btn" id="go">Generate Names</button></div><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="text" id="kw" placeholder="Keyword e.g. cloud"><div class="btn-row"><button class="btn" id="go">Generate Names</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const k = Jot.$('#kw', ui).value || 'tech';
@@ -1698,7 +1845,7 @@ JotTools['business-names'] = function (root) {
 
 JotTools['salary-calculator'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Target net $<input type="number" id="net" value="5000"></label><label>Tax rate %<input type="number" id="tax" value="25"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate Gross</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate Gross</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const net = +Jot.$('#net', ui).value, tax = +Jot.$('#tax', ui).value / 100;
@@ -1710,7 +1857,7 @@ JotTools['salary-calculator'] = function (root) {
 JotTools['bond-yield'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Face value $<input type="number" id="face" value="1000"></label><label>Price $<input type="number" id="price" value="950"></label>
     <label>Coupon %<input type="number" id="coupon" value="5" step="0.1"></label><label>Years<input type="number" id="yrs" value="10"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate YTM</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate YTM</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const F=+Jot.$('#face',ui).value, P=+Jot.$('#price',ui).value, c=+Jot.$('#coupon',ui).value/100, n=+Jot.$('#yrs',ui).value;
@@ -1721,7 +1868,7 @@ JotTools['bond-yield'] = function (root) {
 
 JotTools['dividend-tax'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Dividend $<input type="number" id="div" value="1000"></label><label>Tax rate %<input type="number" id="tax" value="15"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const d=+Jot.$('#div',ui).value, t=+Jot.$('#tax',ui).value/100;
@@ -1732,7 +1879,7 @@ JotTools['dividend-tax'] = function (root) {
 JotTools['physics-solver'] = function (root) {
   const ui = Jot.ui(`<select id="mode"><option value="v">Find velocity (d/t)</option><option value="d">Find distance (v*t)</option><option value="t">Find time (d/v)</option></select>
     <div class="row"><label>v (m/s)<input type="number" id="v" value="10"></label><label>d (m)<input type="number" id="d" value="100"></label><label>t (s)<input type="number" id="t" value="10"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Solve</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Solve</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const v=+Jot.$('#v',ui).value, d=+Jot.$('#d',ui).value, t=+Jot.$('#t',ui).value;
@@ -1744,7 +1891,7 @@ JotTools['physics-solver'] = function (root) {
 };
 
 JotTools['anagram-solver'] = function (root) {
-  const ui = Jot.ui(`<input type="text" id="in" placeholder="listen" maxlength="8"><div class="btn-row"><button class="btn" id="go">Find Anagrams</button></div><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="text" id="in" placeholder="listen" maxlength="8"><div class="btn-row"><button class="btn" id="go">Find Anagrams</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   const dict = ['listen','silent','enlist','inlets','tinsel','rat','tar','art','eat','tea','ate','cat','act','stop','pots','tops','opt','pot','top'];
   Jot.$('#go', ui).onclick = () => {
@@ -1771,7 +1918,7 @@ JotTools['font-subset'] = function (root) {
     <div id="prev" style="font-size:24px;margin:1rem 0;padding:1rem;background:var(--surface-2);border-radius:8px"></div>`);
   root.appendChild(ui);
   Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const url = URL.createObjectURL(f);
     Jot.$('#prev', ui).style.fontFamily = 'CustomFont';
     let st = document.getElementById('jot-font-style');
@@ -1784,7 +1931,7 @@ JotTools['font-subset'] = function (root) {
 
 JotTools['matrix-solver'] = function (root) {
   const ui = Jot.ui(`<p>Enter 2x2 or 3x3 matrix (space-separated rows):</p>
-    <textarea id="in" rows="4">3 8\n4 6</textarea><div class="btn-row"><button class="btn" id="go">Determinant</button></div><div class="output" id="out"></div>`);
+    <textarea id="in" rows="4">3 8\n4 6</textarea><div class="btn-row"><button class="btn" id="go">Determinant</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     try {
@@ -1797,7 +1944,7 @@ JotTools['matrix-solver'] = function (root) {
 JotTools['storage-converter'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Value<input type="number" id="val" value="1"></label>
     <label>From<select id="from"><option value="0">Bytes</option><option value="1" selected>KB</option><option value="2">MB</option><option value="3">GB</option><option value="4">TB</option></select></label></div>
-    <div class="btn-row"><button class="btn" id="go">Convert All</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Convert All</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   const units = ['Bytes','KB','MB','GB','TB'];
   Jot.$('#go', ui).onclick = () => {
@@ -1812,7 +1959,7 @@ JotTools['gps-converter'] = function (root) {
     <div id="panel-dms"><div class="row"><label>Deg<input type="number" id="dg" value="40"></label><label>Min<input type="number" id="mn" value="26"></label><label>Sec<input type="number" id="sc" value="46"></label>
     <label>Dir<select id="dir"><option>N</option><option>S</option><option>E</option><option>W</option></select></label></div></div>
     <div id="panel-dec" class="hidden"><input type="number" id="dec" value="40.446111" step="any"></div>
-    <div class="btn-row"><button class="btn" id="go">Convert</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Convert</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   let mode = 'dms';
   Jot.$$('.tab', ui).forEach(t => t.onclick = () => { mode = t.dataset.m; Jot.$$('.tab',ui).forEach(x=>x.classList.remove('active')); t.classList.add('active');
@@ -1876,10 +2023,10 @@ JotTools['emoji-picker'] = function (root) {
 
 JotTools['file-identify'] = function (root) {
   const sigs = [[0x89,0x50,'PNG'],[0xFF,0xD8,'JPEG'],[0x47,0x49,'GIF'],[0x25,0x50,'PDF'],[0x50,0x4B,'ZIP'],[0x52,0x61,'RAR/WebP?']];
-  const ui = Jot.ui(`<input type="file" id="file"><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="file" id="file"><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const r = new FileReader();
     r.onload = () => {
       const b = new Uint8Array(r.result);
@@ -1916,7 +2063,7 @@ JotTools['responsive-preview'] = function (root) {
   root.appendChild(ui);
   const widths = [320, 768, 1024, 1440];
   Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const url = URL.createObjectURL(f);
     Jot.$('#frames', ui).innerHTML = widths.map(w =>
       `<div style="margin-bottom:1rem"><label>${w}px</label><div style="width:${Math.min(w,100)}%;max-width:${w}px;border:1px solid var(--border);overflow:hidden;border-radius:8px"><img src="${url}" style="width:100%"></div></div>`).join('');
@@ -1946,14 +2093,14 @@ JotTools['gif-splitter'] = function (root) {
     <p class="success-msg">Shows GIF preview. For multi-frame GIFs, displays animated preview (full frame extraction requires server-side processing).</p>`);
   root.appendChild(ui);
   Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const url = URL.createObjectURL(f);
     Jot.$('#frames', ui).innerHTML = `<img src="${url}" style="max-width:100%;border-radius:8px"><br><a class="btn btn-secondary" href="${url}" download="animation.gif">Download GIF</a>`;
   };
 };
 
 JotTools['zip-packer'] = function (root) {
-  const ui = Jot.ui(`<input type="file" id="file" multiple><div class="btn-row"><button class="btn" id="go">Create ZIP</button></div><div id="out" class="output"></div>`);
+  const ui = Jot.ui(`<input type="file" id="file" multiple><div class="btn-row"><button class="btn" id="go">Create ZIP</button></div><div id="out" class="output output--empty">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
     const files = Jot.$('#file', ui).files;
@@ -1970,10 +2117,10 @@ JotTools['zip-packer'] = function (root) {
 };
 
 JotTools['tar-unpacker'] = function (root) {
-  const ui = Jot.ui(`<input type="file" id="file" accept=".gz,.gzip"><div class="btn-row"><button class="btn" id="go">Decompress GZIP</button></div><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="file" id="file" accept=".gz,.gzip"><div class="btn-row"><button class="btn" id="go">Decompress GZIP</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     await Jot.loadScript('https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js');
     const buf = new Uint8Array(await f.arrayBuffer());
     try {
@@ -1986,10 +2133,10 @@ JotTools['tar-unpacker'] = function (root) {
 
 JotTools['pdf-splitter'] = function (root) {
   const ui = Jot.ui(`<input type="file" id="file" accept="application/pdf"><div class="row"><label>Page #<input type="number" id="pg" value="1" min="1"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Extract Page</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Extract Page</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     Jot.$('#out', ui).textContent = 'Processing...';
     await Jot.loadScript('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js');
     const PDFLib = window.PDFLib;
@@ -2023,7 +2170,7 @@ JotTools['soundboard'] = function (root) {
 JotTools['yearly-savings'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Initial $<input type="number" id="p" value="1000"></label><label>Monthly $<input type="number" id="m" value="200"></label>
     <label>Rate %<input type="number" id="r" value="7" step="0.1"></label><label>Years<input type="number" id="y" value="10"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Project</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Project</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     let bal = +Jot.$('#p', ui).value;
@@ -2041,7 +2188,7 @@ JotTools['yearly-savings'] = function (root) {
 JotTools['octal-converter'] = function (root) {
   const ui = Jot.ui(`<input type="text" id="in" placeholder="Octal 377 or decimal 255"><div class="btn-row">
     <button class="btn" id="toDec">Octal to Decimal</button><button class="btn btn-secondary" id="toOct">Decimal to Octal</button></div>
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#toDec', ui).onclick = () => {
     try { Jot.$('#out', ui).textContent = parseInt(Jot.$('#in', ui).value, 8).toString(10); }
@@ -2108,7 +2255,7 @@ JotTools['bmi-calculator'] = function (root) {
     <label>Height (cm) <input type="number" id="h" value="175" step="0.1"></label>
   </div>
   <div class="btn-row"><button class="btn" id="go">Calculate BMI</button></div>
-  <div class="output" id="out"></div>`);
+  <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const w = +Jot.$('#w', ui).value, h = +Jot.$('#h', ui).value / 100;
@@ -2121,36 +2268,79 @@ JotTools['bmi-calculator'] = function (root) {
 };
 
 JotTools['image-resizer'] = function (root) {
-  const ui = Jot.ui(`<input type="file" id="file" accept="image/*">
-    <div class="row"><label>Width px <input type="number" id="w" value="800" min="1"></label>
-    <label>Height px <input type="number" id="h" value="600" min="1"></label>
-    <label><input type="checkbox" id="aspect" checked> Keep aspect ratio</label></div>
-    <div class="btn-row"><button class="btn" id="go">Resize & Download</button></div>
-    <canvas id="c" style="max-width:100%;margin-top:1rem"></canvas>`);
+  const ui = Jot.ui(`<p class="hint">Upload an image, set target dimensions, preview the result, then download.</p>
+    <input type="file" id="file" accept="image/*">
+    <div class="tool-panel tool-panel--locked" id="settings">
+      <p class="tool-panel-title">Resize settings</p>
+      <p class="tool-panel-note" id="settings-note">Upload an image above to unlock these controls.</p>
+      <div class="row">
+        <label>Width px <input type="number" id="w" value="800" min="1" disabled></label>
+        <label>Height px <input type="number" id="h" value="600" min="1" disabled></label>
+        <label class="checkbox-label"><input type="checkbox" id="aspect" checked disabled> Keep aspect ratio</label>
+      </div>
+      <p class="estimate-line" id="size-info">Original and output size will appear here.</p>
+    </div>
+    <div class="compare-grid" id="compare" style="display:none">
+      <div class="compare-card"><p class="compare-label">Original</p><img id="prev-orig" alt="Original"></div>
+      <div class="compare-card"><p class="compare-label">Resized preview</p><canvas id="c" style="max-width:100%"></canvas></div>
+    </div>
+    <div class="btn-row"><button class="btn" id="go" disabled>Download resized image</button></div>`);
   root.appendChild(ui);
   let img;
+  let sourceFile;
+
+  function unlock() {
+    Jot.$('#settings', ui).classList.remove('tool-panel--locked');
+    Jot.$('#settings-note', ui).style.display = 'none';
+    Jot.$$('#w,#h,#aspect', ui).forEach(el => { el.disabled = false; });
+  }
+
+  function preview() {
+    if (!img) return;
+    const w = Math.max(1, +Jot.$('#w', ui).value || img.width);
+    const h = Math.max(1, +Jot.$('#h', ui).value || img.height);
+    const c = Jot.$('#c', ui);
+    const ctx = c.getContext('2d');
+    c.width = w;
+    c.height = h;
+    ctx.drawImage(img, 0, 0, w, h);
+    Jot.$('#prev-orig', ui).src = img.src;
+    Jot.$('#compare', ui).style.display = '';
+    Jot.$('#size-info', ui).textContent = `Original: ${img.width}×${img.height}px (${Jot.formatBytes(sourceFile?.size)}) → Output: ${w}×${h}px`;
+    Jot.$('#go', ui).disabled = false;
+  }
+
   Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
+    sourceFile = f;
     img = new Image();
     img.onload = () => {
-      if (Jot.$('#aspect', ui).checked) {
-        const ratio = img.width / img.height;
-        Jot.$('#w', ui).value = Math.round(+Jot.$('#w', ui).value || img.width);
-        Jot.$('#h', ui).value = Math.round(+Jot.$('#w', ui).value / ratio);
-      }
+      unlock();
+      Jot.$('#w', ui).value = img.width;
+      Jot.$('#h', ui).value = img.height;
+      preview();
     };
     img.src = URL.createObjectURL(f);
   };
+
+  function syncAspect(changed) {
+    if (!img || !Jot.$('#aspect', ui).checked) return;
+    const ratio = img.width / img.height;
+    if (changed === 'w') Jot.$('#h', ui).value = Math.round(+Jot.$('#w', ui).value / ratio);
+    else Jot.$('#w', ui).value = Math.round(+Jot.$('#h', ui).value * ratio);
+  }
+
+  Jot.$('#w', ui).addEventListener('input', () => { syncAspect('w'); preview(); });
+  Jot.$('#h', ui).addEventListener('input', () => { syncAspect('h'); preview(); });
+  Jot.$('#aspect', ui).addEventListener('change', preview);
+
   Jot.$('#go', ui).onclick = () => {
     if (!img) return;
-    const w = +Jot.$('#w', ui).value, h = +Jot.$('#h', ui).value;
-    const c = Jot.$('#c', ui), ctx = c.getContext('2d');
-    c.width = w; c.height = h;
-    ctx.drawImage(img, 0, 0, w, h);
     const a = document.createElement('a');
-    a.href = c.toDataURL('image/png');
+    a.href = Jot.$('#c', ui).toDataURL('image/png');
     a.download = 'resized.png';
     a.click();
+    Jot.toast('Download started');
   };
 };
 
@@ -2178,9 +2368,11 @@ JotTools['pdf-merger'] = function (root) {
 };
 
 JotTools['md5-hash'] = function (root) {
-  const ui = Jot.ui(`<textarea id="in" placeholder="Text to hash"></textarea>
+  const ui = Jot.ui(`<p class="hint">Paste text below, or hash a file instead.</p>
+    <textarea id="in" placeholder="Text to hash"></textarea>
+    <label class="file-input-compact">Or choose a file <input type="file" id="file" data-no-drop></label>
     <div class="btn-row"><button class="btn" id="go">Generate MD5</button><button class="btn btn-secondary" id="copy">Copy</button></div>
-    <input type="file" id="file"><div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   async function md5(text) {
     await Jot.loadScript('https://cdn.jsdelivr.net/npm/spark-md5@3.0.2/spark-md5.min.js');
@@ -2190,7 +2382,7 @@ JotTools['md5-hash'] = function (root) {
     Jot.$('#out', ui).textContent = await md5(Jot.$('#in', ui).value);
   };
   Jot.$('#file', ui).onchange = async e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     await Jot.loadScript('https://cdn.jsdelivr.net/npm/spark-md5@3.0.2/spark-md5.min.js');
     const buf = await f.arrayBuffer();
     Jot.$('#out', ui).textContent = SparkMD5.ArrayBuffer.hash(buf);
@@ -2341,7 +2533,7 @@ JotTools['discount-calculator'] = function (root) {
 
 JotTools['mortgage-calculator'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Loan amount $<input type="number" id="amt" value="300000"></label><label>Rate % <input type="number" id="rate" value="6.5" step="0.01"></label><label>Years <input type="number" id="years" value="30"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const P = +Jot.$('#amt', ui).value, r = +Jot.$('#rate', ui).value / 100 / 12, n = +Jot.$('#years', ui).value * 12;
@@ -2384,10 +2576,10 @@ JotTools['robots-txt'] = function (root) {
 JotTools['png-jpg-converter'] = function (root) {
   const ui = Jot.ui(`<input type="file" id="file" accept="image/*">
     <div class="btn-row"><button class="btn" id="png">Save as PNG</button><button class="btn btn-secondary" id="jpg">Save as JPG</button></div>
-    <canvas id="c" style="display:none"></canvas><div class="output" id="out"></div>`);
+    <canvas id="c" style="display:none"></canvas><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   let img;
-  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (!f) return; img = new Image(); img.onload = () => Jot.$('#out', ui).textContent = `Loaded ${img.width}x${img.height}`; img.src = URL.createObjectURL(f); };
+  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; } img = new Image(); img.onload = () => Jot.$('#out', ui).textContent = `Loaded ${img.width}x${img.height}`; img.src = URL.createObjectURL(f); };
   function save(fmt) {
     if (!img) return;
     const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
@@ -2410,7 +2602,7 @@ JotTools['rot13'] = function (root) {
 };
 
 JotTools['credit-card-validator'] = function (root) {
-  const ui = Jot.ui(`<input type="text" id="in" placeholder="4111 1111 1111 1111"><div class="btn-row"><button class="btn" id="go">Validate</button></div><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="text" id="in" placeholder="4111 1111 1111 1111"><div class="btn-row"><button class="btn" id="go">Validate</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const num = Jot.$('#in', ui).value.replace(/\D/g, '');
@@ -2425,7 +2617,7 @@ JotTools['credit-card-validator'] = function (root) {
 
 JotTools['dice-roller'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Dice <input type="number" id="dice" value="2" min="1" max="20"></label><label>Sides <input type="number" id="sides" value="6" min="2" max="100"></label></div>
-    <div class="btn-row"><button class="btn" id="go">Roll</button></div><div class="output" id="out"></div>`);
+    <div class="btn-row"><button class="btn" id="go">Roll</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const n = +Jot.$('#dice', ui).value, s = +Jot.$('#sides', ui).value;
@@ -2444,7 +2636,7 @@ JotTools['cron-generator'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Minute <input type="text" id="min" value="0"></label><label>Hour <input type="text" id="hour" value="*"></label></div>
     <div class="row"><label>Day <input type="text" id="dom" value="*"></label><label>Month <input type="text" id="mon" value="*"></label><label>Weekday <input type="text" id="dow" value="*"></label></div>
     <p style="font-size:.8125rem;color:var(--text-muted)">Quick: <button class="btn btn-secondary" data-p="0 * * * *">Hourly</button> <button class="btn btn-secondary" data-p="0 0 * * *">Daily</button> <button class="btn btn-secondary" data-p="0 0 * * 0">Weekly</button></p>
-    <div class="output" id="out"></div><div class="output" id="explain" style="margin-top:.5rem"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div><div class="output" id="explain" style="margin-top:.5rem"></div>`);
   root.appendChild(ui);
   function update() {
     const expr = [Jot.$('#min', ui).value, Jot.$('#hour', ui).value, Jot.$('#dom', ui).value, Jot.$('#mon', ui).value, Jot.$('#dow', ui).value].join(' ');
@@ -2514,7 +2706,7 @@ JotTools['pomodoro-timer'] = function (root) {
 };
 
 JotTools['prime-checker'] = function (root) {
-  const ui = Jot.ui(`<input type="number" id="in" value="97"><div class="btn-row"><button class="btn" id="go">Check</button></div><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<input type="number" id="in" value="97"><div class="btn-row"><button class="btn" id="go">Check</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   function isPrime(n) {
     if (n < 2) return false; if (n === 2) return true; if (n % 2 === 0) return false;
@@ -2530,7 +2722,7 @@ JotTools['prime-checker'] = function (root) {
 };
 
 JotTools['palindrome-checker'] = function (root) {
-  const ui = Jot.ui(`<textarea id="in" placeholder="Enter word or phrase"></textarea><div class="btn-row"><button class="btn" id="go">Check</button></div><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<textarea id="in" placeholder="Enter word or phrase"></textarea><div class="btn-row"><button class="btn" id="go">Check</button></div><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const clean = Jot.$('#in', ui).value.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -2598,7 +2790,7 @@ JotTools['profit-margin'] = function (root) {
 JotTools['hours-calculator'] = function (root) {
   const ui = Jot.ui(`<div class="row"><label>Hours <input type="number" id="h" value="2"></label><label>Minutes <input type="number" id="m" value="30"></label></div>
     <div class="btn-row"><button class="btn" id="add">Add to now</button><button class="btn btn-secondary" id="sub">Subtract from now</button></div>
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   function calc(add) {
     const ms = (+Jot.$('#h', ui).value * 3600000) + (+Jot.$('#m', ui).value * 60000);
@@ -2610,7 +2802,7 @@ JotTools['hours-calculator'] = function (root) {
 };
 
 JotTools['reading-time'] = function (root) {
-  const ui = Jot.ui(`<textarea id="in" placeholder="Paste article text"></textarea><div class="output" id="out"></div>`);
+  const ui = Jot.ui(`<textarea id="in" placeholder="Paste article text"></textarea><div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
   Jot.$('#in', ui).oninput = () => {
     const words = Jot.$('#in', ui).value.trim().split(/\s+/).filter(Boolean).length;

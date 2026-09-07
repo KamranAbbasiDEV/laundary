@@ -4,7 +4,7 @@
 
 Jot._factorUI = function (root, units) {
   const opts = units.map(u => '<option value="' + u.id + '">' + u.label + '</option>').join('');
-  const ui = Jot.ui('<div class="row"><label>Amount <input type="number" id="val" value="1" step="any"></label></div><div class="row"><label>From <select id="from">' + opts + '</select></label><label>To <select id="to">' + opts + '</select></label></div><div class="btn-row"><button class="btn" id="go">Convert</button><button class="btn btn-secondary" id="swap">Swap</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Amount <input type="number" id="val" value="1" step="any"></label></div><div class="row"><label>From <select id="from">' + opts + '</select></label><label>To <select id="to">' + opts + '</select></label></div><div class="btn-row"><button class="btn" id="go">Convert</button><button class="btn btn-secondary" id="swap">Swap</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   const map = Object.fromEntries(units.map(u => [u.id, u]));
   function run() {
@@ -84,7 +84,7 @@ JotTools['area-converter'] = function (root) {
 };
 
 JotTools['angle-converter'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Value <input type="number" id="v" value="90"></label><label>From <select id="f"><option value="deg">Degrees</option><option value="rad">Radians</option><option value="grad">Gradians</option></select></label></div><div class="btn-row"><button class="btn" id="go">Convert all</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Value <input type="number" id="v" value="90"></label><label>From <select id="f"><option value="deg">Degrees</option><option value="rad">Radians</option><option value="grad">Gradians</option></select></label></div><div class="btn-row"><button class="btn" id="go">Convert all</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     let d = +Jot.$('#v', ui).value;
@@ -97,7 +97,7 @@ JotTools['angle-converter'] = function (root) {
 };
 
 JotTools['fuel-economy'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>MPG (US) <input type="number" id="mpg" value="30"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>MPG (US) <input type="number" id="mpg" value="30"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#mpg', ui).oninput = () => {
     const mpg = +Jot.$('#mpg', ui).value;
@@ -108,7 +108,7 @@ JotTools['fuel-economy'] = function (root) {
 };
 
 JotTools['cooking-converter'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Cups <input type="number" id="c" value="1" step="0.25"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Cups <input type="number" id="c" value="1" step="0.25"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#c', ui).oninput = () => {
     const c = +Jot.$('#c', ui).value;
@@ -118,7 +118,7 @@ JotTools['cooking-converter'] = function (root) {
 };
 
 JotTools['kelvin-converter'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Celsius <input type="number" id="c" value="25"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Celsius <input type="number" id="c" value="25"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#c', ui).oninput = () => {
     const c = +Jot.$('#c', ui).value;
@@ -128,7 +128,7 @@ JotTools['kelvin-converter'] = function (root) {
 };
 
 JotTools['nautical-converter'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Nautical miles <input type="number" id="n" value="1"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Nautical miles <input type="number" id="n" value="1"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#n', ui).oninput = () => {
     const n = +Jot.$('#n', ui).value;
@@ -138,7 +138,7 @@ JotTools['nautical-converter'] = function (root) {
 };
 
 JotTools['stone-converter'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Stone <input type="number" id="st" value="10"></label><label>Pounds <input type="number" id="lb" value="0"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Stone <input type="number" id="st" value="10"></label><label>Pounds <input type="number" id="lb" value="0"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   function run() {
     const kg = (+Jot.$('#st', ui).value * 6.35029) + (+Jot.$('#lb', ui).value * 0.453592);
@@ -148,7 +148,7 @@ JotTools['stone-converter'] = function (root) {
 };
 
 JotTools['shoe-size'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>US Men <input type="number" id="us" value="10" step="0.5"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>US Men <input type="number" id="us" value="10" step="0.5"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#us', ui).oninput = () => {
     const us = +Jot.$('#us', ui).value;
@@ -158,7 +158,7 @@ JotTools['shoe-size'] = function (root) {
 };
 
 JotTools['ring-size'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>US size <input type="number" id="us" value="7" step="0.25"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>US size <input type="number" id="us" value="7" step="0.25"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#us', ui).oninput = () => {
     const us = +Jot.$('#us', ui).value;
@@ -168,7 +168,7 @@ JotTools['ring-size'] = function (root) {
 };
 
 JotTools['rgb-cmyk'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Hex <input type="text" id="hex" value="#2563eb"></label></div><div class="btn-row"><button class="btn" id="go">Convert</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Hex <input type="text" id="hex" value="#2563eb"></label></div><div class="btn-row"><button class="btn" id="go">Convert</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     let h = Jot.$('#hex', ui).value.replace('#', '');
@@ -184,14 +184,14 @@ JotTools['rgb-cmyk'] = function (root) {
 };
 
 JotTools['hours-decimal'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Hours <input type="number" id="h" value="2"></label><label>Minutes <input type="number" id="m" value="30"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Hours <input type="number" id="h" value="2"></label><label>Minutes <input type="number" id="m" value="30"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   function run() { Jot.$('#out', ui).textContent = 'Decimal hours: ' + (+Jot.$('#h', ui).value + +Jot.$('#m', ui).value / 60).toFixed(4); }
   Jot.$('#h', ui).oninput = run; Jot.$('#m', ui).oninput = run; run();
 };
 
 JotTools['fuel-cost'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Distance (miles) <input type="number" id="d" value="100"></label><label>MPG <input type="number" id="mpg" value="28"></label><label>Price/gal $<input type="number" id="p" value="3.5" step="0.01"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Distance (miles) <input type="number" id="d" value="100"></label><label>MPG <input type="number" id="mpg" value="28"></label><label>Price/gal $<input type="number" id="p" value="3.5" step="0.01"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   function run() {
     const cost = (+Jot.$('#d', ui).value / +Jot.$('#mpg', ui).value) * +Jot.$('#p', ui).value;
@@ -209,7 +209,7 @@ Jot._canvasFromImg = function (img, w, h) {
 };
 
 JotTools['background-remover'] = function (root) {
-  const ui = Jot.ui('<input type="file" id="file" accept="image/*"><div class="btn-row"><button class="btn" id="go">Remove background</button></div><p style="font-size:.8125rem;color:var(--text-muted)">Processing runs locally. First use downloads an AI model (~40MB).</p><canvas id="c" style="max-width:100%;margin-top:1rem"></canvas><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="file" id="file" accept="image/*"><div class="btn-row"><button class="btn" id="go">Remove background</button></div><p style="font-size:.8125rem;color:var(--text-muted)">Processing runs locally. First use downloads an AI model (~40MB).</p><canvas id="c" style="max-width:100%;margin-top:1rem"></canvas><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   let file;
   Jot.$('#file', ui).onchange = e => { file = e.target.files[0]; Jot.$('#out', ui).textContent = file ? file.name : ''; };
@@ -237,7 +237,7 @@ JotTools['image-cropper'] = function (root) {
   const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="row"><label>X <input type="number" id="x" value="0"></label><label>Y <input type="number" id="y" value="0"></label><label>W <input type="number" id="w" value="200"></label><label>H <input type="number" id="h" value="200"></label></div><div class="btn-row"><button class="btn" id="go">Crop & Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
   root.appendChild(ui);
   let img;
-  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (!f) return; Jot._loadImg(f, i => { img = i; Jot.$('#w', ui).value = i.width; Jot.$('#h', ui).value = i.height; }); };
+  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; } Jot._loadImg(f, i => { img = i; Jot.$('#w', ui).value = i.width; Jot.$('#h', ui).value = i.height; }); };
   Jot.$('#go', ui).onclick = () => {
     if (!img) return;
     const x = +Jot.$('#x', ui).value, y = +Jot.$('#y', ui).value, w = +Jot.$('#w', ui).value, h = +Jot.$('#h', ui).value;
@@ -251,7 +251,7 @@ JotTools['image-rotate'] = function (root) {
   const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="btn-row"><button class="btn btn-secondary" data-a="90">Rotate 90°</button><button class="btn btn-secondary" data-a="180">180°</button><button class="btn btn-secondary" data-a="270">270°</button><button class="btn btn-secondary" id="flip">Flip H</button><button class="btn" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
   root.appendChild(ui);
   let img, flip = false;
-  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (!f) return; Jot._loadImg(f, i => { img = i; draw(0); }); };
+  Jot.$('#file', ui).onchange = e => { const f = e.target.files[0]; if (!f) { Jot.toast('Please upload a file first'); return; } Jot._loadImg(f, i => { img = i; draw(0); }); };
   function draw(deg) {
     if (!img) return;
     const c = Jot.$('#c', ui), rad = deg * Math.PI / 180;
@@ -271,7 +271,7 @@ JotTools['image-rotate'] = function (root) {
     const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="btn-row"><button class="btn" id="go">Apply</button><button class="btn btn-secondary" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
     root.appendChild(ui);
     Jot.$('#go', ui).onclick = () => {
-      const f = Jot.$('#file', ui).files[0]; if (!f) return;
+      const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
       Jot._loadImg(f, img => {
         const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
         const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
@@ -296,18 +296,59 @@ JotTools['image-rotate'] = function (root) {
 });
 
 JotTools['image-watermark'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><label>Watermark text <input type="text" id="txt" value="© JotNexus"></label><div class="btn-row"><button class="btn" id="go">Apply</button><button class="btn btn-secondary" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
+  const ui = Jot.ui(`<p class="hint">Upload an image, then add a text watermark and/or logo overlay.</p>
+    <input type="file" accept="image/*" id="file">
+    <div class="tool-panel tool-panel--locked" id="settings">
+      <p class="tool-panel-note" id="settings-note">Upload an image above to unlock watermark options.</p>
+      <label>Watermark text <input type="text" id="txt" value="© JotNexus" disabled></label>
+      ${Jot.logoUploadHtml('wmlogo')}
+      <label>Logo opacity <span id="opv" class="range-value">70%</span>
+        <input type="range" id="opacity" min="0.1" max="1" step="0.05" value="0.7" disabled>
+      </label>
+    </div>
+    <div class="btn-row"><button class="btn" id="go" disabled>Apply watermark</button><button class="btn btn-secondary" id="dl" disabled>Download</button></div>
+    <canvas id="c" style="max-width:100%"></canvas>`);
   root.appendChild(ui);
-  Jot.$('#go', ui).onclick = () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
-    Jot._loadImg(f, img => {
+  let logoDataUrl = '';
+  Jot.bindLogoUpload(ui, { prefix: 'wmlogo', onChange: url => { logoDataUrl = url; apply(); } });
+
+  function unlock() {
+    Jot.$('#settings', ui).classList.remove('tool-panel--locked');
+    Jot.$('#settings-note', ui).style.display = 'none';
+    Jot.$('#txt', ui).disabled = false;
+    Jot.$('#opacity', ui).disabled = false;
+  }
+
+  async function apply() {
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
+    Jot._loadImg(f, async img => {
       const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
       const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
-      ctx.font = Math.max(16, img.width / 20) + 'px sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2;
-      const t = Jot.$('#txt', ui).value; ctx.strokeText(t, 20, img.height - 30); ctx.fillText(t, 20, img.height - 30);
+      const t = Jot.$('#txt', ui).value.trim();
+      if (t) {
+        ctx.font = Math.max(16, img.width / 20) + 'px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2;
+        ctx.strokeText(t, 20, img.height - 30); ctx.fillText(t, 20, img.height - 30);
+      }
+      if (logoDataUrl) {
+        const logo = await Jot.loadImageFromDataUrl(logoDataUrl);
+        if (logo) {
+          ctx.globalAlpha = +Jot.$('#opacity', ui).value;
+          Jot.drawFitImage(ctx, logo, img.width - Math.min(img.width * 0.25, 180) - 20, 20, Math.min(img.width * 0.25, 180), Math.min(img.height * 0.15, 120));
+          ctx.globalAlpha = 1;
+        }
+      }
+      Jot.$('#dl', ui).disabled = false;
     });
-  };
+  }
+
+  Jot.$('#file', ui).addEventListener('change', () => { unlock(); apply(); });
+  Jot.$('#go', ui).onclick = apply;
+  Jot.$('#txt', ui).addEventListener('input', apply);
+  Jot.$('#opacity', ui).addEventListener('input', () => {
+    Jot.$('#opv', ui).textContent = `${Math.round(+Jot.$('#opacity', ui).value * 100)}%`;
+    apply();
+  });
   Jot.$('#dl', ui).onclick = () => { const a = document.createElement('a'); a.href = Jot.$('#c', ui).toDataURL('image/png'); a.download = 'watermarked.png'; a.click(); };
 };
 
@@ -331,7 +372,7 @@ JotTools['svg-to-png'] = function (root) {
   const ui = Jot.ui('<input type="file" accept="image/svg+xml,.svg" id="file"><div class="row"><label>Width <input type="number" id="w" value="512"></label></div><div class="btn-row"><button class="btn" id="go">Convert</button></div><canvas id="c" style="max-width:100%"></canvas>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const url = URL.createObjectURL(f);
     const img = new Image();
     img.onload = () => {
@@ -351,7 +392,7 @@ Jot._pdfLib = async function () {
 
 JotTools['image-to-pdf'] = JotTools['images-to-pdf'] = function (root) {
   const multi = document.getElementById('tool-root').dataset.tool === 'images-to-pdf';
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file" ' + (multi ? 'multiple' : '') + '><div class="btn-row"><button class="btn" id="go">Create PDF</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="file" accept="image/*" id="file" ' + (multi ? 'multiple' : '') + '><div class="btn-row"><button class="btn" id="go">Create PDF</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
     const files = [...Jot.$('#file', ui).files]; if (!files.length) return;
@@ -369,10 +410,10 @@ JotTools['image-to-pdf'] = JotTools['images-to-pdf'] = function (root) {
 };
 
 JotTools['pdf-to-jpg'] = JotTools['pdf-to-images'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="application/pdf" id="file"><div class="btn-row"><button class="btn" id="go">Export pages</button></div><div class="output" id="out"></div><div id="prev"></div>');
+  const ui = Jot.ui('<input type="file" accept="application/pdf" id="file"><div class="btn-row"><button class="btn" id="go">Export pages</button></div><div class="output output--empty" id="out">Results will appear here.</div><div id="prev"></div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     Jot.$('#out', ui).textContent = 'Rendering pages…';
     const pdfjs = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.mjs');
     pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.mjs';
@@ -392,24 +433,33 @@ JotTools['pdf-to-jpg'] = JotTools['pdf-to-images'] = function (root) {
 
 JotTools['pdf-compressor'] = function (root) {
   const ui = Jot.ui(`
-    <p class="hint">Upload a PDF to optimize and re-save locally. Best for text-based PDFs — scanned documents may need PDF → JPG first.</p>
+    <p class="hint">Upload a PDF to optimize and re-save locally. Text-based PDFs often shrink 5–30%; scanned pages may not compress much.</p>
     <input type="file" accept="application/pdf" id="file">
+    <p class="estimate-line" id="pre-hint" style="display:none"></p>
     <div class="btn-row"><button class="btn" id="go" disabled>Compress & download</button></div>
     <div class="stats" id="stats" style="display:none">
       <div class="stat"><strong id="orig">—</strong>Original</div>
       <div class="stat"><strong id="new">—</strong>Optimized</div>
       <div class="stat"><strong id="saved">—</strong>Saved</div>
     </div>
-    <div class="output" id="out"></div>`);
+    <div class="output output--empty" id="out">Results will appear here.</div>`);
   root.appendChild(ui);
 
   Jot.$('#file', ui).addEventListener('change', () => {
-    Jot.$('#go', ui).disabled = !Jot.$('#file', ui).files?.[0];
+    const f = Jot.$('#file', ui).files?.[0];
+    Jot.$('#go', ui).disabled = !f;
+    const hint = Jot.$('#pre-hint', ui);
+    if (!f) {
+      hint.style.display = 'none';
+      return;
+    }
+    hint.style.display = '';
+    hint.textContent = `Ready to optimize ${f.name} (${Jot.formatBytes(f.size)}). Exact savings depend on how the PDF was built — you'll see results after compression.`;
   });
 
   Jot.$('#go', ui).onclick = async () => {
     const f = Jot.$('#file', ui).files?.[0];
-    if (!f) return;
+    if (!f) { Jot.toast('Please upload a file first'); return; }
     const btn = Jot.$('#go', ui);
     btn.disabled = true;
     btn.textContent = 'Compressing…';
@@ -425,7 +475,7 @@ JotTools['pdf-compressor'] = function (root) {
       const saved = Math.max(0, (1 - bytes.length / f.size) * 100);
       Jot.$('#orig', ui).textContent = Jot.formatBytes(f.size);
       Jot.$('#new', ui).textContent = Jot.formatBytes(bytes.length);
-      Jot.$('#saved', ui).textContent = `${saved.toFixed(0)}%`;
+      Jot.$('#saved', ui).textContent = `${saved.toFixed(0)}% · ${Jot.formatBytes(Math.max(0, f.size - bytes.length))} saved`;
       Jot.$('#stats', ui).style.display = '';
       Jot.$('#out', ui).textContent = `Done — ${src.getPageCount()} page(s) optimized. Download started.`;
       Jot.toast('PDF compressed');
@@ -442,7 +492,7 @@ JotTools['pdf-rotate'] = function (root) {
   const ui = Jot.ui('<input type="file" accept="application/pdf" id="file"><div class="row"><label>Page <input type="number" id="pg" value="1" min="1"></label><label>Degrees <select id="deg"><option value="90">90</option><option value="180">180</option><option value="270">270</option></select></label></div><div class="btn-row"><button class="btn" id="go">Rotate & Download</button></div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const { PDFDocument, degrees } = await Jot._pdfLib();
     const pdf = await PDFDocument.load(await f.arrayBuffer());
     const i = +Jot.$('#pg', ui).value - 1;
@@ -456,7 +506,7 @@ JotTools['pdf-delete-pages'] = function (root) {
   const ui = Jot.ui('<input type="file" accept="application/pdf" id="file"><label>Pages to remove (e.g. 1,3,5) <input type="text" id="rm" value="1"></label><div class="btn-row"><button class="btn" id="go">Delete pages</button></div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const rm = new Set(Jot.$('#rm', ui).value.split(',').map(n => +n.trim() - 1));
     const { PDFDocument } = await Jot._pdfLib();
     const src = await PDFDocument.load(await f.arrayBuffer());
@@ -472,7 +522,7 @@ JotTools['pdf-page-numbers'] = function (root) {
   const ui = Jot.ui('<input type="file" accept="application/pdf" id="file"><div class="btn-row"><button class="btn" id="go">Add page numbers</button></div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const { PDFDocument, StandardFonts, rgb } = await Jot._pdfLib();
     const pdf = await PDFDocument.load(await f.arrayBuffer());
     const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -522,15 +572,21 @@ Jot._ffmpeg = async function (onLog) {
 };
 
 function ffmpegTool(root, accept, runFn) {
-  const ui = Jot.ui('<input type="file" id="file" accept="' + accept + '"><div class="btn-row"><button class="btn" id="go">Process</button></div><div class="output" id="out">First run downloads ~25MB encoder (once).</div>');
+  const ui = Jot.ui('<input type="file" id="file" accept="' + accept + '"><div class="btn-row"><button class="btn" id="go" disabled>Process</button></div><div class="output output--empty" id="out">Ready — upload a file to begin. First run downloads encoder (~25MB, one-time).</div>');
   root.appendChild(ui);
+  Jot.$('#file', ui).addEventListener('change', () => {
+    Jot.$('#go', ui).disabled = !Jot.$('#file', ui).files?.[0];
+  });
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
+    const btn = Jot.$('#go', ui);
+    btn.disabled = true;
     Jot.$('#out', ui).textContent = 'Loading encoder…';
     try {
       const { ff, fetchFile } = await Jot._ffmpeg(m => { Jot.$('#out', ui).textContent = m.slice(0, 120); });
       await runFn(ff, fetchFile, f, ui);
     } catch (e) { Jot.$('#out', ui).textContent = 'Error: ' + e.message; }
+    finally { btn.disabled = false; }
   };
 }
 
@@ -555,10 +611,10 @@ JotTools['video-compressor'] = function (root) {
 };
 
 JotTools['video-trimmer'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="video/*" id="file"><div class="row"><label>Start sec <input type="number" id="s" value="0"></label><label>End sec <input type="number" id="e" value="10"></label></div><div class="btn-row"><button class="btn" id="go">Trim</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="file" accept="video/*" id="file"><div class="row"><label>Start sec <input type="number" id="s" value="0"></label><label>End sec <input type="number" id="e" value="10"></label></div><div class="btn-row"><button class="btn" id="go">Trim</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const s = Jot.$('#s', ui).value, e = Jot.$('#e', ui).value;
     Jot.$('#out', ui).textContent = 'Processing…';
     const { ff, fetchFile } = await Jot._ffmpeg();
@@ -597,10 +653,10 @@ JotTools['video-mute'] = function (root) {
 };
 
 JotTools['video-speed'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="video/*" id="file"><label>Speed <input type="number" id="sp" value="2" step="0.1" min="0.5" max="4"></label><div class="btn-row"><button class="btn" id="go">Change speed</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="file" accept="video/*" id="file"><label>Speed <input type="number" id="sp" value="2" step="0.1" min="0.5" max="4"></label><div class="btn-row"><button class="btn" id="go">Change speed</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const sp = +Jot.$('#sp', ui).value;
     Jot.$('#out', ui).textContent = 'Processing…';
     const { ff, fetchFile } = await Jot._ffmpeg();
@@ -612,10 +668,10 @@ JotTools['video-speed'] = function (root) {
 };
 
 JotTools['audio-trimmer'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="audio/*" id="file"><div class="row"><label>Start <input type="number" id="s" value="0"></label><label>End sec <input type="number" id="e" value="30"></label></div><div class="btn-row"><button class="btn" id="go">Trim</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="file" accept="audio/*" id="file"><div class="row"><label>Start <input type="number" id="s" value="0"></label><label>End sec <input type="number" id="e" value="30"></label></div><div class="btn-row"><button class="btn" id="go">Trim</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     const { ff, fetchFile } = await Jot._ffmpeg();
     await ff.writeFile('in', await fetchFile(f));
     await ff.exec(['-i', 'in', '-ss', Jot.$('#s', ui).value, '-to', Jot.$('#e', ui).value, '-c', 'copy', 'out.mp3']);
@@ -634,7 +690,7 @@ JotTools['audio-converter'] = function (root) {
 };
 
 JotTools['merge-audio'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="audio/*" id="file" multiple><div class="btn-row"><button class="btn" id="go">Merge</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="file" accept="audio/*" id="file" multiple><div class="btn-row"><button class="btn" id="go">Merge</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
     const files = [...Jot.$('#file', ui).files]; if (files.length < 2) return;
@@ -671,7 +727,7 @@ JotTools['speech-to-text'] = function (root) {
 };
 
 JotTools['scientific-calc'] = function (root) {
-  const ui = Jot.ui('<input type="text" id="in" placeholder="e.g. sin(45)*2+sqrt(16)" style="font-family:var(--mono)"><div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="text" id="in" placeholder="e.g. sin(45)*2+sqrt(16)" style="font-family:var(--mono)"><div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     try {
@@ -682,7 +738,7 @@ JotTools['scientific-calc'] = function (root) {
 };
 
 JotTools['fraction-calc'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>a/b <input type="text" id="a" value="1/2"></label><label>op <select id="op"><option>+</option><option>-</option><option>*</option><option>/</option></select></label><label>c/d <input type="text" id="b" value="1/3"></label></div><div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>a/b <input type="text" id="a" value="1/2"></label><label>op <select id="op"><option>+</option><option>-</option><option>*</option><option>/</option></select></label><label>c/d <input type="text" id="b" value="1/3"></label></div><div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   const parse = s => { const [n,d]=s.split('/').map(Number); return {n,d:d||1}; };
   const simp = (n,d) => { const g=(a,b)=>b?g(b,a%b):a; const x=g(Math.abs(n),Math.abs(d)); return [n/x,d/x]; };
@@ -694,7 +750,7 @@ JotTools['fraction-calc'] = function (root) {
 };
 
 JotTools['gpa-calculator'] = function (root) {
-  const ui = Jot.ui('<textarea id="in" rows="6" placeholder="grade,credits per line e.g. A,3"></textarea><div class="btn-row"><button class="btn" id="go">Calculate GPA</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<textarea id="in" rows="6" placeholder="grade,credits per line e.g. A,3"></textarea><div class="btn-row"><button class="btn" id="go">Calculate GPA</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   const map = { A:4, 'A-':3.7, 'B+':3.3, B:3, 'B-':2.7, 'C+':2.7, C:2, 'C-':1.7, D:1, F:0 };
   Jot.$('#go', ui).onclick = () => {
@@ -707,7 +763,7 @@ JotTools['gpa-calculator'] = function (root) {
 };
 
 JotTools['iban-validator'] = function (root) {
-  const ui = Jot.ui('<input type="text" id="in" placeholder="GB82WEST12345698765432"><div class="btn-row"><button class="btn" id="go">Validate</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="text" id="in" placeholder="GB82WEST12345698765432"><div class="btn-row"><button class="btn" id="go">Validate</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const iban = Jot.$('#in', ui).value.replace(/\s/g,'').toUpperCase();
@@ -793,7 +849,7 @@ JotTools['hashtag-generator'] = function (root) {
 };
 
 JotTools['week-number'] = function (root) {
-  const ui = Jot.ui('<input type="date" id="d"><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="date" id="d"><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#d', ui).value = new Date().toISOString().slice(0,10);
   Jot.$('#d', ui).oninput = () => {
@@ -807,7 +863,7 @@ JotTools['week-number'] = function (root) {
 };
 
 JotTools['iso-timestamp'] = function (root) {
-  const ui = Jot.ui('<input type="datetime-local" id="d"><div class="btn-row"><button class="btn" id="go">To ISO</button><button class="btn btn-secondary" id="now">Now</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<input type="datetime-local" id="d"><div class="btn-row"><button class="btn" id="go">To ISO</button><button class="btn btn-secondary" id="now">Now</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => { Jot.$('#out', ui).textContent = new Date(Jot.$('#d', ui).value).toISOString(); };
   Jot.$('#now', ui).onclick = () => { Jot.$('#out', ui).textContent = new Date().toISOString(); };
@@ -855,7 +911,7 @@ JotTools['meme-generator'] = function (root) {
   const ui = Jot.ui('<input type="file" accept="image/*" id="file"><label>Top <input type="text" id="top" value="TOP TEXT"></label><label>Bottom <input type="text" id="bot" value="BOTTOM TEXT"></label><div class="btn-row"><button class="btn" id="go">Generate</button><button class="btn btn-secondary" id="dl">Download</button></div><canvas id="c" style="max-width:100%"></canvas>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     Jot._loadImg(f, img => {
       const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;
       const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
@@ -883,7 +939,7 @@ JotTools['signature-pad'] = function (root) {
 };
 
 JotTools['json-schema'] = function (root) {
-  const ui = Jot.ui('<label>JSON<textarea id="json" rows="6">{"name":"test","count":1}</textarea></label><label>Schema<textarea id="schema" rows="6">{"type":"object","required":["name"],"properties":{"name":{"type":"string"},"count":{"type":"number"}}}</textarea></label><div class="btn-row"><button class="btn" id="go">Validate</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<label>JSON<textarea id="json" rows="6">{"name":"test","count":1}</textarea></label><label>Schema<textarea id="schema" rows="6">{"type":"object","required":["name"],"properties":{"name":{"type":"string"},"count":{"type":"number"}}}</textarea></label><div class="btn-row"><button class="btn" id="go">Validate</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     try {
@@ -940,7 +996,7 @@ JotTools['column-to-rows'] = function (root) {
 };
 
 JotTools['business-days'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Start <input type="date" id="a"></label><label>End <input type="date" id="b"></label></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Start <input type="date" id="a"></label><label>End <input type="date" id="b"></label></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   function run() {
     let a = new Date(Jot.$('#a', ui).value), b = new Date(Jot.$('#b', ui).value);
@@ -953,7 +1009,7 @@ JotTools['business-days'] = function (root) {
 };
 
 JotTools['car-loan'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Price $<input type="number" id="p" value="25000"></label><label>Down $<input type="number" id="d" value="5000"></label><label>Rate % <input type="number" id="r" value="5.9" step="0.1"></label><label>Months <input type="number" id="m" value="60"></label></div><div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Price $<input type="number" id="p" value="25000"></label><label>Down $<input type="number" id="d" value="5000"></label><label>Rate % <input type="number" id="r" value="5.9" step="0.1"></label><label>Months <input type="number" id="m" value="60"></label></div><div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     const P = +Jot.$('#p', ui).value - +Jot.$('#d', ui).value, r = +Jot.$('#r', ui).value/100/12, n = +Jot.$('#m', ui).value;
@@ -964,7 +1020,7 @@ JotTools['car-loan'] = function (root) {
 };
 
 JotTools['debt-payoff'] = function (root) {
-  const ui = Jot.ui('<div class="row"><label>Balance $<input type="number" id="b" value="5000"></label><label>APR % <input type="number" id="r" value="18"></label><label>Monthly pay $<input type="number" id="m" value="200"></label><label>Extra $<input type="number" id="x" value="50"></label></div><div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui('<div class="row"><label>Balance $<input type="number" id="b" value="5000"></label><label>APR % <input type="number" id="r" value="18"></label><label>Monthly pay $<input type="number" id="m" value="200"></label><label>Extra $<input type="number" id="x" value="50"></label></div><div class="btn-row"><button class="btn" id="go">Calculate</button></div><div class="output output--empty" id="out">Results will appear here.</div>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = () => {
     let bal = +Jot.$('#b', ui).value, r = +Jot.$('#r', ui).value/100/12, pay = +Jot.$('#m', ui).value + +Jot.$('#x', ui).value, months = 0;
@@ -995,10 +1051,10 @@ JotTools['xml-to-csv'] = function (root) {
 };
 
 JotTools['qr-decoder'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="btn-row"><button class="btn" id="go">Decode</button></div><div class="output" id="out"></div><canvas id="c" style="display:none"></canvas>');
+  const ui = Jot.ui('<input type="file" accept="image/*" id="file"><div class="btn-row"><button class="btn" id="go">Decode</button></div><div class="output output--empty" id="out">Results will appear here.</div><canvas id="c" style="display:none"></canvas>');
   root.appendChild(ui);
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
+    const f = Jot.$('#file', ui).files[0]; if (!f) { Jot.toast('Please upload a file first'); return; }
     await Jot.loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js');
     Jot._loadImg(f, img => {
       const c = Jot.$('#c', ui); c.width = img.width; c.height = img.height;

@@ -16,7 +16,6 @@ const allToolsMega = fs.existsSync(megaPath) ? fs.readFileSync(megaPath, 'utf8')
 const dom = new JSDOM('<!DOCTYPE html><html><body><div id="tool-root"></div></body></html>', {
   url: 'https://www.jotnexus.com/',
   runScripts: 'dangerously',
-  resources: 'usable',
 });
 
 const { window } = dom;
@@ -36,9 +35,11 @@ window.devicePixelRatio = 1;
 // Mock canvas for jsdom
 window.HTMLCanvasElement.prototype.getContext = function () {
   return {
-    fillStyle: '', fillRect: () => {}, drawImage: () => {}, stroke: () => {},
-    beginPath: () => {}, moveTo: () => {}, lineTo: () => {},
-    fillText: () => {}, measureText: (t) => ({ width: t.length * 10 }),
+    fillStyle: '', strokeStyle: '', lineWidth: 1, font: '', textAlign: 'left', globalAlpha: 1,
+    fillRect: () => {}, strokeRect: () => {}, rect: () => {}, drawImage: () => {},
+    stroke: () => {}, strokeText: () => {},
+    beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, closePath: () => {},
+    fillText: () => {}, measureText: (t) => ({ width: String(t).length * 10 }),
     getImageData: () => ({ data: new Uint8ClampedArray(256) }),
   };
 };
@@ -47,6 +48,7 @@ window.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,test
 const scriptEl = document.createElement('script');
 scriptEl.textContent = shared + '\n' + allTools + '\n' + allToolsExt + '\n' + allToolsMega;
 document.body.appendChild(scriptEl);
+window.Jot.loadScript = async () => {};
 
 const failures = [];
 for (const tool of tools) {
@@ -62,6 +64,9 @@ for (const tool of tools) {
   }
   try {
     fn(root);
+    root.dataset.toolDesc = tool.description || '';
+    root.dataset.toolCategory = tool.category || '';
+    if (window.Jot?.polishToolUx) window.Jot.polishToolUx(root);
     if (!root.querySelector('.tool-ui') && !root.innerHTML.trim()) {
       failures.push({ id: tool.id, error: 'Mounted but empty DOM' });
     }
@@ -76,3 +81,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('OK: All', tools.length, 'tools mounted without throwing');
+process.exit(0);

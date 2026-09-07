@@ -398,7 +398,7 @@ function toolPage(tool) {
   const isLive = tool.status === 'live';
 
   const toolArea = isLive
-    ? `<div id="tool-root" class="tool-root" data-tool="${tool.id}"></div>`
+    ? `<div id="tool-root" class="tool-root" data-tool="${tool.id}" data-tool-desc="${esc(tool.description)}" data-tool-category="${esc(tool.category)}"></div>`
     : `<div class="coming-soon">
         <p>This tool is on the roadmap and will be live soon.</p>
         <a class="btn" href="/">Browse ${liveTools.length}+ live tools</a>

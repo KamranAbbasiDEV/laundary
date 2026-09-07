@@ -8,6 +8,7 @@
     "catalog": "node scripts/generate-extended-catalog.js && node scripts/generate-mega-catalog.js",
     "test": "node scripts/smoke-test.js",
     "fix": "node scripts/fix-all-tools.js",
+    "polish": "node scripts/polish-tools-batch.js",
     "dev": "node scripts/build.js && npx --yes serve dist -l 3000",
     "preview": "npx --yes serve dist -l 3000"
   },
