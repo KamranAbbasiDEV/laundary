@@ -9,6 +9,7 @@
     "test": "node scripts/smoke-test.js",
     "fix": "node scripts/fix-all-tools.js",
     "polish": "node scripts/polish-tools-batch.js",
+    "audit": "node scripts/audit-tool-gaps.js",
     "dev": "node scripts/build.js && npx --yes serve dist -l 3000",
     "preview": "npx --yes serve dist -l 3000"
   },

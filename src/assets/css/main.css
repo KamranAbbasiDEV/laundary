@@ -1222,6 +1222,33 @@ a:hover { color: var(--link-hover); }
   border-radius: var(--radius);
 }
 
+.tool-ui .shortcut-tip {
+  margin: 1rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.tool-ui .result-heading {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.tool-ui .file-meta {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.tool-ui textarea#out {
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.8125rem;
+}
+
 .tool-ui .output--empty {
   color: var(--text-muted);
   font-style: normal;

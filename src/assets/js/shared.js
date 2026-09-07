@@ -374,7 +374,10 @@ Jot._wireImageCanvasPreview = function (ui, fileInput, canvas, toolId) {
   const triggerPreview = () => {
     if (!ready) return;
     const go = ui.querySelector('#go');
-    if (go && !go.disabled) go.click();
+    if (!go || go.disabled) return;
+    const label = (go.textContent || '').toLowerCase();
+    if (label.includes('download') || label.includes('remove background')) return;
+    go.click();
   };
 
   fileInput.addEventListener('change', () => {
@@ -432,6 +435,156 @@ Jot._wireHiddenCanvasPreview = function (ui, fileInput, canvas) {
   ui.querySelectorAll('#go, .btn-row .btn:not(.btn-secondary)').forEach(btn => {
     btn.addEventListener('click', () => setTimeout(syncResult, 100));
   });
+};
+
+Jot.fillToolGaps = function (ui, primaryFile) {
+  if (ui.dataset.gapsFilled) return;
+  ui.dataset.gapsFilled = '1';
+
+  Jot._gapResultHeading(ui);
+  Jot._gapInlineOutputs(ui);
+  Jot._gapReadonlyOutputs(ui);
+  Jot._gapLiveRegions(ui);
+  Jot._gapCopyButton(ui);
+  Jot._gapClearButton(ui);
+  Jot._gapFileMeta(ui, primaryFile);
+  Jot._gapShortcutTip(ui);
+};
+
+Jot._gapResultHeading = function (ui) {
+  const targets = [
+    ui.querySelector('textarea#out'),
+    ui.querySelector('pre#out, pre.output'),
+    ui.querySelector('#out.output'),
+    ui.querySelector('.output#out'),
+  ].filter(Boolean);
+  targets.forEach(el => {
+    if (el.closest('.compare-grid, .invoice-preview-wrap')) return;
+    const prev = el.previousElementSibling;
+    if (prev?.classList?.contains('result-heading') || prev?.classList?.contains('preview-heading')) return;
+    const h = document.createElement('p');
+    h.className = 'result-heading';
+    h.textContent = 'Result';
+    el.parentNode.insertBefore(h, el);
+  });
+  if (ui.querySelector('#err') && !ui.querySelector('#err').previousElementSibling?.classList?.contains('result-heading')) {
+    const err = ui.querySelector('#err');
+    if (!err.textContent) err.textContent = '';
+  }
+};
+
+Jot._gapInlineOutputs = function (ui) {
+  const regions = [
+    { sel: '.stats', label: 'Live stats' },
+    { sel: '#scale', label: 'Type scale preview' },
+    { sel: '#table', label: 'Analysis' },
+    { sel: '#list', label: 'Patterns' },
+    { sel: '.palette', label: 'Picker' },
+  ];
+  regions.forEach(({ sel, label }) => {
+    const el = ui.querySelector(sel);
+    if (!el) return;
+    if (!el.getAttribute('aria-live')) el.setAttribute('aria-live', 'polite');
+    el.classList.add('tool-live-output');
+    const prev = el.previousElementSibling;
+    if (prev?.classList?.contains('result-heading') || prev?.classList?.contains('preview-heading')) return;
+    const h = document.createElement('p');
+    h.className = 'result-heading';
+    h.textContent = label;
+    el.parentNode.insertBefore(h, el);
+  });
+};
+
+Jot._gapReadonlyOutputs = function (ui) {
+  ui.querySelectorAll('textarea#out, textarea[id="out"]').forEach(ta => {
+    ta.readOnly = true;
+    if (!ta.getAttribute('rows')) ta.setAttribute('rows', '6');
+  });
+};
+
+Jot._gapLiveRegions = function (ui) {
+  Jot.$$('#out, .output, #preview, #prev, .preview-box, #qr-wrap', ui).forEach(el => {
+    if (!el.getAttribute('aria-live')) el.setAttribute('aria-live', 'polite');
+  });
+};
+
+Jot._gapCopyButton = function (ui) {
+  if (ui.querySelector('#copy')) return;
+  const out = ui.querySelector('textarea#out, pre#out, pre.output');
+  if (!out) return;
+  const row = Jot._gapBtnRow(ui, out);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn btn-secondary';
+  btn.id = 'copy';
+  btn.textContent = 'Copy result';
+  btn.disabled = true;
+  btn.onclick = () => Jot.copy(out.value !== undefined ? out.value : out.textContent, btn);
+  row.appendChild(btn);
+};
+
+Jot._gapClearButton = function (ui) {
+  if (ui.querySelector('#clear, #clr')) return;
+  const inp = ui.querySelector('textarea#in');
+  if (!inp) return;
+  const row = ui.querySelector('.btn-row');
+  if (!row) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn btn-secondary';
+  btn.id = 'clear';
+  btn.textContent = 'Clear';
+  btn.onclick = () => {
+    inp.value = '';
+    ui.querySelectorAll('textarea#out, #out.output, pre#out').forEach(o => {
+      if (o.value !== undefined) o.value = '';
+      else o.textContent = '';
+    });
+    ui.querySelectorAll('#err').forEach(e => { e.textContent = ''; });
+    Jot.toast('Cleared');
+  };
+  row.appendChild(btn);
+};
+
+Jot._gapFileMeta = function (ui, primaryFile) {
+  if (!primaryFile || ui.querySelector('.file-meta')) return;
+  const meta = document.createElement('p');
+  meta.className = 'file-meta';
+  meta.hidden = true;
+  const anchor = primaryFile.closest('.file-drop-zone') || primaryFile;
+  anchor.insertAdjacentElement('afterend', meta);
+  const sync = () => {
+    const files = primaryFile.files;
+    if (!files?.length) { meta.hidden = true; return; }
+    meta.hidden = false;
+    meta.textContent = files.length > 1
+      ? `${files.length} files selected · ${Jot.formatBytes([...files].reduce((s, f) => s + f.size, 0))} total`
+      : `${files[0].name} · ${Jot.formatBytes(files[0].size)}`;
+  };
+  primaryFile.addEventListener('change', sync);
+};
+
+Jot._gapBtnRow = function (ui, nearEl) {
+  let row = ui.querySelector('.btn-row');
+  if (!row) {
+    row = document.createElement('div');
+    row.className = 'btn-row';
+    nearEl.insertAdjacentElement('afterend', row);
+  }
+  return row;
+};
+
+Jot._gapShortcutTip = function (ui) {
+  if (ui.querySelector('.shortcut-tip')) return;
+  const go = ui.querySelector('#go');
+  const ta = ui.querySelector('textarea#in, textarea:first-of-type');
+  if (!go || !ta) return;
+  const tip = document.createElement('p');
+  tip.className = 'shortcut-tip';
+  tip.textContent = 'Tip: Press Ctrl+Enter (Cmd+Enter on Mac) to run the tool.';
+  const badge = ui.querySelector('.local-badge');
+  if (badge) badge.insertAdjacentElement('beforebegin', tip);
+  else ui.appendChild(tip);
 };
 
 Jot._toolHint = function (ui, desc, category) {
@@ -500,6 +653,8 @@ Jot.polishToolUx = function (root) {
       control.setAttribute('aria-label', label.textContent.trim());
     }
   });
+
+  Jot.fillToolGaps(ui, primaryFile);
 
   const gateBtn = (btn, testFn) => {
     if (!btn || btn.dataset.fileGated) return;
@@ -570,13 +725,15 @@ Jot.polishToolUx = function (root) {
   });
 
   const goBtn = ui.querySelector('#go');
-  const textIn = ui.querySelector('textarea#in, textarea:first-of-type');
+  const textIn = ui.querySelector('textarea#in');
+  const optionalFile = ui.querySelector('input[type="file"][data-no-drop], input[type="file"][data-logo-upload]');
   if (goBtn && textIn && !primaryFile && !ui.querySelector('input[type="number"]') && !goBtn.dataset.validPolished) {
     goBtn.dataset.validPolished = '1';
     goBtn.addEventListener('click', e => {
-      if (!textIn.value.trim()) {
+      const hasFile = optionalFile?.files?.length;
+      if (!textIn.value.trim() && !hasFile) {
         e.stopImmediatePropagation();
-        Jot.toast('Please enter some text first');
+        Jot.toast(optionalFile ? 'Please enter text or choose a file first' : 'Please enter some text first');
       }
     }, true);
   }
@@ -592,11 +749,17 @@ Jot.polishToolUx = function (root) {
 
   ui.querySelectorAll('.output, #out').forEach(el => {
     if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') return;
+    if (el.classList.contains('file-meta') || el.classList.contains('local-badge')) return;
     if (!el.dataset.emptyPolished) {
       el.dataset.emptyPolished = '1';
-      if (!el.textContent.trim()) el.classList.add('output--empty');
+      const placeholder = el.dataset.placeholder || 'Results will appear here.';
+      if (!el.textContent.trim() || el.textContent.trim() === 'Results will appear here.') {
+        if (!el.textContent.trim()) el.textContent = placeholder;
+        el.classList.add('output--empty');
+      }
       new MutationObserver(() => {
-        el.classList.toggle('output--empty', !el.textContent.trim());
+        const empty = !el.textContent.trim() || el.textContent.trim() === placeholder;
+        el.classList.toggle('output--empty', empty);
       }).observe(el, { childList: true, characterData: true, subtree: true });
     }
   });
