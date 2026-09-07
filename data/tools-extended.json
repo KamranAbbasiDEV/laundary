@@ -1,0 +1,1298 @@
+[
+  {
+    "id": "background-remover",
+    "slug": "background-remover",
+    "name": "Background Remover",
+    "category": "image",
+    "status": "live",
+    "keywords": "remove background from image online free",
+    "description": "Remove photo backgrounds instantly using AI in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "image-resizer",
+      "png-jpg-converter",
+      "exif-stripper"
+    ],
+    "popular": true
+  },
+  {
+    "id": "image-cropper",
+    "slug": "image-cropper",
+    "name": "Image Cropper",
+    "category": "image",
+    "status": "live",
+    "keywords": "crop image online free",
+    "description": "Crop images to custom dimensions with live preview.",
+    "privacy": "client-only",
+    "related": [
+      "image-resizer",
+      "aspect-ratio",
+      "background-remover"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-rotate",
+    "slug": "image-rotate-flip",
+    "name": "Image Rotate & Flip",
+    "category": "image",
+    "status": "live",
+    "keywords": "rotate flip image online",
+    "description": "Rotate and flip images without uploading to a server.",
+    "privacy": "client-only",
+    "related": [
+      "image-cropper",
+      "image-resizer",
+      "exif-stripper"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-to-pdf",
+    "slug": "image-to-pdf",
+    "name": "Image to PDF",
+    "category": "document",
+    "status": "live",
+    "keywords": "convert image to pdf online free",
+    "description": "Convert JPG or PNG images into a PDF document locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "images-to-pdf",
+      "pdf-to-jpg"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-to-jpg",
+    "slug": "pdf-to-jpg",
+    "name": "PDF to JPG",
+    "category": "document",
+    "status": "live",
+    "keywords": "convert pdf to jpg online free",
+    "description": "Export PDF pages as JPG images in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "pdf-splitter",
+      "image-to-pdf"
+    ],
+    "popular": true
+  },
+  {
+    "id": "pdf-to-images",
+    "slug": "pdf-to-images",
+    "name": "PDF to Images",
+    "category": "document",
+    "status": "live",
+    "keywords": "pdf to png jpg images online",
+    "description": "Convert every PDF page to downloadable PNG images.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-to-jpg",
+      "pdf-splitter",
+      "image-to-pdf"
+    ],
+    "popular": true
+  },
+  {
+    "id": "pdf-compressor",
+    "slug": "pdf-compressor",
+    "name": "PDF Compressor",
+    "category": "document",
+    "status": "live",
+    "keywords": "compress pdf online free reduce size",
+    "description": "Reduce PDF file size locally before sharing.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "pdf-splitter",
+      "pdf-to-jpg"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-rotate",
+    "slug": "pdf-rotate-pages",
+    "name": "PDF Page Rotator",
+    "category": "document",
+    "status": "live",
+    "keywords": "rotate pdf pages online free",
+    "description": "Rotate PDF pages 90° or 180° locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "pdf-splitter",
+      "pdf-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-delete-pages",
+    "slug": "pdf-delete-pages",
+    "name": "PDF Page Deleter",
+    "category": "document",
+    "status": "live",
+    "keywords": "delete pdf pages online free",
+    "description": "Remove specific pages from PDF files locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-splitter",
+      "pdf-merger",
+      "pdf-rotate"
+    ],
+    "popular": false
+  },
+  {
+    "id": "images-to-pdf",
+    "slug": "images-to-pdf",
+    "name": "Images to PDF",
+    "category": "document",
+    "status": "live",
+    "keywords": "multiple images to pdf online",
+    "description": "Combine multiple images into one PDF file.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "image-to-pdf",
+      "invoice-pdf"
+    ],
+    "popular": true
+  },
+  {
+    "id": "text-to-pdf",
+    "slug": "text-to-pdf",
+    "name": "Text to PDF",
+    "category": "document",
+    "status": "live",
+    "keywords": "text to pdf converter online free",
+    "description": "Create a PDF from plain text instantly.",
+    "privacy": "client-only",
+    "related": [
+      "invoice-pdf",
+      "images-to-pdf",
+      "markdown-to-html"
+    ],
+    "popular": false
+  },
+  {
+    "id": "html-to-pdf",
+    "slug": "html-to-pdf",
+    "name": "HTML to PDF",
+    "category": "document",
+    "status": "live",
+    "keywords": "html to pdf print online free",
+    "description": "Print HTML content to PDF using your browser.",
+    "privacy": "client-only",
+    "related": [
+      "text-to-pdf",
+      "markdown-to-html",
+      "invoice-pdf"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-page-numbers",
+    "slug": "pdf-page-numbers",
+    "name": "PDF Page Numbers",
+    "category": "document",
+    "status": "live",
+    "keywords": "add page numbers to pdf online",
+    "description": "Add page numbers to PDF documents locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "pdf-rotate",
+      "invoice-pdf"
+    ],
+    "popular": false
+  },
+  {
+    "id": "webp-converter",
+    "slug": "webp-converter",
+    "name": "WebP Converter",
+    "category": "image",
+    "status": "live",
+    "keywords": "webp to png jpg converter online",
+    "description": "Convert WebP images to PNG or JPG and back.",
+    "privacy": "client-only",
+    "related": [
+      "png-jpg-converter",
+      "image-compressor",
+      "image-resizer"
+    ],
+    "popular": true
+  },
+  {
+    "id": "svg-to-png",
+    "slug": "svg-to-png",
+    "name": "SVG to PNG",
+    "category": "image",
+    "status": "live",
+    "keywords": "svg to png converter online free",
+    "description": "Rasterize SVG files to PNG images locally.",
+    "privacy": "client-only",
+    "related": [
+      "svg-optimizer",
+      "favicon-generator",
+      "image-resizer"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-grayscale",
+    "slug": "image-grayscale",
+    "name": "Image Grayscale Filter",
+    "category": "image",
+    "status": "live",
+    "keywords": "convert image to grayscale online",
+    "description": "Turn color photos into black and white instantly.",
+    "privacy": "client-only",
+    "related": [
+      "image-compressor",
+      "png-jpg-converter",
+      "palette-picker"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-blur",
+    "slug": "image-blur",
+    "name": "Image Blur Tool",
+    "category": "image",
+    "status": "live",
+    "keywords": "blur image online free",
+    "description": "Apply blur effects to images locally.",
+    "privacy": "client-only",
+    "related": [
+      "image-grayscale",
+      "image-resizer",
+      "exif-stripper"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-watermark",
+    "slug": "image-watermark",
+    "name": "Image Watermark",
+    "category": "image",
+    "status": "live",
+    "keywords": "add watermark to image online free",
+    "description": "Add text watermarks to images before download.",
+    "privacy": "client-only",
+    "related": [
+      "image-resizer",
+      "quote-card",
+      "image-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pixelate-image",
+    "slug": "pixelate-image",
+    "name": "Pixelate Image",
+    "category": "image",
+    "status": "live",
+    "keywords": "pixelate image censor online",
+    "description": "Pixelate regions of an image for privacy.",
+    "privacy": "client-only",
+    "related": [
+      "image-blur",
+      "image-cropper",
+      "exif-stripper"
+    ],
+    "popular": false
+  },
+  {
+    "id": "invert-image",
+    "slug": "invert-image-colors",
+    "name": "Invert Image Colors",
+    "category": "image",
+    "status": "live",
+    "keywords": "invert image colors online",
+    "description": "Invert image colors to create negative effects.",
+    "privacy": "client-only",
+    "related": [
+      "image-grayscale",
+      "palette-picker",
+      "image-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-to-mp3",
+    "slug": "video-to-mp3",
+    "name": "Video to MP3",
+    "category": "video",
+    "status": "live",
+    "keywords": "extract mp3 from video online free",
+    "description": "Extract audio from video files as MP3 in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "audio-trimmer",
+      "video-mute",
+      "audio-converter"
+    ],
+    "popular": true
+  },
+  {
+    "id": "video-compressor",
+    "slug": "video-compressor",
+    "name": "Video Compressor",
+    "category": "video",
+    "status": "live",
+    "keywords": "compress video online free reduce size",
+    "description": "Reduce video file size locally before sharing.",
+    "privacy": "client-only",
+    "related": [
+      "video-trimmer",
+      "video-to-gif",
+      "video-to-mp3"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-trimmer",
+    "slug": "video-trimmer",
+    "name": "Video Trimmer",
+    "category": "video",
+    "status": "live",
+    "keywords": "trim cut video online free",
+    "description": "Trim video clips to a start and end time locally.",
+    "privacy": "client-only",
+    "related": [
+      "video-compressor",
+      "video-to-gif",
+      "video-speed"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-to-gif",
+    "slug": "video-to-gif",
+    "name": "Video to GIF",
+    "category": "video",
+    "status": "live",
+    "keywords": "convert video to gif online free",
+    "description": "Convert video clips into animated GIF files.",
+    "privacy": "client-only",
+    "related": [
+      "gif-splitter",
+      "video-trimmer",
+      "video-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "gif-to-mp4",
+    "slug": "gif-to-mp4",
+    "name": "GIF to MP4",
+    "category": "video",
+    "status": "live",
+    "keywords": "convert gif to mp4 online free",
+    "description": "Convert animated GIFs to MP4 video files.",
+    "privacy": "client-only",
+    "related": [
+      "video-to-gif",
+      "gif-splitter",
+      "video-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-mute",
+    "slug": "video-mute",
+    "name": "Mute Video",
+    "category": "video",
+    "status": "live",
+    "keywords": "remove audio from video online free",
+    "description": "Strip audio track from video files locally.",
+    "privacy": "client-only",
+    "related": [
+      "video-to-mp3",
+      "video-trimmer",
+      "video-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-speed",
+    "slug": "video-speed-changer",
+    "name": "Video Speed Changer",
+    "category": "video",
+    "status": "live",
+    "keywords": "speed up slow down video online",
+    "description": "Change video playback speed locally.",
+    "privacy": "client-only",
+    "related": [
+      "video-trimmer",
+      "video-compressor",
+      "video-to-gif"
+    ],
+    "popular": false
+  },
+  {
+    "id": "audio-trimmer",
+    "slug": "audio-trimmer",
+    "name": "Audio Trimmer",
+    "category": "audio",
+    "status": "live",
+    "keywords": "trim audio online free cut mp3",
+    "description": "Trim audio files to precise start and end points.",
+    "privacy": "client-only",
+    "related": [
+      "audio-converter",
+      "video-to-mp3",
+      "merge-audio"
+    ],
+    "popular": false
+  },
+  {
+    "id": "audio-converter",
+    "slug": "audio-converter",
+    "name": "Audio Format Converter",
+    "category": "audio",
+    "status": "live",
+    "keywords": "convert wav to mp3 online free",
+    "description": "Convert audio between WAV and other formats locally.",
+    "privacy": "client-only",
+    "related": [
+      "audio-trimmer",
+      "video-to-mp3",
+      "merge-audio"
+    ],
+    "popular": false
+  },
+  {
+    "id": "merge-audio",
+    "slug": "merge-audio",
+    "name": "Merge Audio Files",
+    "category": "audio",
+    "status": "live",
+    "keywords": "merge combine audio files online",
+    "description": "Join multiple audio clips into one file.",
+    "privacy": "client-only",
+    "related": [
+      "audio-trimmer",
+      "audio-converter",
+      "video-to-mp3"
+    ],
+    "popular": false
+  },
+  {
+    "id": "text-to-speech",
+    "slug": "text-to-speech",
+    "name": "Text to Speech",
+    "category": "audio",
+    "status": "live",
+    "keywords": "text to speech online free",
+    "description": "Convert written text to spoken audio in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "speech-to-text",
+      "word-counter",
+      "reading-time"
+    ],
+    "popular": true
+  },
+  {
+    "id": "speech-to-text",
+    "slug": "speech-to-text",
+    "name": "Speech to Text",
+    "category": "audio",
+    "status": "live",
+    "keywords": "speech to text online free dictation",
+    "description": "Transcribe spoken words to text using your microphone.",
+    "privacy": "client-only",
+    "related": [
+      "text-to-speech",
+      "word-counter",
+      "markdown-editor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pressure-converter",
+    "slug": "pressure-converter",
+    "name": "Pressure Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "psi bar pascal pressure converter",
+    "description": "Convert between PSI, bar, Pascal, and atm pressure units.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "energy-converter",
+      "power-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "energy-converter",
+    "slug": "energy-converter",
+    "name": "Energy Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "joules calories kwh converter online",
+    "description": "Convert joules, calories, and kilowatt-hours.",
+    "privacy": "client-only",
+    "related": [
+      "power-converter",
+      "pressure-converter",
+      "unit-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "power-converter",
+    "slug": "power-converter",
+    "name": "Power Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "watts horsepower power converter",
+    "description": "Convert watts, kilowatts, and mechanical horsepower.",
+    "privacy": "client-only",
+    "related": [
+      "energy-converter",
+      "pressure-converter",
+      "unit-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "angle-converter",
+    "slug": "angle-converter",
+    "name": "Angle Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "degrees radians gradians converter",
+    "description": "Convert angles between degrees, radians, and gradians.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "physics-solver",
+      "base-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "fuel-economy",
+    "slug": "fuel-economy-converter",
+    "name": "Fuel Economy Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "mpg to liters per 100km converter",
+    "description": "Convert fuel economy between MPG and L/100km.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "fuel-cost",
+      "speed-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "cooking-converter",
+    "slug": "cooking-converter",
+    "name": "Cooking Measurement Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "cups tbsp ml grams cooking converter",
+    "description": "Convert cups, tablespoons, milliliters, and grams.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "height-weight",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "frequency-converter",
+    "slug": "frequency-converter",
+    "name": "Frequency Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "hz khz mhz frequency converter",
+    "description": "Convert frequency between Hz, kHz, and MHz.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "audio-generator",
+      "physics-solver"
+    ],
+    "popular": false
+  },
+  {
+    "id": "torque-converter",
+    "slug": "torque-converter",
+    "name": "Torque Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "nm lb-ft torque converter online",
+    "description": "Convert torque between newton-meters and pound-feet.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "power-converter",
+      "pressure-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "kelvin-converter",
+    "slug": "kelvin-converter",
+    "name": "Kelvin Temperature Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "celsius kelvin fahrenheit converter",
+    "description": "Convert between Kelvin, Celsius, and Fahrenheit.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "epoch-converter",
+      "timezone-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "nautical-converter",
+    "slug": "nautical-mile-converter",
+    "name": "Nautical Mile Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "nautical miles km miles converter",
+    "description": "Convert nautical miles to kilometers and statute miles.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "speed-converter",
+      "gps-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "stone-converter",
+    "slug": "stone-converter",
+    "name": "Stone to KG Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "stone to kg pounds converter uk",
+    "description": "Convert stone and pounds to kilograms.",
+    "privacy": "client-only",
+    "related": [
+      "height-weight",
+      "unit-converter",
+      "bmi-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "area-converter",
+    "slug": "square-feet-converter",
+    "name": "Square Feet Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "square feet to square meters converter",
+    "description": "Convert area between square feet and square meters.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "aspect-ratio",
+      "storage-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "data-rate",
+    "slug": "data-rate-converter",
+    "name": "Data Rate Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "mbps to mbs data rate converter",
+    "description": "Convert data transfer rates between Mbps and MB/s.",
+    "privacy": "client-only",
+    "related": [
+      "storage-converter",
+      "unit-converter",
+      "binary-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "shoe-size",
+    "slug": "shoe-size-converter",
+    "name": "Shoe Size Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "us uk eu shoe size converter online",
+    "description": "Convert shoe sizes between US, UK, and EU standards.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "height-weight",
+      "ring-size"
+    ],
+    "popular": false
+  },
+  {
+    "id": "ring-size",
+    "slug": "ring-size-converter",
+    "name": "Ring Size Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "ring size us uk mm converter",
+    "description": "Convert ring sizes between US, UK, and millimeters.",
+    "privacy": "client-only",
+    "related": [
+      "shoe-size",
+      "unit-converter",
+      "aspect-ratio"
+    ],
+    "popular": false
+  },
+  {
+    "id": "rgb-cmyk",
+    "slug": "rgb-cmyk-converter",
+    "name": "RGB to CMYK Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "rgb to cmyk color converter print",
+    "description": "Convert RGB screen colors to CMYK for print design.",
+    "privacy": "client-only",
+    "related": [
+      "color-picker",
+      "palette-picker",
+      "css-gradient"
+    ],
+    "popular": false
+  },
+  {
+    "id": "hours-decimal",
+    "slug": "hours-to-decimal-converter",
+    "name": "Hours to Decimal Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "hours minutes to decimal hours converter",
+    "description": "Convert hours and minutes to decimal hour values.",
+    "privacy": "client-only",
+    "related": [
+      "hours-calculator",
+      "date-duration",
+      "stopwatch"
+    ],
+    "popular": false
+  },
+  {
+    "id": "fuel-cost",
+    "slug": "fuel-cost-calculator",
+    "name": "Fuel Cost Calculator",
+    "category": "converter",
+    "status": "live",
+    "keywords": "fuel cost trip calculator mpg",
+    "description": "Estimate trip fuel cost from distance and economy.",
+    "privacy": "client-only",
+    "related": [
+      "fuel-economy",
+      "unit-converter",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "speed-converter",
+    "slug": "speed-converter",
+    "name": "Speed Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "speed converter m/s km/h mph",
+    "description": "Convert speed between m/s, km/h, and mph.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "fuel-economy",
+      "physics-solver"
+    ],
+    "popular": false
+  },
+  {
+    "id": "scientific-calc",
+    "slug": "scientific-calculator",
+    "name": "Scientific Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "scientific calculator online free",
+    "description": "Perform advanced math with trig, log, and power functions.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "equation-solver",
+      "fraction-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "fraction-calc",
+    "slug": "fraction-calculator",
+    "name": "Fraction Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "fraction calculator add multiply online",
+    "description": "Add, subtract, multiply, and simplify fractions.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "scientific-calc",
+      "equation-solver"
+    ],
+    "popular": false
+  },
+  {
+    "id": "gpa-calculator",
+    "slug": "gpa-calculator",
+    "name": "GPA Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "gpa calculator grade point average online",
+    "description": "Calculate weighted GPA from course grades and credits.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "scientific-calc",
+      "salary-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "iban-validator",
+    "slug": "iban-validator",
+    "name": "IBAN Validator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "iban validator check online free",
+    "description": "Validate International Bank Account Numbers locally.",
+    "privacy": "client-only",
+    "related": [
+      "credit-card-validator",
+      "hash-generator",
+      "sales-tax"
+    ],
+    "popular": false
+  },
+  {
+    "id": "html-to-markdown",
+    "slug": "html-to-markdown",
+    "name": "HTML to Markdown",
+    "category": "developer",
+    "status": "live",
+    "keywords": "html to markdown converter online",
+    "description": "Convert HTML markup into clean Markdown text.",
+    "privacy": "client-only",
+    "related": [
+      "markdown-to-html",
+      "html-minifier",
+      "markdown-editor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "xml-to-json",
+    "slug": "xml-to-json",
+    "name": "XML to JSON Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "xml to json converter online free",
+    "description": "Parse XML documents into JSON structure locally.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "xml-formatter",
+      "yaml-json"
+    ],
+    "popular": false
+  },
+  {
+    "id": "json-to-xml",
+    "slug": "json-to-xml",
+    "name": "JSON to XML Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json to xml converter online free",
+    "description": "Convert JSON data into XML markup locally.",
+    "privacy": "client-only",
+    "related": [
+      "xml-to-json",
+      "json-formatter",
+      "xml-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "unicode-escape",
+    "slug": "unicode-converter",
+    "name": "Unicode Escape Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "unicode escape unescape converter online",
+    "description": "Convert text to Unicode escape sequences and back.",
+    "privacy": "client-only",
+    "related": [
+      "html-entities",
+      "hex-text",
+      "binary-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "ascii-table",
+    "slug": "ascii-table",
+    "name": "ASCII Table Reference",
+    "category": "developer",
+    "status": "live",
+    "keywords": "ascii table character codes reference",
+    "description": "Look up ASCII character codes and symbols instantly.",
+    "privacy": "client-only",
+    "related": [
+      "hex-text",
+      "binary-text",
+      "unicode-escape"
+    ],
+    "popular": false
+  },
+  {
+    "id": "instagram-formatter",
+    "slug": "instagram-line-breaks",
+    "name": "Instagram Line Break Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "instagram caption line breaks online",
+    "description": "Add invisible line breaks for Instagram captions.",
+    "privacy": "client-only",
+    "related": [
+      "tweet-counter",
+      "word-counter",
+      "hashtag-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "hashtag-generator",
+    "slug": "hashtag-generator",
+    "name": "Hashtag Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "hashtag generator instagram online",
+    "description": "Generate relevant hashtags from keywords for social posts.",
+    "privacy": "client-only",
+    "related": [
+      "keyword-density",
+      "instagram-formatter",
+      "slugify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "week-number",
+    "slug": "week-number-calculator",
+    "name": "Week Number Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "week number calculator iso online",
+    "description": "Find ISO week number for any calendar date.",
+    "privacy": "client-only",
+    "related": [
+      "epoch-converter",
+      "date-duration",
+      "age-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "iso-timestamp",
+    "slug": "iso-timestamp-converter",
+    "name": "ISO Timestamp Converter",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "iso 8601 timestamp converter online",
+    "description": "Convert dates to ISO 8601 format and parse timestamps.",
+    "privacy": "client-only",
+    "related": [
+      "epoch-converter",
+      "timezone-converter",
+      "cron-parser"
+    ],
+    "popular": false
+  },
+  {
+    "id": "flexbox-gen",
+    "slug": "flexbox-generator",
+    "name": "CSS Flexbox Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css flexbox generator online",
+    "description": "Build flexbox layouts with live preview and CSS output.",
+    "privacy": "client-only",
+    "related": [
+      "css-grid-gen",
+      "css-box-shadow",
+      "pixel-to-rem"
+    ],
+    "popular": false
+  },
+  {
+    "id": "css-grid-gen",
+    "slug": "css-grid-generator",
+    "name": "CSS Grid Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css grid generator online",
+    "description": "Design CSS grid layouts with visual controls.",
+    "privacy": "client-only",
+    "related": [
+      "flexbox-gen",
+      "css-box-shadow",
+      "aspect-ratio"
+    ],
+    "popular": false
+  },
+  {
+    "id": "color-shades",
+    "slug": "color-shades-generator",
+    "name": "Color Shades Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "color shades tints generator hex online",
+    "description": "Generate tints and shades from any base hex color.",
+    "privacy": "client-only",
+    "related": [
+      "color-picker",
+      "css-gradient",
+      "palette-picker"
+    ],
+    "popular": false
+  },
+  {
+    "id": "meme-generator",
+    "slug": "meme-generator",
+    "name": "Meme Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "meme generator online free",
+    "description": "Add top and bottom text to images for memes.",
+    "privacy": "client-only",
+    "related": [
+      "quote-card",
+      "image-watermark",
+      "image-resizer"
+    ],
+    "popular": false
+  },
+  {
+    "id": "signature-pad",
+    "slug": "signature-generator",
+    "name": "Draw Signature",
+    "category": "design",
+    "status": "live",
+    "keywords": "draw signature online download png",
+    "description": "Draw and download your signature as a PNG image.",
+    "privacy": "client-only",
+    "related": [
+      "invoice-pdf",
+      "email-signature",
+      "favicon-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "json-schema",
+    "slug": "json-schema-validator",
+    "name": "JSON Schema Validator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json schema validator online",
+    "description": "Validate JSON documents against a schema definition.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "yaml-json",
+      "regex-tester"
+    ],
+    "popular": false
+  },
+  {
+    "id": "http-status",
+    "slug": "http-status-codes",
+    "name": "HTTP Status Codes",
+    "category": "developer",
+    "status": "live",
+    "keywords": "http status codes reference lookup",
+    "description": "Search HTTP status codes with meanings and usage notes.",
+    "privacy": "client-only",
+    "related": [
+      "nginx-generator",
+      "webhook-tester",
+      "regex-cheatsheet"
+    ],
+    "popular": false
+  },
+  {
+    "id": "extract-urls",
+    "slug": "extract-urls",
+    "name": "Extract URLs from Text",
+    "category": "text",
+    "status": "live",
+    "keywords": "extract urls from text online",
+    "description": "Pull all URLs from pasted text or HTML content.",
+    "privacy": "client-only",
+    "related": [
+      "query-string",
+      "link-opener",
+      "slugify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "extract-emails",
+    "slug": "extract-emails",
+    "name": "Extract Emails from Text",
+    "category": "text",
+    "status": "live",
+    "keywords": "extract email addresses from text online",
+    "description": "Find and list email addresses in any text block.",
+    "privacy": "client-only",
+    "related": [
+      "extract-urls",
+      "find-replace",
+      "list-dedupe"
+    ],
+    "popular": false
+  },
+  {
+    "id": "transpose-text",
+    "slug": "transpose-text",
+    "name": "Transpose Text Columns",
+    "category": "text",
+    "status": "live",
+    "keywords": "transpose rows columns text online",
+    "description": "Swap rows and columns in tabular text data.",
+    "privacy": "client-only",
+    "related": [
+      "csv-to-json",
+      "text-joiner",
+      "array-to-table"
+    ],
+    "popular": false
+  },
+  {
+    "id": "column-to-rows",
+    "slug": "columns-to-rows",
+    "name": "Columns to Rows",
+    "category": "text",
+    "status": "live",
+    "keywords": "convert columns to rows text online",
+    "description": "Transform column data into row format.",
+    "privacy": "client-only",
+    "related": [
+      "transpose-text",
+      "text-joiner",
+      "csv-to-json"
+    ],
+    "popular": false
+  },
+  {
+    "id": "business-days",
+    "slug": "business-days-calculator",
+    "name": "Business Days Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "business days calculator exclude weekends",
+    "description": "Count business days between two dates.",
+    "privacy": "client-only",
+    "related": [
+      "date-duration",
+      "age-calculator",
+      "week-number"
+    ],
+    "popular": false
+  },
+  {
+    "id": "car-loan",
+    "slug": "car-loan-calculator",
+    "name": "Car Loan Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "car loan calculator monthly payment",
+    "description": "Estimate auto loan payments with down payment and rate.",
+    "privacy": "client-only",
+    "related": [
+      "loan-calculator",
+      "mortgage-calculator",
+      "compound-interest"
+    ],
+    "popular": false
+  },
+  {
+    "id": "debt-payoff",
+    "slug": "debt-payoff-calculator",
+    "name": "Debt Payoff Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "debt payoff calculator snowball avalanche",
+    "description": "Plan debt payoff with extra monthly payments.",
+    "privacy": "client-only",
+    "related": [
+      "loan-calculator",
+      "compound-interest",
+      "yearly-savings"
+    ],
+    "popular": false
+  },
+  {
+    "id": "csv-to-xml",
+    "slug": "csv-to-xml",
+    "name": "CSV to XML Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "csv to xml converter online free",
+    "description": "Convert CSV spreadsheet data into XML format.",
+    "privacy": "client-only",
+    "related": [
+      "csv-to-json",
+      "xml-to-json",
+      "json-to-xml"
+    ],
+    "popular": false
+  },
+  {
+    "id": "xml-to-csv",
+    "slug": "xml-to-csv",
+    "name": "XML to CSV Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "xml to csv converter online free",
+    "description": "Convert XML data into CSV spreadsheet format.",
+    "privacy": "client-only",
+    "related": [
+      "csv-to-xml",
+      "xml-to-json",
+      "json-to-csv"
+    ],
+    "popular": false
+  },
+  {
+    "id": "qr-decoder",
+    "slug": "qr-code-decoder",
+    "name": "QR Code Decoder",
+    "category": "web",
+    "status": "live",
+    "keywords": "qr code decoder reader online",
+    "description": "Decode QR codes from uploaded images locally.",
+    "privacy": "client-only",
+    "related": [
+      "qr-code",
+      "barcode",
+      "file-identify"
+    ],
+    "popular": false
+  }
+]

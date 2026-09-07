@@ -1,0 +1,141 @@
+{
+  "name": "JotNexus",
+  "domain": "https://www.jotnexus.com",
+  "tagline": "400+ free utilities for PDFs, media, converters, and everyday work.",
+  "description": "JotNexus is the complete online utility hub — 400+ tools for documents, images, video, audio, unit conversion, developers, and more. No accounts. Upload files when a tool needs them; processing runs in your browser and your data never leaves your device.",
+  "language": "en",
+  "adsenseClient": "ca-pub-XXXXXXXXXXXXXXXX",
+  "contactEmail": "hello@jotnexus.com",
+  "github": "https://github.com/jotnexus/tools",
+  "mostUsedTools": [
+    "pdf-merger",
+    "pdf-compressor",
+    "background-remover",
+    "image-compressor",
+    "image-resizer",
+    "image-to-pdf",
+    "video-to-mp3",
+    "password-generator",
+    "qr-code-generator",
+    "tip-calculator",
+    "unit-converter",
+    "pdf-to-jpg"
+  ],
+  "categories": [
+    { "id": "developer", "name": "Developer" },
+    { "id": "text", "name": "Text" },
+    { "id": "converter", "name": "Converter" },
+    { "id": "document", "name": "Documents & PDF" },
+    { "id": "image", "name": "Image & Photo" },
+    { "id": "video", "name": "Video" },
+    { "id": "audio", "name": "Audio" },
+    { "id": "security", "name": "Security" },
+    { "id": "finance", "name": "Finance" },
+    { "id": "datetime", "name": "Date & Time" },
+    { "id": "math", "name": "Math" },
+    { "id": "web", "name": "Web" },
+    { "id": "design", "name": "Design" }
+  ],
+  "categoryPages": [
+    {
+      "slug": "pdf-tools",
+      "category": "document",
+      "title": "Free PDF Tools Online — Merge, Split, Compress & Convert",
+      "h1": "PDF & Document Tools",
+      "description": "Free online PDF tools — merge, split, compress, rotate, convert to images, and more. Upload your PDF; everything runs locally in your browser. No signup.",
+      "intro": "Every PDF tool on this page runs in your browser. Upload a file, get results instantly, and download — your documents never leave your device."
+    },
+    {
+      "slug": "image-tools",
+      "category": "image",
+      "title": "Free Image Tools Online — Resize, Compress, Convert & Edit",
+      "h1": "Image & Photo Tools",
+      "description": "Free online image tools — resize, compress, crop, remove backgrounds, convert WebP/HEIC/AVIF, and more. Processed locally in your browser.",
+      "intro": "Upload images from your device and edit them instantly. No server uploads, no accounts — just fast, private image processing in your browser."
+    },
+    {
+      "slug": "video-tools",
+      "category": "video",
+      "title": "Free Video Tools Online — Compress, Trim, Convert to GIF or MP3",
+      "h1": "Video Tools",
+      "description": "Free online video tools — compress, trim, crop, merge, convert to GIF or MP3, and more. Runs in your browser with no signup.",
+      "intro": "Upload video files and convert or edit them locally. Heavy processing uses WebAssembly in your browser — nothing is sent to our servers."
+    },
+    {
+      "slug": "audio-tools",
+      "category": "audio",
+      "title": "Free Audio Tools Online — Trim, Convert, Merge & Record",
+      "h1": "Audio Tools",
+      "description": "Free online audio tools — trim, convert formats, merge tracks, adjust speed, transcribe speech, and more. No signup required.",
+      "intro": "Upload or record audio and process it in your browser. Convert between MP3, WAV, OGG, and other formats without uploading to a server."
+    },
+    {
+      "slug": "developer-tools",
+      "category": "developer",
+      "title": "Free Developer Tools Online — JSON, JWT, Regex, Hash & Code Utilities",
+      "h1": "Developer Tools",
+      "description": "Free online developer tools — JSON formatter, JWT decoder, regex tester, hash generator, Base64, UUID, and 50+ more. Instant, no signup.",
+      "intro": "Built for developers who need fast utilities without friction. Paste code or data and get results instantly in your browser."
+    },
+    {
+      "slug": "text-tools",
+      "category": "text",
+      "title": "Free Text Tools Online — Edit, Transform, Count & Analyze",
+      "h1": "Text Tools",
+      "description": "Free online text tools — case converter, word counter, diff checker, lorem ipsum, slugify, and dozens more. No signup, runs in your browser.",
+      "intro": "Paste or type text and transform it instantly. Every text tool runs locally — your content stays private on your device."
+    },
+    {
+      "slug": "security-tools",
+      "category": "security",
+      "title": "Free Security Tools Online — Hash, Encrypt, Password & Crypto Utilities",
+      "h1": "Security & Crypto Tools",
+      "description": "Free online security tools — SHA hash generator, AES encrypt, password generator, HMAC, ciphers, and more. Client-side, no signup.",
+      "intro": "Cryptographic and security utilities that run entirely in your browser. Sensitive data never leaves your device."
+    },
+    {
+      "slug": "finance-tools",
+      "categories": ["finance", "math"],
+      "title": "Free Finance & Math Calculators Online — Loans, Tips, ROI & More",
+      "h1": "Finance & Math Calculators",
+      "description": "Free online finance and math calculators — loan, mortgage, tip, ROI, compound interest, GPA, percentage, and 40+ more. No signup.",
+      "intro": "Quick calculators for money, business, health metrics, and everyday math. Enter numbers and get instant results in your browser."
+    },
+    {
+      "slug": "date-time-tools",
+      "category": "datetime",
+      "title": "Free Date & Time Tools Online — Epoch, Timezone, Countdown & Age",
+      "h1": "Date & Time Tools",
+      "description": "Free online date and time tools — Unix epoch converter, timezone converter, countdown timer, age calculator, and more.",
+      "intro": "Convert, calculate, and compare dates and times instantly. All processing happens locally in your browser."
+    },
+    {
+      "slug": "web-tools",
+      "category": "web",
+      "title": "Free Web Tools Online — DNS, SEO, Meta Tags & URL Utilities",
+      "h1": "Web & SEO Tools",
+      "description": "Free online web tools — DNS lookup, meta tag generator, Open Graph preview, sitemap generator, URL encoder, and more.",
+      "intro": "Utilities for web developers, SEO specialists, and site owners. Most tools run locally; API-based lookups are clearly marked."
+    },
+    {
+      "slug": "design-tools",
+      "category": "design",
+      "title": "Free Design Tools Online — CSS Generator, Colors, Contrast & Layout",
+      "h1": "Design Tools",
+      "description": "Free online design tools — CSS gradient generator, box shadow, color picker, WCAG contrast checker, palette generator, and more.",
+      "intro": "Visual and CSS design utilities for creating polished interfaces. Preview and copy code snippets instantly."
+    }
+  ],
+  "homepageSections": [
+    { "id": "popular", "title": "Most used", "subtitle": "PDF, photos, video, and everyday helpers — no tech skills needed", "type": "popular", "limit": 12 },
+    { "id": "document", "title": "Documents & PDF", "subtitle": "Upload PDFs to merge, split, convert, or compress — processed on your device", "type": "category", "category": "document" },
+    { "id": "image", "title": "Image & photo", "subtitle": "Upload images to resize, compress, remove backgrounds, or convert formats locally", "type": "category", "category": "image" },
+    { "id": "video", "title": "Video tools", "subtitle": "Upload video to compress, trim, or convert to GIF or MP3 in your browser", "type": "category", "category": "video" },
+    { "id": "audio", "title": "Audio tools", "subtitle": "Upload or record audio to trim, convert, merge, or transcribe", "type": "category", "category": "audio" },
+    { "id": "converter", "title": "Converters A–Z", "subtitle": "Units, formats, colors, and measurements", "type": "category", "category": "converter" },
+    { "id": "developer", "title": "Developer", "subtitle": "JSON, JWT, regex, hashes, and code utilities", "type": "category", "category": "developer" },
+    { "id": "text", "title": "Text tools", "subtitle": "Edit, transform, and analyze text", "type": "category", "category": "text" },
+    { "id": "finance", "title": "Finance & math", "subtitle": "Calculators for money, loans, and everyday math", "type": "categories", "categories": ["finance", "math"] },
+    { "id": "all", "title": "All tools", "subtitle": "Search and filter the full catalog", "type": "all" }
+  ]
+}

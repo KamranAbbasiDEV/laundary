@@ -1,0 +1,5874 @@
+[
+  {
+    "id": "json-formatter",
+    "slug": "json-formatter",
+    "name": "JSON Formatter & Validator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json formatter online free no signup validate beautify",
+    "description": "Beautify, minify, and validate JSON instantly in your browser. No data leaves your device.",
+    "privacy": "client-only",
+    "related": [
+      "json-to-csv",
+      "jwt-decoder",
+      "csv-to-json"
+    ],
+    "popular": true
+  },
+  {
+    "id": "base64",
+    "slug": "base64-encoder-decoder",
+    "name": "Base64 Encoder & Decoder",
+    "category": "developer",
+    "status": "live",
+    "keywords": "base64 encode decode online free",
+    "description": "Encode or decode Base64 text and files locally without uploading anywhere.",
+    "privacy": "client-only",
+    "related": [
+      "url-encoder",
+      "hash-generator",
+      "data-url-converter"
+    ],
+    "popular": true
+  },
+  {
+    "id": "case-converter",
+    "slug": "case-converter",
+    "name": "Case Converter",
+    "category": "text",
+    "status": "live",
+    "keywords": "text case converter uppercase lowercase title case camelCase",
+    "description": "Convert text to UPPERCASE, lowercase, Title Case, Sentence case, or camelCase instantly.",
+    "privacy": "client-only",
+    "related": [
+      "word-counter",
+      "slugify",
+      "lorem-ipsum"
+    ],
+    "popular": true
+  },
+  {
+    "id": "uuid-generator",
+    "slug": "uuid-generator",
+    "name": "UUID Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "uuid v4 generator online free bulk",
+    "description": "Generate secure random UUID v4 identifiers. Create one or hundreds at once.",
+    "privacy": "client-only",
+    "related": [
+      "random-string",
+      "hash-generator",
+      "guid-bulk"
+    ],
+    "popular": true
+  },
+  {
+    "id": "qr-code",
+    "slug": "qr-code-generator",
+    "name": "QR Code Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "qr code generator free online url text",
+    "description": "Create downloadable QR codes from URLs or text entirely in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "url-encoder",
+      "slugify",
+      "sitemap-generator"
+    ],
+    "popular": true
+  },
+  {
+    "id": "diff-checker",
+    "slug": "diff-checker",
+    "name": "Diff Checker & Text Compare",
+    "category": "developer",
+    "status": "live",
+    "keywords": "text diff checker compare online free",
+    "description": "Compare two blocks of text side-by-side and highlight additions and deletions.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "word-counter",
+      "markdown-editor"
+    ],
+    "popular": true
+  },
+  {
+    "id": "epoch-converter",
+    "slug": "epoch-converter",
+    "name": "Unix Timestamp Converter",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "unix timestamp converter epoch to date online",
+    "description": "Convert Unix epoch seconds to human-readable dates and back, in your local timezone.",
+    "privacy": "client-only",
+    "related": [
+      "age-calculator",
+      "timezone-converter",
+      "stopwatch"
+    ],
+    "popular": true
+  },
+  {
+    "id": "word-counter",
+    "slug": "word-counter",
+    "name": "Word & Character Counter",
+    "category": "text",
+    "status": "live",
+    "keywords": "word counter character count reading time online",
+    "description": "Count words, characters, sentences, and estimated reading time in real time.",
+    "privacy": "client-only",
+    "related": [
+      "case-converter",
+      "keyword-density",
+      "tweet-counter"
+    ],
+    "popular": true
+  },
+  {
+    "id": "url-encoder",
+    "slug": "url-encoder-decoder",
+    "name": "URL Encoder & Decoder",
+    "category": "web",
+    "status": "live",
+    "keywords": "url encode decode percent encoding online",
+    "description": "Encode or decode URL strings with percent-encoding safely in the browser.",
+    "privacy": "client-only",
+    "related": [
+      "base64",
+      "query-string-parser",
+      "slugify"
+    ],
+    "popular": true
+  },
+  {
+    "id": "html-entities",
+    "slug": "html-entity-encoder",
+    "name": "HTML Entity Encoder & Decoder",
+    "category": "developer",
+    "status": "live",
+    "keywords": "html entity encode decode online",
+    "description": "Convert special characters to HTML entities and back for safe web output.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "markdown-to-html",
+      "html-minifier"
+    ],
+    "popular": false
+  },
+  {
+    "id": "hash-generator",
+    "slug": "hash-generator",
+    "name": "Hash Generator (SHA-256 / SHA-1)",
+    "category": "security",
+    "status": "live",
+    "keywords": "sha256 hash generator online file text",
+    "description": "Generate SHA-256 and SHA-1 hashes from text or files locally using Web Crypto.",
+    "privacy": "client-only",
+    "related": [
+      "base64",
+      "jwt-decoder",
+      "password-strength"
+    ],
+    "popular": true
+  },
+  {
+    "id": "jwt-decoder",
+    "slug": "jwt-decoder",
+    "name": "JWT Decoder",
+    "category": "security",
+    "status": "live",
+    "keywords": "jwt decoder debug token online free",
+    "description": "Decode JSON Web Tokens and inspect header and payload without sending data to a server.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "base64",
+      "hash-generator"
+    ],
+    "popular": true
+  },
+  {
+    "id": "regex-tester",
+    "slug": "regex-tester",
+    "name": "Regex Tester",
+    "category": "developer",
+    "status": "live",
+    "keywords": "regex tester javascript online live",
+    "description": "Test regular expressions against sample text with live match highlighting.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "slugify",
+      "random-string"
+    ],
+    "popular": true
+  },
+  {
+    "id": "markdown-to-html",
+    "slug": "markdown-to-html",
+    "name": "Markdown to HTML Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "markdown to html converter online free",
+    "description": "Convert Markdown documents to clean HTML markup instantly.",
+    "privacy": "client-only",
+    "related": [
+      "markdown-editor",
+      "html-minifier",
+      "json-formatter"
+    ],
+    "popular": true
+  },
+  {
+    "id": "cron-parser",
+    "slug": "cron-parser",
+    "name": "Cron Expression Parser",
+    "category": "developer",
+    "status": "live",
+    "keywords": "cron expression parser human readable online",
+    "description": "Translate cron schedule syntax into plain English explanations.",
+    "privacy": "client-only",
+    "related": [
+      "epoch-converter",
+      "json-formatter",
+      "regex-tester"
+    ],
+    "popular": true
+  },
+  {
+    "id": "json-to-csv",
+    "slug": "json-to-csv",
+    "name": "JSON to CSV Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json to csv converter online free",
+    "description": "Flatten JSON arrays into CSV spreadsheet format for download or copy.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "csv-to-json",
+      "word-counter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "slugify",
+    "slug": "slugify",
+    "name": "Slugify URL Editor",
+    "category": "web",
+    "status": "live",
+    "keywords": "slugify url title online free",
+    "description": "Convert titles into clean, SEO-friendly URL slugs with lowercase and hyphens.",
+    "privacy": "client-only",
+    "related": [
+      "case-converter",
+      "url-encoder",
+      "qr-code"
+    ],
+    "popular": false
+  },
+  {
+    "id": "lorem-ipsum",
+    "slug": "lorem-ipsum",
+    "name": "Lorem Ipsum Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "lorem ipsum generator paragraphs online",
+    "description": "Generate placeholder paragraphs, sentences, and words for design mockups.",
+    "privacy": "client-only",
+    "related": [
+      "word-counter",
+      "case-converter",
+      "mock-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "random-number",
+    "slug": "random-number-generator",
+    "name": "Random Number Generator",
+    "category": "math",
+    "status": "live",
+    "keywords": "random number generator rng online",
+    "description": "Generate random numbers within a custom min and max range.",
+    "privacy": "client-only",
+    "related": [
+      "list-randomizer",
+      "uuid-generator",
+      "random-string"
+    ],
+    "popular": false
+  },
+  {
+    "id": "list-randomizer",
+    "slug": "list-randomizer",
+    "name": "List Randomizer & Shuffler",
+    "category": "text",
+    "status": "live",
+    "keywords": "list randomizer shuffle online free",
+    "description": "Shuffle lines of text into random order for contests and sampling.",
+    "privacy": "client-only",
+    "related": [
+      "list-dedupe",
+      "random-number",
+      "word-counter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "list-dedupe",
+    "slug": "list-dedupe",
+    "name": "List Duplicate Remover",
+    "category": "text",
+    "status": "live",
+    "keywords": "remove duplicate lines online free",
+    "description": "Remove duplicate lines from large text lists instantly.",
+    "privacy": "client-only",
+    "related": [
+      "list-randomizer",
+      "text-joiner",
+      "word-counter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "roman-numerals",
+    "slug": "roman-numerals",
+    "name": "Roman Numeral Converter",
+    "category": "math",
+    "status": "live",
+    "keywords": "roman numeral converter online",
+    "description": "Convert numbers to Roman numerals and back with validation.",
+    "privacy": "client-only",
+    "related": [
+      "number-to-words",
+      "percentage-calculator",
+      "base-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "percentage-calculator",
+    "slug": "percentage-calculator",
+    "name": "Percentage Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "percentage calculator increase decrease difference",
+    "description": "Calculate percentage change, difference, and proportion between values.",
+    "privacy": "client-only",
+    "related": [
+      "sales-tax-calculator",
+      "loan-calculator",
+      "compound-interest"
+    ],
+    "popular": false
+  },
+  {
+    "id": "age-calculator",
+    "slug": "age-calculator",
+    "name": "Age & Time Elapsed Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "age calculator exact years months days",
+    "description": "Calculate exact age and time elapsed between any two dates.",
+    "privacy": "client-only",
+    "related": [
+      "epoch-converter",
+      "date-duration",
+      "stopwatch"
+    ],
+    "popular": false
+  },
+  {
+    "id": "color-picker",
+    "slug": "color-picker",
+    "name": "Color Picker (Hex / RGB / HSL)",
+    "category": "design",
+    "status": "live",
+    "keywords": "color picker hex rgb hsl converter contrast",
+    "description": "Pick colors and convert between Hex, RGB, and HSL with contrast checking.",
+    "privacy": "client-only",
+    "related": [
+      "css-gradient",
+      "css-box-shadow",
+      "gradient-text"
+    ],
+    "popular": true
+  },
+  {
+    "id": "css-box-shadow",
+    "slug": "css-box-shadow-generator",
+    "name": "CSS Box Shadow Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css box shadow generator online",
+    "description": "Design box shadows with live preview and copy-ready CSS code.",
+    "privacy": "client-only",
+    "related": [
+      "css-gradient",
+      "color-picker",
+      "gradient-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "css-gradient",
+    "slug": "css-gradient-generator",
+    "name": "CSS Gradient Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css gradient generator linear radial online",
+    "description": "Build linear and radial CSS gradients with draggable stops and export code.",
+    "privacy": "client-only",
+    "related": [
+      "css-box-shadow",
+      "color-picker",
+      "gradient-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "password-strength",
+    "slug": "password-strength",
+    "name": "Password Strength Checker",
+    "category": "security",
+    "status": "live",
+    "keywords": "password strength checker entropy online",
+    "description": "Score password strength and estimate crack time using entropy analysis.",
+    "privacy": "client-only",
+    "related": [
+      "hash-generator",
+      "random-string",
+      "uuid-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "bmr-calculator",
+    "slug": "bmr-tdee-calculator",
+    "name": "BMR & TDEE Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "bmr tdee calorie calculator online free",
+    "description": "Calculate Basal Metabolic Rate and Total Daily Energy Expenditure.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "height-weight-converter",
+      "loan-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "loan-calculator",
+    "slug": "loan-calculator",
+    "name": "Loan Amortization Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "loan amortization calculator monthly payment",
+    "description": "Calculate monthly payments and full amortization schedule for any loan.",
+    "privacy": "client-only",
+    "related": [
+      "compound-interest",
+      "sales-tax-calculator",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "compound-interest",
+    "slug": "compound-interest-calculator",
+    "name": "Compound Interest Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "compound interest calculator investment forecast",
+    "description": "Forecast investment growth with recurring deposits and compound interest.",
+    "privacy": "client-only",
+    "related": [
+      "loan-calculator",
+      "sales-tax-calculator",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "sales-tax",
+    "slug": "sales-tax-calculator",
+    "name": "Sales Tax & VAT Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "sales tax vat calculator online",
+    "description": "Calculate tax inclusive and exclusive prices forward and backward.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "loan-calculator",
+      "etsy-fee"
+    ],
+    "popular": false
+  },
+  {
+    "id": "unit-converter",
+    "slug": "unit-converter",
+    "name": "Unit Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "unit converter metric imperial online free",
+    "description": "Convert length, weight, temperature, volume, and more instantly.",
+    "privacy": "client-only",
+    "related": [
+      "height-weight-converter",
+      "aspect-ratio",
+      "pixel-to-rem"
+    ],
+    "popular": true
+  },
+  {
+    "id": "binary-text",
+    "slug": "binary-to-text",
+    "name": "Binary to Text Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "binary to text ascii converter online",
+    "description": "Convert binary strings to readable ASCII text and back.",
+    "privacy": "client-only",
+    "related": [
+      "base-converter",
+      "base64",
+      "hash-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "base-converter",
+    "slug": "base-converter",
+    "name": "Number Base Converter",
+    "category": "math",
+    "status": "live",
+    "keywords": "decimal hex binary octal converter",
+    "description": "Convert numbers between decimal, hexadecimal, binary, and octal bases.",
+    "privacy": "client-only",
+    "related": [
+      "binary-text",
+      "roman-numerals",
+      "random-number"
+    ],
+    "popular": false
+  },
+  {
+    "id": "aspect-ratio",
+    "slug": "aspect-ratio-calculator",
+    "name": "Aspect Ratio Calculator",
+    "category": "design",
+    "status": "live",
+    "keywords": "aspect ratio calculator 16:9 resize dimensions",
+    "description": "Calculate proportional dimensions for video and responsive layouts.",
+    "privacy": "client-only",
+    "related": [
+      "pixel-to-rem",
+      "unit-converter",
+      "color-picker"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pixel-to-rem",
+    "slug": "pixel-to-rem",
+    "name": "Pixel to REM Converter",
+    "category": "design",
+    "status": "live",
+    "keywords": "px to rem converter css online",
+    "description": "Convert pixel values to rem units based on root font size.",
+    "privacy": "client-only",
+    "related": [
+      "aspect-ratio",
+      "css-box-shadow",
+      "typography-scale"
+    ],
+    "popular": false
+  },
+  {
+    "id": "query-string",
+    "slug": "query-string-parser",
+    "name": "Query String Parser",
+    "category": "web",
+    "status": "live",
+    "keywords": "url query string parser parameters online",
+    "description": "Parse URL query strings into organized parameter tables.",
+    "privacy": "client-only",
+    "related": [
+      "url-encoder",
+      "slugify",
+      "jwt-decoder"
+    ],
+    "popular": false
+  },
+  {
+    "id": "user-agent",
+    "slug": "user-agent-checker",
+    "name": "Browser User-Agent Checker",
+    "category": "web",
+    "status": "live",
+    "keywords": "user agent checker browser info online",
+    "description": "Display your browser user-agent, screen size, and device properties.",
+    "privacy": "client-only",
+    "related": [
+      "query-string",
+      "json-formatter",
+      "stopwatch"
+    ],
+    "popular": false
+  },
+  {
+    "id": "stopwatch",
+    "slug": "stopwatch",
+    "name": "Online Stopwatch & Lap Timer",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "online stopwatch lap timer free",
+    "description": "High-precision stopwatch with lap timing. Runs entirely offline in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "epoch-converter",
+      "age-calculator",
+      "timezone-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "timezone-converter",
+    "slug": "timezone-converter",
+    "name": "Timezone Converter",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "timezone converter world clock online",
+    "description": "Compare current times across multiple international timezones.",
+    "privacy": "client-only",
+    "related": [
+      "epoch-converter",
+      "stopwatch",
+      "age-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "morse-code",
+    "slug": "morse-code-translator",
+    "name": "Morse Code Translator",
+    "category": "text",
+    "status": "live",
+    "keywords": "morse code translator text online",
+    "description": "Convert text to Morse code and decode dot-dash sequences.",
+    "privacy": "client-only",
+    "related": [
+      "binary-text",
+      "case-converter",
+      "ascii-art"
+    ],
+    "popular": false
+  },
+  {
+    "id": "text-joiner",
+    "slug": "text-joiner",
+    "name": "Text File Joiner",
+    "category": "text",
+    "status": "live",
+    "keywords": "join merge text lines separator online",
+    "description": "Merge multiple text blocks with custom separators.",
+    "privacy": "client-only",
+    "related": [
+      "list-dedupe",
+      "list-randomizer",
+      "case-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "keyword-density",
+    "slug": "keyword-density",
+    "name": "Keyword Density Analyzer",
+    "category": "web",
+    "status": "live",
+    "keywords": "keyword density analyzer seo online",
+    "description": "Analyze word frequency and keyword density for SEO content review.",
+    "privacy": "client-only",
+    "related": [
+      "word-counter",
+      "slugify",
+      "lorem-ipsum"
+    ],
+    "popular": false
+  },
+  {
+    "id": "markdown-editor",
+    "slug": "markdown-editor",
+    "name": "Markdown Live Editor",
+    "category": "developer",
+    "status": "live",
+    "keywords": "markdown live editor preview online",
+    "description": "Write Markdown with real-time preview rendered in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "markdown-to-html",
+      "diff-checker",
+      "html-minifier"
+    ],
+    "popular": false
+  },
+  {
+    "id": "xml-formatter",
+    "slug": "xml-formatter",
+    "name": "XML Formatter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "xml formatter beautify online free",
+    "description": "Beautify and format XML documents with proper indentation.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "html-minifier",
+      "sql-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "sql-formatter",
+    "slug": "sql-formatter",
+    "name": "SQL Query Formatter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "sql formatter beautify online free",
+    "description": "Format messy SQL queries into readable indented statements.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "xml-formatter",
+      "regex-tester"
+    ],
+    "popular": false
+  },
+  {
+    "id": "srt-shifter",
+    "slug": "subtitle-time-shifter",
+    "name": "Subtitle Time Shifter",
+    "category": "text",
+    "status": "live",
+    "keywords": "srt subtitle time shift sync online",
+    "description": "Shift SRT subtitle timestamps forward or backward to fix sync issues.",
+    "privacy": "client-only",
+    "related": [
+      "vtt-to-srt",
+      "markdown-editor",
+      "text-joiner"
+    ],
+    "popular": false
+  },
+  {
+    "id": "vtt-to-srt",
+    "slug": "vtt-to-srt",
+    "name": "VTT to SRT Converter",
+    "category": "text",
+    "status": "live",
+    "keywords": "vtt to srt converter online free",
+    "description": "Convert WebVTT subtitle files to SRT format locally.",
+    "privacy": "client-only",
+    "related": [
+      "srt-shifter",
+      "text-joiner",
+      "markdown-editor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "sitemap-generator",
+    "slug": "sitemap-generator",
+    "name": "Sitemap XML Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "sitemap xml generator online free",
+    "description": "Generate sitemap.xml files from a list of URLs for search engines.",
+    "privacy": "client-only",
+    "related": [
+      "slugify",
+      "qr-code",
+      "keyword-density"
+    ],
+    "popular": false
+  },
+  {
+    "id": "og-preview",
+    "slug": "og-tag-previewer",
+    "name": "Open Graph Tag Previewer",
+    "category": "web",
+    "status": "live",
+    "keywords": "open graph tag preview social media",
+    "description": "Preview how your meta tags will appear when shared on social networks.",
+    "privacy": "client-only",
+    "related": [
+      "query-string",
+      "slugify",
+      "sitemap-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-compressor",
+    "slug": "image-compressor",
+    "name": "Image Compressor",
+    "category": "image",
+    "status": "live",
+    "keywords": "image compressor online free no upload jpeg png",
+    "description": "Compress JPEG and PNG images locally using canvas. Files never leave your device.",
+    "privacy": "client-only",
+    "related": [
+      "data-url-converter",
+      "exif-stripper",
+      "palette-picker"
+    ],
+    "popular": true
+  },
+  {
+    "id": "data-url",
+    "slug": "data-url-converter",
+    "name": "Data URL Converter",
+    "category": "image",
+    "status": "live",
+    "keywords": "image to base64 data url converter online",
+    "description": "Convert images to data URLs or extract images from base64 inline code.",
+    "privacy": "client-only",
+    "related": [
+      "base64",
+      "image-compressor",
+      "exif-stripper"
+    ],
+    "popular": false
+  },
+  {
+    "id": "palette-picker",
+    "slug": "image-palette-picker",
+    "name": "Image Color Palette Picker",
+    "category": "image",
+    "status": "live",
+    "keywords": "image color palette extractor online",
+    "description": "Extract dominant color palettes from any uploaded image locally.",
+    "privacy": "client-only",
+    "related": [
+      "color-picker",
+      "css-gradient",
+      "image-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "exif-stripper",
+    "slug": "exif-stripper",
+    "name": "EXIF Metadata Stripper",
+    "category": "image",
+    "status": "live",
+    "keywords": "remove exif metadata photo online privacy",
+    "description": "Strip GPS and camera metadata from photos before sharing or downloading.",
+    "privacy": "client-only",
+    "related": [
+      "image-compressor",
+      "data-url-converter",
+      "hash-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "guid-bulk",
+    "slug": "guid-bulk-generator",
+    "name": "GUID Bulk Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "guid uuid bulk generator online",
+    "description": "Generate hundreds of UUID v4 identifiers at once for testing and development.",
+    "privacy": "client-only",
+    "related": [
+      "uuid-generator",
+      "random-string",
+      "hash-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "random-string",
+    "slug": "random-string-generator",
+    "name": "Random String Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "random string generator password online",
+    "description": "Generate random alphanumeric strings with custom length and character sets.",
+    "privacy": "client-only",
+    "related": [
+      "uuid-generator",
+      "password-strength",
+      "hash-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "height-weight",
+    "slug": "height-weight-converter",
+    "name": "Height & Weight Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "height weight converter imperial metric",
+    "description": "Convert feet/inches and pounds to metric units and back.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "bmr-calculator",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "html-minifier",
+    "slug": "html-minifier",
+    "name": "HTML Minifier",
+    "category": "developer",
+    "status": "live",
+    "keywords": "html minifier compress online free",
+    "description": "Remove whitespace and comments from HTML to reduce file size.",
+    "privacy": "client-only",
+    "related": [
+      "markdown-to-html",
+      "xml-formatter",
+      "json-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "csv-to-json",
+    "slug": "csv-to-json",
+    "name": "CSV to JSON Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "csv to json converter online free",
+    "description": "Parse CSV spreadsheet data into structured JSON arrays locally.",
+    "privacy": "client-only",
+    "related": [
+      "json-to-csv",
+      "json-formatter",
+      "word-counter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "tweet-counter",
+    "slug": "tweet-character-counter",
+    "name": "Twitter/X Character Counter",
+    "category": "text",
+    "status": "live",
+    "keywords": "twitter character counter x tweet limit",
+    "description": "Count characters for tweets with real-time limit warnings.",
+    "privacy": "client-only",
+    "related": [
+      "word-counter",
+      "case-converter",
+      "slugify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "number-to-words",
+    "slug": "number-to-words",
+    "name": "Number to Words Converter",
+    "category": "text",
+    "status": "live",
+    "keywords": "number to words converter check writing",
+    "description": "Convert numbers to written words for checks and formal documents.",
+    "privacy": "client-only",
+    "related": [
+      "roman-numerals",
+      "percentage-calculator",
+      "sales-tax"
+    ],
+    "popular": false
+  },
+  {
+    "id": "ascii-art",
+    "slug": "ascii-art-generator",
+    "name": "ASCII Art Text Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "ascii art text generator banner online",
+    "description": "Create stylized ASCII banner text for terminals and retro designs.",
+    "privacy": "client-only",
+    "related": [
+      "morse-code",
+      "case-converter",
+      "lorem-ipsum"
+    ],
+    "popular": false
+  },
+  {
+    "id": "gradient-text",
+    "slug": "gradient-text-generator",
+    "name": "Gradient Text CSS Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "gradient text css generator online",
+    "description": "Generate CSS for multicolor gradient text effects with live preview.",
+    "privacy": "client-only",
+    "related": [
+      "css-gradient",
+      "color-picker",
+      "css-box-shadow"
+    ],
+    "popular": false
+  },
+  {
+    "id": "audio-generator",
+    "slug": "audio-frequency-generator",
+    "name": "Audio Frequency Generator",
+    "category": "audio",
+    "status": "live",
+    "keywords": "audio frequency generator tone online web audio",
+    "description": "Generate sine, square, sawtooth, and triangle waves using the Web Audio API.",
+    "privacy": "client-only",
+    "related": [
+      "morse-code",
+      "stopwatch",
+      "random-number"
+    ],
+    "popular": false
+  },
+  {
+    "id": "equation-solver",
+    "slug": "equation-solver",
+    "name": "Equation Solver",
+    "category": "math",
+    "status": "live",
+    "keywords": "quadratic equation solver online free",
+    "description": "Solve linear and quadratic equations from input coefficients.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "base-converter",
+      "roman-numerals"
+    ],
+    "popular": false
+  },
+  {
+    "id": "date-duration",
+    "slug": "date-duration-calculator",
+    "name": "Date Duration Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "date difference calculator days between dates",
+    "description": "Calculate the exact duration between two calendar dates.",
+    "privacy": "client-only",
+    "related": [
+      "age-calculator",
+      "epoch-converter",
+      "stopwatch"
+    ],
+    "popular": false
+  },
+  {
+    "id": "mock-text",
+    "slug": "mock-text-generator",
+    "name": "Mock Text Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "placeholder text generator corporate tech funny",
+    "description": "Generate funny, corporate, or tech-themed placeholder text for mockups.",
+    "privacy": "client-only",
+    "related": [
+      "lorem-ipsum",
+      "word-counter",
+      "case-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "typography-scale",
+    "slug": "typography-scale",
+    "name": "Typography Scale Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "typography scale modular preview online",
+    "description": "Preview heading and body font size scales using modular ratios.",
+    "privacy": "client-only",
+    "related": [
+      "pixel-to-rem",
+      "gradient-text",
+      "css-gradient"
+    ],
+    "popular": false
+  },
+  {
+    "id": "meeting-cost",
+    "slug": "meeting-cost-calculator",
+    "name": "Meeting Cost Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "meeting cost calculator salary timer",
+    "description": "Calculate the real cost of meetings based on attendees and hourly rates.",
+    "privacy": "client-only",
+    "related": [
+      "compound-interest",
+      "percentage-calculator",
+      "stopwatch"
+    ],
+    "popular": false
+  },
+  {
+    "id": "break-even",
+    "slug": "break-even-calculator",
+    "name": "Break-Even Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "break even analysis calculator business",
+    "description": "Find the break-even point based on fixed costs, price, and variable costs.",
+    "privacy": "client-only",
+    "related": [
+      "sales-tax",
+      "loan-calculator",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "etsy-fee",
+    "slug": "etsy-fee-calculator",
+    "name": "Etsy Fee Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "etsy fee profit calculator seller",
+    "description": "Estimate Etsy listing, transaction, and payment processing fees and net profit.",
+    "privacy": "client-only",
+    "related": [
+      "sales-tax",
+      "break-even",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "array-to-table",
+    "slug": "array-to-html-table",
+    "name": "Array to HTML Table",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json array to html table converter online",
+    "description": "Convert JSON or CSV arrays into copyable HTML table markup.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "csv-to-json",
+      "markdown-to-html"
+    ],
+    "popular": false
+  },
+  {
+    "id": "barcode",
+    "slug": "barcode-generator",
+    "name": "Barcode Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "barcode generator svg online free",
+    "description": "Generate Code 128 barcodes as downloadable SVG files.",
+    "privacy": "client-only",
+    "related": [
+      "qr-code",
+      "slugify",
+      "sitemap-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "bip39",
+    "slug": "bip39-validator",
+    "name": "BIP39 Mnemonic Validator",
+    "category": "security",
+    "status": "live",
+    "keywords": "bip39 mnemonic validator seed phrase",
+    "description": "Validate cryptocurrency recovery seed phrases locally.",
+    "privacy": "client-only",
+    "related": [
+      "hash-generator",
+      "password-strength",
+      "random-string"
+    ],
+    "popular": false
+  },
+  {
+    "id": "currency-rates",
+    "slug": "currency-converter",
+    "name": "Currency Converter",
+    "category": "finance",
+    "status": "live",
+    "keywords": "currency converter exchange rate online",
+    "description": "Convert currencies using cached daily exchange rates.",
+    "privacy": "api-light",
+    "related": [
+      "unit-converter",
+      "sales-tax",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "dns-lookup",
+    "slug": "dns-lookup",
+    "name": "DNS Record Lookup",
+    "category": "web",
+    "status": "live",
+    "keywords": "dns lookup mx txt cname online",
+    "description": "Look up DNS records for any domain using public resolvers.",
+    "privacy": "api-light",
+    "related": [
+      "query-string",
+      "user-agent",
+      "sitemap-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "invoice-pdf",
+    "slug": "invoice-generator",
+    "name": "Invoice PDF Generator",
+    "category": "document",
+    "status": "live",
+    "keywords": "freelance invoice pdf generator free",
+    "description": "Create professional invoice PDFs from a simple form.",
+    "privacy": "client-only",
+    "related": [
+      "sales-tax",
+      "break-even",
+      "etsy-fee"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-splitter",
+    "slug": "pdf-splitter",
+    "name": "PDF Splitter",
+    "category": "document",
+    "status": "live",
+    "keywords": "pdf split pages online free client side",
+    "description": "Extract pages from PDF files locally in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "image-compressor",
+      "exif-stripper",
+      "data-url"
+    ],
+    "popular": false
+  },
+  {
+    "id": "zip-packer",
+    "slug": "zip-packer",
+    "name": "Zip File Packer",
+    "category": "developer",
+    "status": "live",
+    "keywords": "zip file creator online browser",
+    "description": "Pack files into a zip archive locally without uploading.",
+    "privacy": "client-only",
+    "related": [
+      "text-joiner",
+      "csv-to-json",
+      "json-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "gif-splitter",
+    "slug": "gif-splitter",
+    "name": "GIF Frame Splitter",
+    "category": "image",
+    "status": "live",
+    "keywords": "gif frame extractor online free",
+    "description": "Extract individual frames from animated GIF files.",
+    "privacy": "client-only",
+    "related": [
+      "image-compressor",
+      "exif-stripper",
+      "palette-picker"
+    ],
+    "popular": false
+  },
+  {
+    "id": "svg-tracer",
+    "slug": "image-to-svg",
+    "name": "Image to SVG Tracer",
+    "category": "image",
+    "status": "live",
+    "keywords": "image to svg converter trace online",
+    "description": "Trace raster images into SVG vector paths locally.",
+    "privacy": "client-only",
+    "related": [
+      "palette-picker",
+      "data-url",
+      "image-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "ip-lookup",
+    "slug": "ip-address-lookup",
+    "name": "IP Address Lookup",
+    "category": "web",
+    "status": "live",
+    "keywords": "what is my ip address lookup online",
+    "description": "Display your public IP address and basic network information.",
+    "privacy": "api-light",
+    "related": [
+      "user-agent",
+      "dns-lookup",
+      "query-string"
+    ],
+    "popular": false
+  },
+  {
+    "id": "youtube-transcript",
+    "slug": "youtube-transcript",
+    "name": "YouTube Transcript Extractor",
+    "category": "web",
+    "status": "live",
+    "keywords": "youtube transcript extractor online free",
+    "description": "Extract subtitle transcripts from YouTube videos.",
+    "privacy": "api-light",
+    "related": [
+      "vtt-to-srt",
+      "srt-shifter",
+      "keyword-density"
+    ],
+    "popular": false
+  },
+  {
+    "id": "nginx-generator",
+    "slug": "nginx-config-generator",
+    "name": "Nginx Config Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "nginx config generator reverse proxy",
+    "description": "Generate baseline Nginx server configuration blocks.",
+    "privacy": "client-only",
+    "related": [
+      "sql-formatter",
+      "json-formatter",
+      "sitemap-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "favicon-generator",
+    "slug": "favicon-generator",
+    "name": "Favicon Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "favicon generator ico online free",
+    "description": "Create favicon files from uploaded logo images.",
+    "privacy": "client-only",
+    "related": [
+      "image-compressor",
+      "palette-picker",
+      "og-preview"
+    ],
+    "popular": false
+  },
+  {
+    "id": "inline-css",
+    "slug": "inline-css-converter",
+    "name": "Inline CSS Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "css to inline styles converter html",
+    "description": "Convert CSS rules into inline HTML style attributes.",
+    "privacy": "client-only",
+    "related": [
+      "html-minifier",
+      "markdown-to-html",
+      "css-gradient"
+    ],
+    "popular": false
+  },
+  {
+    "id": "js-deobfuscator",
+    "slug": "js-deobfuscator",
+    "name": "JavaScript Deobfuscator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "javascript deobfuscator unpack online",
+    "description": "Unpack and beautify obfuscated JavaScript code.",
+    "privacy": "client-only",
+    "related": [
+      "html-minifier",
+      "regex-tester",
+      "json-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "bcrypt-tester",
+    "slug": "bcrypt-tester",
+    "name": "Bcrypt Hash Tester",
+    "category": "security",
+    "status": "live",
+    "keywords": "bcrypt hash generator verify online",
+    "description": "Generate and verify bcrypt password hashes in the browser.",
+    "privacy": "client-only",
+    "related": [
+      "hash-generator",
+      "password-strength",
+      "random-string"
+    ],
+    "popular": false
+  },
+  {
+    "id": "ase-converter",
+    "slug": "ase-color-converter",
+    "name": "Adobe ASE Color Converter",
+    "category": "design",
+    "status": "live",
+    "keywords": "ase aco swatch to hex converter",
+    "description": "Parse Adobe ASE/ACO swatch files into hex color codes.",
+    "privacy": "client-only",
+    "related": [
+      "color-picker",
+      "palette-picker",
+      "css-gradient"
+    ],
+    "popular": false
+  },
+  {
+    "id": "billionaire-sim",
+    "slug": "billionaire-simulator",
+    "name": "Billionaire Spend Simulator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "billionaire money spend simulator viral",
+    "description": "Visualize spending rates against billionaire net worth fortunes.",
+    "privacy": "client-only",
+    "related": [
+      "compound-interest",
+      "meeting-cost",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "knot-guide",
+    "slug": "knot-tying-guide",
+    "name": "Knot Tying Guide",
+    "category": "math",
+    "status": "live",
+    "keywords": "knot tying guide interactive online",
+    "description": "Interactive visual guide to common rope knots.",
+    "privacy": "client-only",
+    "related": [
+      "ascii-art",
+      "morse-code",
+      "random-number"
+    ],
+    "popular": false
+  },
+  {
+    "id": "business-names",
+    "slug": "business-name-generator",
+    "name": "Business Name Generator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "business name generator domain ideas",
+    "description": "Generate business and domain name ideas from keywords.",
+    "privacy": "client-only",
+    "related": [
+      "slugify",
+      "mock-text",
+      "keyword-density"
+    ],
+    "popular": false
+  },
+  {
+    "id": "salary-calculator",
+    "slug": "salary-calculator",
+    "name": "Net to Gross Salary Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "net to gross salary calculator tax",
+    "description": "Calculate gross salary needed for a target net income.",
+    "privacy": "client-only",
+    "related": [
+      "sales-tax",
+      "meeting-cost",
+      "loan-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "bond-yield",
+    "slug": "bond-yield-calculator",
+    "name": "Bond Yield Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "yield to maturity bond calculator",
+    "description": "Calculate bond yield to maturity from price and coupon rate.",
+    "privacy": "client-only",
+    "related": [
+      "compound-interest",
+      "loan-calculator",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "physics-solver",
+    "slug": "physics-calculator",
+    "name": "Velocity & Distance Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "velocity acceleration distance calculator physics",
+    "description": "Solve basic physics equations for speed, time, and distance.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "equation-solver",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "xpath-tester",
+    "slug": "xpath-tester",
+    "name": "XPath Query Tester",
+    "category": "developer",
+    "status": "live",
+    "keywords": "xpath tester query evaluator online",
+    "description": "Test XPath queries against XML documents locally.",
+    "privacy": "client-only",
+    "related": [
+      "xml-formatter",
+      "regex-tester",
+      "json-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "xor-cipher",
+    "slug": "xor-cipher",
+    "name": "XOR Cipher Tool",
+    "category": "security",
+    "status": "live",
+    "keywords": "xor cipher encoder decoder online",
+    "description": "Apply XOR bitwise operations to text for basic cryptography demos.",
+    "privacy": "client-only",
+    "related": [
+      "binary-text",
+      "base64",
+      "hash-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "anagram-solver",
+    "slug": "anagram-solver",
+    "name": "Anagram Solver",
+    "category": "text",
+    "status": "live",
+    "keywords": "anagram solver word unscramble online",
+    "description": "Find valid anagram combinations from word inputs.",
+    "privacy": "client-only",
+    "related": [
+      "word-counter",
+      "random-string",
+      "case-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "font-pairing",
+    "slug": "font-pairing",
+    "name": "Web Font Pairing Preview",
+    "category": "design",
+    "status": "live",
+    "keywords": "web safe font pairing preview online",
+    "description": "Preview typography layouts with system font pairings.",
+    "privacy": "client-only",
+    "related": [
+      "typography-scale",
+      "gradient-text",
+      "css-gradient"
+    ],
+    "popular": false
+  },
+  {
+    "id": "soundboard",
+    "slug": "soundboard",
+    "name": "Soundboard",
+    "category": "math",
+    "status": "live",
+    "keywords": "online soundboard keyboard triggers",
+    "description": "Map keyboard hotkeys to custom audio clips loaded locally.",
+    "privacy": "client-only",
+    "related": [
+      "audio-generator",
+      "morse-code",
+      "stopwatch"
+    ],
+    "popular": false
+  },
+  {
+    "id": "matrix-solver",
+    "slug": "matrix-calculator",
+    "name": "Matrix Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "matrix determinant calculator online",
+    "description": "Compute matrix determinants and basic operations.",
+    "privacy": "client-only",
+    "related": [
+      "equation-solver",
+      "percentage-calculator",
+      "base-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "keycode",
+    "slug": "keycode-detector",
+    "name": "Keyboard KeyCode Detector",
+    "category": "developer",
+    "status": "live",
+    "keywords": "javascript keycode detector online",
+    "description": "Display key codes and event properties when keys are pressed.",
+    "privacy": "client-only",
+    "related": [
+      "regex-tester",
+      "user-agent",
+      "stopwatch"
+    ],
+    "popular": false
+  },
+  {
+    "id": "storage-converter",
+    "slug": "storage-unit-converter",
+    "name": "Storage Unit Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "kb mb gb tb converter online",
+    "description": "Convert digital storage units across bit and byte standards.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "base-converter",
+      "binary-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "link-opener",
+    "slug": "bulk-link-opener",
+    "name": "Bulk Link Opener",
+    "category": "web",
+    "status": "live",
+    "keywords": "open multiple urls tabs online",
+    "description": "Open a list of URLs in new browser tabs at once.",
+    "privacy": "client-only",
+    "related": [
+      "query-string",
+      "sitemap-generator",
+      "slugify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "email-signature",
+    "slug": "email-signature-generator",
+    "name": "Email Signature Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "email signature html generator free",
+    "description": "Build professional HTML email signatures from form fields.",
+    "privacy": "client-only",
+    "related": [
+      "markdown-to-html",
+      "og-preview",
+      "case-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "meta-ad-checker",
+    "slug": "meta-ad-checker",
+    "name": "Meta Ad Text Checker",
+    "category": "web",
+    "status": "live",
+    "keywords": "facebook meta ad text character limit checker",
+    "description": "Check ad copy against Meta/Facebook text length guidelines.",
+    "privacy": "client-only",
+    "related": [
+      "tweet-counter",
+      "word-counter",
+      "keyword-density"
+    ],
+    "popular": false
+  },
+  {
+    "id": "svg-optimizer",
+    "slug": "svg-optimizer",
+    "name": "SVG Optimizer",
+    "category": "design",
+    "status": "live",
+    "keywords": "svg optimizer clean minify online",
+    "description": "Clean and minify bloated SVG code from design tools.",
+    "privacy": "client-only",
+    "related": [
+      "image-to-svg",
+      "html-minifier",
+      "css-gradient"
+    ],
+    "popular": false
+  },
+  {
+    "id": "regex-cheatsheet",
+    "slug": "regex-cheatsheet",
+    "name": "Regex Cheat Sheet",
+    "category": "developer",
+    "status": "live",
+    "keywords": "regex cheat sheet reference online",
+    "description": "Searchable regular expression pattern reference for developers.",
+    "privacy": "client-only",
+    "related": [
+      "regex-tester",
+      "json-formatter",
+      "sql-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "tar-unpacker",
+    "slug": "tar-unpacker",
+    "name": "Tar/Gzip Unpacker",
+    "category": "developer",
+    "status": "live",
+    "keywords": "tar gz unpack extract online browser",
+    "description": "Extract tar and gzip archives locally in the browser.",
+    "privacy": "client-only",
+    "related": [
+      "zip-packer",
+      "csv-to-json",
+      "text-joiner"
+    ],
+    "popular": false
+  },
+  {
+    "id": "quote-card",
+    "slug": "quote-card-generator",
+    "name": "Quote Card Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "quote card image generator download",
+    "description": "Create downloadable quote image cards with custom colors.",
+    "privacy": "client-only",
+    "related": [
+      "gradient-text",
+      "ascii-art",
+      "og-preview"
+    ],
+    "popular": false
+  },
+  {
+    "id": "emoji-picker",
+    "slug": "emoji-picker",
+    "name": "Emoji Picker",
+    "category": "text",
+    "status": "live",
+    "keywords": "emoji picker copy paste online",
+    "description": "Search and copy emojis by category instantly.",
+    "privacy": "client-only",
+    "related": [
+      "tweet-counter",
+      "case-converter",
+      "word-counter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "file-identify",
+    "slug": "file-type-identifier",
+    "name": "File Type Identifier",
+    "category": "developer",
+    "status": "live",
+    "keywords": "file type identifier magic bytes online",
+    "description": "Identify unknown file types from magic byte signatures.",
+    "privacy": "client-only",
+    "related": [
+      "hash-generator",
+      "base64",
+      "data-url"
+    ],
+    "popular": false
+  },
+  {
+    "id": "ad-text-checker",
+    "slug": "ad-text-checker",
+    "name": "Ad Text Length Checker",
+    "category": "web",
+    "status": "live",
+    "keywords": "google ad text character limit checker",
+    "description": "Validate ad headlines and descriptions against platform limits.",
+    "privacy": "client-only",
+    "related": [
+      "tweet-counter",
+      "meta-ad-checker",
+      "word-counter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "dns-propagation",
+    "slug": "dns-propagation",
+    "name": "DNS Propagation Checker",
+    "category": "web",
+    "status": "live",
+    "keywords": "dns propagation checker global online",
+    "description": "Check DNS record propagation across global resolvers.",
+    "privacy": "api-light",
+    "related": [
+      "dns-lookup",
+      "query-string",
+      "sitemap-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "proxy-formatter",
+    "slug": "proxy-list-formatter",
+    "name": "Proxy List Formatter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "proxy list formatter clean online",
+    "description": "Clean and format proxy server lists into raw host strings.",
+    "privacy": "client-only",
+    "related": [
+      "text-joiner",
+      "list-dedupe",
+      "json-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "font-subset",
+    "slug": "font-subset-tester",
+    "name": "Font Subset Tester",
+    "category": "design",
+    "status": "live",
+    "keywords": "woff2 font tester preview online",
+    "description": "Preview local font files in editable text boxes.",
+    "privacy": "client-only",
+    "related": [
+      "font-pairing",
+      "typography-scale",
+      "gradient-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "graph-paper",
+    "slug": "graph-paper-generator",
+    "name": "Graph Paper Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "graph paper pdf generator online",
+    "description": "Create downloadable graph paper PDFs with custom grid spacing.",
+    "privacy": "client-only",
+    "related": [
+      "aspect-ratio",
+      "color-picker",
+      "typography-scale"
+    ],
+    "popular": false
+  },
+  {
+    "id": "gps-converter",
+    "slug": "gps-coordinate-converter",
+    "name": "GPS Coordinate Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "gps coordinates dms decimal converter",
+    "description": "Convert GPS coordinates between DMS and decimal formats.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "aspect-ratio",
+      "height-weight"
+    ],
+    "popular": false
+  },
+  {
+    "id": "dividend-tax",
+    "slug": "dividend-tax-calculator",
+    "name": "Dividend Tax Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "dividend tax yield calculator",
+    "description": "Estimate dividend investment yields after tax brackets.",
+    "privacy": "client-only",
+    "related": [
+      "compound-interest",
+      "sales-tax",
+      "bond-yield"
+    ],
+    "popular": false
+  },
+  {
+    "id": "webhook-tester",
+    "slug": "webhook-tester",
+    "name": "Webhook Payload Tester",
+    "category": "developer",
+    "status": "live",
+    "keywords": "webhook tester mock endpoint online",
+    "description": "Test webhook payloads with temporary catch endpoints.",
+    "privacy": "api-light",
+    "related": [
+      "json-formatter",
+      "jwt-decoder",
+      "query-string"
+    ],
+    "popular": false
+  },
+  {
+    "id": "responsive-preview",
+    "slug": "responsive-image-preview",
+    "name": "Responsive Image Preview",
+    "category": "design",
+    "status": "live",
+    "keywords": "responsive image preview breakpoints online",
+    "description": "Preview images at common responsive breakpoints.",
+    "privacy": "client-only",
+    "related": [
+      "aspect-ratio",
+      "image-compressor",
+      "pixel-to-rem"
+    ],
+    "popular": false
+  },
+  {
+    "id": "yearly-savings",
+    "slug": "yearly-savings-calculator",
+    "name": "Yearly Savings Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "yearly savings compound calculator projection",
+    "description": "Model savings growth across multiple years with interactive sliders.",
+    "privacy": "client-only",
+    "related": [
+      "compound-interest",
+      "loan-calculator",
+      "dividend-tax"
+    ],
+    "popular": false
+  },
+  {
+    "id": "octal-converter",
+    "slug": "octal-converter",
+    "name": "Octal to Decimal Converter",
+    "category": "math",
+    "status": "live",
+    "keywords": "octal to decimal converter online",
+    "description": "Convert numbers between octal and decimal notation instantly.",
+    "privacy": "client-only",
+    "related": [
+      "base-converter",
+      "binary-text",
+      "roman-numerals"
+    ],
+    "popular": false
+  },
+  {
+    "id": "password-generator",
+    "slug": "password-generator",
+    "name": "Password Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "password generator strong random online free",
+    "description": "Generate secure random passwords with custom length and character sets.",
+    "privacy": "client-only",
+    "related": [
+      "password-strength",
+      "random-string",
+      "bcrypt-tester"
+    ],
+    "popular": true
+  },
+  {
+    "id": "tip-calculator",
+    "slug": "tip-calculator",
+    "name": "Tip Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "tip calculator split bill restaurant online",
+    "description": "Calculate tips and split bills between people instantly.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "sales-tax",
+      "discount-calculator"
+    ],
+    "popular": true
+  },
+  {
+    "id": "bmi-calculator",
+    "slug": "bmi-calculator",
+    "name": "BMI Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "bmi calculator body mass index online free",
+    "description": "Calculate Body Mass Index from height and weight with category guidance.",
+    "privacy": "client-only",
+    "related": [
+      "bmr-calculator",
+      "height-weight",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-resizer",
+    "slug": "image-resizer",
+    "name": "Image Resizer",
+    "category": "image",
+    "status": "live",
+    "keywords": "image resizer resize photo online free no upload",
+    "description": "Resize images to exact pixel dimensions locally in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "image-compressor",
+      "aspect-ratio",
+      "png-jpg-converter"
+    ],
+    "popular": true
+  },
+  {
+    "id": "pdf-merger",
+    "slug": "pdf-merger",
+    "name": "PDF Merger",
+    "category": "document",
+    "status": "live",
+    "keywords": "merge pdf files online free combine pdf",
+    "description": "Combine multiple PDF files into one document locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-splitter",
+      "invoice-pdf",
+      "zip-packer"
+    ],
+    "popular": true
+  },
+  {
+    "id": "md5-hash",
+    "slug": "md5-hash-generator",
+    "name": "MD5 Hash Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "md5 hash generator online text file",
+    "description": "Generate MD5 checksums from text or files for legacy compatibility checks.",
+    "privacy": "client-only",
+    "related": [
+      "hash-generator",
+      "bcrypt-tester",
+      "file-identify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "js-minifier",
+    "slug": "javascript-minifier",
+    "name": "JavaScript Minifier & Beautifier",
+    "category": "developer",
+    "status": "live",
+    "keywords": "javascript minifier beautifier online free",
+    "description": "Minify or format JavaScript code for production or readability.",
+    "privacy": "client-only",
+    "related": [
+      "html-minifier",
+      "css-minifier",
+      "js-deobfuscator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "css-minifier",
+    "slug": "css-minifier",
+    "name": "CSS Minifier & Beautifier",
+    "category": "developer",
+    "status": "live",
+    "keywords": "css minifier beautifier online free",
+    "description": "Compress CSS for faster pages or expand minified styles for editing.",
+    "privacy": "client-only",
+    "related": [
+      "html-minifier",
+      "js-minifier",
+      "inline-css"
+    ],
+    "popular": false
+  },
+  {
+    "id": "yaml-json",
+    "slug": "yaml-json-converter",
+    "name": "YAML ↔ JSON Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "yaml to json converter json to yaml online",
+    "description": "Convert between YAML and JSON configuration formats both ways.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "csv-to-json",
+      "xml-formatter"
+    ],
+    "popular": true
+  },
+  {
+    "id": "text-reverser",
+    "slug": "text-reverser",
+    "name": "Text Reverser",
+    "category": "text",
+    "status": "live",
+    "keywords": "reverse text string backwards online",
+    "description": "Reverse characters, words, or lines in any text instantly.",
+    "privacy": "client-only",
+    "related": [
+      "case-converter",
+      "palindrome-checker",
+      "morse-code"
+    ],
+    "popular": false
+  },
+  {
+    "id": "find-replace",
+    "slug": "find-and-replace",
+    "name": "Find and Replace",
+    "category": "text",
+    "status": "live",
+    "keywords": "find and replace text online bulk",
+    "description": "Search and replace text with plain or regex matching across large documents.",
+    "privacy": "client-only",
+    "related": [
+      "regex-tester",
+      "case-converter",
+      "list-dedupe"
+    ],
+    "popular": true
+  },
+  {
+    "id": "line-sorter",
+    "slug": "line-sorter",
+    "name": "Line Sorter",
+    "category": "text",
+    "status": "live",
+    "keywords": "sort lines alphabetically online text sorter",
+    "description": "Sort lines of text A–Z or Z–A, case-sensitive or insensitive.",
+    "privacy": "client-only",
+    "related": [
+      "list-dedupe",
+      "list-randomizer",
+      "text-joiner"
+    ],
+    "popular": false
+  },
+  {
+    "id": "remove-empty-lines",
+    "slug": "remove-empty-lines",
+    "name": "Remove Empty Lines",
+    "category": "text",
+    "status": "live",
+    "keywords": "remove empty lines online text cleaner",
+    "description": "Strip blank lines from pasted text lists and documents.",
+    "privacy": "client-only",
+    "related": [
+      "trim-whitespace",
+      "list-dedupe",
+      "text-joiner"
+    ],
+    "popular": false
+  },
+  {
+    "id": "trim-whitespace",
+    "slug": "trim-whitespace",
+    "name": "Trim Whitespace",
+    "category": "text",
+    "status": "live",
+    "keywords": "trim whitespace remove spaces online",
+    "description": "Remove leading, trailing, and extra spaces from every line.",
+    "privacy": "client-only",
+    "related": [
+      "remove-empty-lines",
+      "case-converter",
+      "find-replace"
+    ],
+    "popular": false
+  },
+  {
+    "id": "countdown-timer",
+    "slug": "countdown-timer",
+    "name": "Countdown Timer",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "countdown timer online free alarm",
+    "description": "Set a countdown to any date and time with live remaining display.",
+    "privacy": "client-only",
+    "related": [
+      "stopwatch",
+      "pomodoro-timer",
+      "age-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "discount-calculator",
+    "slug": "discount-calculator",
+    "name": "Discount Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "discount calculator percent off sale price",
+    "description": "Calculate sale prices from original price and discount percentage.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "sales-tax",
+      "tip-calculator"
+    ],
+    "popular": true
+  },
+  {
+    "id": "mortgage-calculator",
+    "slug": "mortgage-calculator",
+    "name": "Mortgage Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "mortgage calculator monthly payment home loan",
+    "description": "Estimate monthly mortgage payments with interest rate and loan term.",
+    "privacy": "client-only",
+    "related": [
+      "loan-calculator",
+      "compound-interest",
+      "break-even"
+    ],
+    "popular": false
+  },
+  {
+    "id": "meta-tags",
+    "slug": "meta-tags-generator",
+    "name": "Meta Tags Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "meta tags generator seo title description open graph",
+    "description": "Generate SEO title, description, and Open Graph meta tags from your content.",
+    "privacy": "client-only",
+    "related": [
+      "og-preview",
+      "sitemap-generator",
+      "slugify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "robots-txt",
+    "slug": "robots-txt-generator",
+    "name": "Robots.txt Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "robots txt generator online seo",
+    "description": "Build a robots.txt file with allow/disallow rules and sitemap URL.",
+    "privacy": "client-only",
+    "related": [
+      "sitemap-generator",
+      "meta-tags",
+      "slugify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "png-jpg-converter",
+    "slug": "png-jpg-converter",
+    "name": "PNG ↔ JPG Converter",
+    "category": "image",
+    "status": "live",
+    "keywords": "png to jpg jpg to png converter online free",
+    "description": "Convert images between PNG and JPEG formats locally.",
+    "privacy": "client-only",
+    "related": [
+      "image-resizer",
+      "image-compressor",
+      "exif-stripper"
+    ],
+    "popular": true
+  },
+  {
+    "id": "rot13",
+    "slug": "rot13-encoder",
+    "name": "ROT13 Encoder & Decoder",
+    "category": "security",
+    "status": "live",
+    "keywords": "rot13 encoder decoder online cipher",
+    "description": "Apply ROT13 encoding and decoding to text instantly.",
+    "privacy": "client-only",
+    "related": [
+      "xor-cipher",
+      "base64",
+      "morse-code"
+    ],
+    "popular": false
+  },
+  {
+    "id": "credit-card-validator",
+    "slug": "credit-card-validator",
+    "name": "Credit Card Validator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "credit card validator luhn check online",
+    "description": "Validate credit card numbers using the Luhn algorithm and detect card type.",
+    "privacy": "client-only",
+    "related": [
+      "hash-generator",
+      "random-string",
+      "password-strength"
+    ],
+    "popular": false
+  },
+  {
+    "id": "dice-roller",
+    "slug": "dice-roller",
+    "name": "Dice Roller",
+    "category": "math",
+    "status": "live",
+    "keywords": "dice roller online random d6 d20",
+    "description": "Roll virtual dice with custom sides and multiple dice at once.",
+    "privacy": "client-only",
+    "related": [
+      "coin-flip",
+      "random-number",
+      "list-randomizer"
+    ],
+    "popular": false
+  },
+  {
+    "id": "coin-flip",
+    "slug": "coin-flip",
+    "name": "Coin Flip",
+    "category": "math",
+    "status": "live",
+    "keywords": "coin flip heads tails random online",
+    "description": "Flip a virtual coin for quick random heads or tails decisions.",
+    "privacy": "client-only",
+    "related": [
+      "dice-roller",
+      "random-number",
+      "list-randomizer"
+    ],
+    "popular": false
+  },
+  {
+    "id": "cron-generator",
+    "slug": "cron-generator",
+    "name": "Cron Expression Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "cron expression generator schedule online",
+    "description": "Build cron schedule expressions from simple time and frequency options.",
+    "privacy": "client-only",
+    "related": [
+      "cron-parser",
+      "epoch-converter",
+      "json-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "html-formatter",
+    "slug": "html-formatter",
+    "name": "HTML Formatter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "html formatter beautify online free",
+    "description": "Format messy HTML into readable indented markup.",
+    "privacy": "client-only",
+    "related": [
+      "html-minifier",
+      "markdown-to-html",
+      "xml-formatter"
+    ],
+    "popular": true
+  },
+  {
+    "id": "remove-line-breaks",
+    "slug": "remove-line-breaks",
+    "name": "Remove Line Breaks",
+    "category": "text",
+    "status": "live",
+    "keywords": "remove line breaks join lines online",
+    "description": "Join broken lines into continuous paragraphs or single lines.",
+    "privacy": "client-only",
+    "related": [
+      "text-joiner",
+      "trim-whitespace",
+      "case-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "add-line-numbers",
+    "slug": "add-line-numbers",
+    "name": "Add Line Numbers",
+    "category": "text",
+    "status": "live",
+    "keywords": "add line numbers to text online",
+    "description": "Prefix each line with line numbers for code review and documentation.",
+    "privacy": "client-only",
+    "related": [
+      "diff-checker",
+      "markdown-editor",
+      "find-replace"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pomodoro-timer",
+    "slug": "pomodoro-timer",
+    "name": "Pomodoro Timer",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "pomodoro timer focus 25 minutes online",
+    "description": "Run focused work sessions with built-in Pomodoro break cycles.",
+    "privacy": "client-only",
+    "related": [
+      "stopwatch",
+      "countdown-timer",
+      "meeting-cost"
+    ],
+    "popular": false
+  },
+  {
+    "id": "prime-checker",
+    "slug": "prime-number-checker",
+    "name": "Prime Number Checker",
+    "category": "math",
+    "status": "live",
+    "keywords": "prime number checker test online",
+    "description": "Check if a number is prime and list nearby primes.",
+    "privacy": "client-only",
+    "related": [
+      "random-number",
+      "equation-solver",
+      "base-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "palindrome-checker",
+    "slug": "palindrome-checker",
+    "name": "Palindrome Checker",
+    "category": "text",
+    "status": "live",
+    "keywords": "palindrome checker word phrase online",
+    "description": "Check whether words or phrases read the same forwards and backwards.",
+    "privacy": "client-only",
+    "related": [
+      "text-reverser",
+      "anagram-solver",
+      "case-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "random-picker",
+    "slug": "random-name-picker",
+    "name": "Random Name Picker",
+    "category": "text",
+    "status": "live",
+    "keywords": "random name picker wheel winner online",
+    "description": "Pick a random winner from a list of names or entries.",
+    "privacy": "client-only",
+    "related": [
+      "list-randomizer",
+      "dice-roller",
+      "coin-flip"
+    ],
+    "popular": false
+  },
+  {
+    "id": "gitignore-generator",
+    "slug": "gitignore-generator",
+    "name": ".gitignore Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "gitignore generator template online",
+    "description": "Generate .gitignore files for Node, Python, Java, and other stacks.",
+    "privacy": "client-only",
+    "related": [
+      "nginx-generator",
+      "json-formatter",
+      "regex-cheatsheet"
+    ],
+    "popular": false
+  },
+  {
+    "id": "hex-text",
+    "slug": "hex-to-text-converter",
+    "name": "Hex to Text Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "hex to text ascii converter online",
+    "description": "Convert hexadecimal strings to readable text and back.",
+    "privacy": "client-only",
+    "related": [
+      "binary-text",
+      "base-converter",
+      "hash-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "profit-margin",
+    "slug": "profit-margin-calculator",
+    "name": "Profit Margin Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "profit margin calculator markup online",
+    "description": "Calculate gross and net profit margins from cost and selling price.",
+    "privacy": "client-only",
+    "related": [
+      "break-even",
+      "sales-tax",
+      "discount-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "hours-calculator",
+    "slug": "hours-minutes-calculator",
+    "name": "Hours & Minutes Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "hours minutes calculator time add subtract",
+    "description": "Add or subtract hours and minutes from time values.",
+    "privacy": "client-only",
+    "related": [
+      "date-duration",
+      "stopwatch",
+      "age-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "reading-time",
+    "slug": "reading-time-calculator",
+    "name": "Reading Time Calculator",
+    "category": "text",
+    "status": "live",
+    "keywords": "reading time calculator words per minute",
+    "description": "Estimate how long it takes to read your article or document.",
+    "privacy": "client-only",
+    "related": [
+      "word-counter",
+      "keyword-density",
+      "tweet-counter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "jwt-encoder",
+    "slug": "jwt-encoder",
+    "name": "JWT Encoder (HS256)",
+    "category": "security",
+    "status": "live",
+    "keywords": "jwt encoder sign token hs256 online",
+    "description": "Create signed HS256 JWT tokens from header and payload JSON.",
+    "privacy": "client-only",
+    "related": [
+      "jwt-decoder",
+      "json-formatter",
+      "hash-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "text-diff-stats",
+    "slug": "text-statistics",
+    "name": "Text Statistics Analyzer",
+    "category": "text",
+    "status": "live",
+    "keywords": "text statistics analyzer readability online",
+    "description": "Analyze text for word frequency, sentence length, and readability metrics.",
+    "privacy": "client-only",
+    "related": [
+      "word-counter",
+      "keyword-density",
+      "reading-time"
+    ],
+    "popular": false
+  },
+  {
+    "id": "background-remover",
+    "slug": "background-remover",
+    "name": "Background Remover",
+    "category": "image",
+    "status": "live",
+    "keywords": "remove background from image online free",
+    "description": "Remove photo backgrounds instantly using AI in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "image-resizer",
+      "png-jpg-converter",
+      "exif-stripper"
+    ],
+    "popular": true
+  },
+  {
+    "id": "image-cropper",
+    "slug": "image-cropper",
+    "name": "Image Cropper",
+    "category": "image",
+    "status": "live",
+    "keywords": "crop image online free",
+    "description": "Crop images to custom dimensions with live preview.",
+    "privacy": "client-only",
+    "related": [
+      "image-resizer",
+      "aspect-ratio",
+      "background-remover"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-rotate",
+    "slug": "image-rotate-flip",
+    "name": "Image Rotate & Flip",
+    "category": "image",
+    "status": "live",
+    "keywords": "rotate flip image online",
+    "description": "Rotate and flip images without uploading to a server.",
+    "privacy": "client-only",
+    "related": [
+      "image-cropper",
+      "image-resizer",
+      "exif-stripper"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-to-pdf",
+    "slug": "image-to-pdf",
+    "name": "Image to PDF",
+    "category": "document",
+    "status": "live",
+    "keywords": "convert image to pdf online free",
+    "description": "Convert JPG or PNG images into a PDF document locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "images-to-pdf",
+      "pdf-to-jpg"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-to-jpg",
+    "slug": "pdf-to-jpg",
+    "name": "PDF to JPG",
+    "category": "document",
+    "status": "live",
+    "keywords": "convert pdf to jpg online free",
+    "description": "Export PDF pages as JPG images in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "pdf-splitter",
+      "image-to-pdf"
+    ],
+    "popular": true
+  },
+  {
+    "id": "pdf-to-images",
+    "slug": "pdf-to-images",
+    "name": "PDF to Images",
+    "category": "document",
+    "status": "live",
+    "keywords": "pdf to png jpg images online",
+    "description": "Convert every PDF page to downloadable PNG images.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-to-jpg",
+      "pdf-splitter",
+      "image-to-pdf"
+    ],
+    "popular": true
+  },
+  {
+    "id": "pdf-compressor",
+    "slug": "pdf-compressor",
+    "name": "PDF Compressor",
+    "category": "document",
+    "status": "live",
+    "keywords": "compress pdf online free reduce size",
+    "description": "Reduce PDF file size locally before sharing.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "pdf-splitter",
+      "pdf-to-jpg"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-rotate",
+    "slug": "pdf-rotate-pages",
+    "name": "PDF Page Rotator",
+    "category": "document",
+    "status": "live",
+    "keywords": "rotate pdf pages online free",
+    "description": "Rotate PDF pages 90° or 180° locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "pdf-splitter",
+      "pdf-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-delete-pages",
+    "slug": "pdf-delete-pages",
+    "name": "PDF Page Deleter",
+    "category": "document",
+    "status": "live",
+    "keywords": "delete pdf pages online free",
+    "description": "Remove specific pages from PDF files locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-splitter",
+      "pdf-merger",
+      "pdf-rotate"
+    ],
+    "popular": false
+  },
+  {
+    "id": "images-to-pdf",
+    "slug": "images-to-pdf",
+    "name": "Images to PDF",
+    "category": "document",
+    "status": "live",
+    "keywords": "multiple images to pdf online",
+    "description": "Combine multiple images into one PDF file.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "image-to-pdf",
+      "invoice-pdf"
+    ],
+    "popular": true
+  },
+  {
+    "id": "text-to-pdf",
+    "slug": "text-to-pdf",
+    "name": "Text to PDF",
+    "category": "document",
+    "status": "live",
+    "keywords": "text to pdf converter online free",
+    "description": "Create a PDF from plain text instantly.",
+    "privacy": "client-only",
+    "related": [
+      "invoice-pdf",
+      "images-to-pdf",
+      "markdown-to-html"
+    ],
+    "popular": false
+  },
+  {
+    "id": "html-to-pdf",
+    "slug": "html-to-pdf",
+    "name": "HTML to PDF",
+    "category": "document",
+    "status": "live",
+    "keywords": "html to pdf print online free",
+    "description": "Print HTML content to PDF using your browser.",
+    "privacy": "client-only",
+    "related": [
+      "text-to-pdf",
+      "markdown-to-html",
+      "invoice-pdf"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-page-numbers",
+    "slug": "pdf-page-numbers",
+    "name": "PDF Page Numbers",
+    "category": "document",
+    "status": "live",
+    "keywords": "add page numbers to pdf online",
+    "description": "Add page numbers to PDF documents locally.",
+    "privacy": "client-only",
+    "related": [
+      "pdf-merger",
+      "pdf-rotate",
+      "invoice-pdf"
+    ],
+    "popular": false
+  },
+  {
+    "id": "webp-converter",
+    "slug": "webp-converter",
+    "name": "WebP Converter",
+    "category": "image",
+    "status": "live",
+    "keywords": "webp to png jpg converter online",
+    "description": "Convert WebP images to PNG or JPG and back.",
+    "privacy": "client-only",
+    "related": [
+      "png-jpg-converter",
+      "image-compressor",
+      "image-resizer"
+    ],
+    "popular": true
+  },
+  {
+    "id": "svg-to-png",
+    "slug": "svg-to-png",
+    "name": "SVG to PNG",
+    "category": "image",
+    "status": "live",
+    "keywords": "svg to png converter online free",
+    "description": "Rasterize SVG files to PNG images locally.",
+    "privacy": "client-only",
+    "related": [
+      "svg-optimizer",
+      "favicon-generator",
+      "image-resizer"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-grayscale",
+    "slug": "image-grayscale",
+    "name": "Image Grayscale Filter",
+    "category": "image",
+    "status": "live",
+    "keywords": "convert image to grayscale online",
+    "description": "Turn color photos into black and white instantly.",
+    "privacy": "client-only",
+    "related": [
+      "image-compressor",
+      "png-jpg-converter",
+      "palette-picker"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-blur",
+    "slug": "image-blur",
+    "name": "Image Blur Tool",
+    "category": "image",
+    "status": "live",
+    "keywords": "blur image online free",
+    "description": "Apply blur effects to images locally.",
+    "privacy": "client-only",
+    "related": [
+      "image-grayscale",
+      "image-resizer",
+      "exif-stripper"
+    ],
+    "popular": false
+  },
+  {
+    "id": "image-watermark",
+    "slug": "image-watermark",
+    "name": "Image Watermark",
+    "category": "image",
+    "status": "live",
+    "keywords": "add watermark to image online free",
+    "description": "Add text watermarks to images before download.",
+    "privacy": "client-only",
+    "related": [
+      "image-resizer",
+      "quote-card",
+      "image-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pixelate-image",
+    "slug": "pixelate-image",
+    "name": "Pixelate Image",
+    "category": "image",
+    "status": "live",
+    "keywords": "pixelate image censor online",
+    "description": "Pixelate regions of an image for privacy.",
+    "privacy": "client-only",
+    "related": [
+      "image-blur",
+      "image-cropper",
+      "exif-stripper"
+    ],
+    "popular": false
+  },
+  {
+    "id": "invert-image",
+    "slug": "invert-image-colors",
+    "name": "Invert Image Colors",
+    "category": "image",
+    "status": "live",
+    "keywords": "invert image colors online",
+    "description": "Invert image colors to create negative effects.",
+    "privacy": "client-only",
+    "related": [
+      "image-grayscale",
+      "palette-picker",
+      "image-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-to-mp3",
+    "slug": "video-to-mp3",
+    "name": "Video to MP3",
+    "category": "video",
+    "status": "live",
+    "keywords": "extract mp3 from video online free",
+    "description": "Extract audio from video files as MP3 in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "audio-trimmer",
+      "video-mute",
+      "audio-converter"
+    ],
+    "popular": true
+  },
+  {
+    "id": "video-compressor",
+    "slug": "video-compressor",
+    "name": "Video Compressor",
+    "category": "video",
+    "status": "live",
+    "keywords": "compress video online free reduce size",
+    "description": "Reduce video file size locally before sharing.",
+    "privacy": "client-only",
+    "related": [
+      "video-trimmer",
+      "video-to-gif",
+      "video-to-mp3"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-trimmer",
+    "slug": "video-trimmer",
+    "name": "Video Trimmer",
+    "category": "video",
+    "status": "live",
+    "keywords": "trim cut video online free",
+    "description": "Trim video clips to a start and end time locally.",
+    "privacy": "client-only",
+    "related": [
+      "video-compressor",
+      "video-to-gif",
+      "video-speed"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-to-gif",
+    "slug": "video-to-gif",
+    "name": "Video to GIF",
+    "category": "video",
+    "status": "live",
+    "keywords": "convert video to gif online free",
+    "description": "Convert video clips into animated GIF files.",
+    "privacy": "client-only",
+    "related": [
+      "gif-splitter",
+      "video-trimmer",
+      "video-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "gif-to-mp4",
+    "slug": "gif-to-mp4",
+    "name": "GIF to MP4",
+    "category": "video",
+    "status": "live",
+    "keywords": "convert gif to mp4 online free",
+    "description": "Convert animated GIFs to MP4 video files.",
+    "privacy": "client-only",
+    "related": [
+      "video-to-gif",
+      "gif-splitter",
+      "video-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-mute",
+    "slug": "video-mute",
+    "name": "Mute Video",
+    "category": "video",
+    "status": "live",
+    "keywords": "remove audio from video online free",
+    "description": "Strip audio track from video files locally.",
+    "privacy": "client-only",
+    "related": [
+      "video-to-mp3",
+      "video-trimmer",
+      "video-compressor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "video-speed",
+    "slug": "video-speed-changer",
+    "name": "Video Speed Changer",
+    "category": "video",
+    "status": "live",
+    "keywords": "speed up slow down video online",
+    "description": "Change video playback speed locally.",
+    "privacy": "client-only",
+    "related": [
+      "video-trimmer",
+      "video-compressor",
+      "video-to-gif"
+    ],
+    "popular": false
+  },
+  {
+    "id": "audio-trimmer",
+    "slug": "audio-trimmer",
+    "name": "Audio Trimmer",
+    "category": "audio",
+    "status": "live",
+    "keywords": "trim audio online free cut mp3",
+    "description": "Trim audio files to precise start and end points.",
+    "privacy": "client-only",
+    "related": [
+      "audio-converter",
+      "video-to-mp3",
+      "merge-audio"
+    ],
+    "popular": false
+  },
+  {
+    "id": "audio-converter",
+    "slug": "audio-converter",
+    "name": "Audio Format Converter",
+    "category": "audio",
+    "status": "live",
+    "keywords": "convert wav to mp3 online free",
+    "description": "Convert audio between WAV and other formats locally.",
+    "privacy": "client-only",
+    "related": [
+      "audio-trimmer",
+      "video-to-mp3",
+      "merge-audio"
+    ],
+    "popular": false
+  },
+  {
+    "id": "merge-audio",
+    "slug": "merge-audio",
+    "name": "Merge Audio Files",
+    "category": "audio",
+    "status": "live",
+    "keywords": "merge combine audio files online",
+    "description": "Join multiple audio clips into one file.",
+    "privacy": "client-only",
+    "related": [
+      "audio-trimmer",
+      "audio-converter",
+      "video-to-mp3"
+    ],
+    "popular": false
+  },
+  {
+    "id": "text-to-speech",
+    "slug": "text-to-speech",
+    "name": "Text to Speech",
+    "category": "audio",
+    "status": "live",
+    "keywords": "text to speech online free",
+    "description": "Convert written text to spoken audio in your browser.",
+    "privacy": "client-only",
+    "related": [
+      "speech-to-text",
+      "word-counter",
+      "reading-time"
+    ],
+    "popular": true
+  },
+  {
+    "id": "speech-to-text",
+    "slug": "speech-to-text",
+    "name": "Speech to Text",
+    "category": "audio",
+    "status": "live",
+    "keywords": "speech to text online free dictation",
+    "description": "Transcribe spoken words to text using your microphone.",
+    "privacy": "client-only",
+    "related": [
+      "text-to-speech",
+      "word-counter",
+      "markdown-editor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pressure-converter",
+    "slug": "pressure-converter",
+    "name": "Pressure Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "psi bar pascal pressure converter",
+    "description": "Convert between PSI, bar, Pascal, and atm pressure units.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "energy-converter",
+      "power-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "energy-converter",
+    "slug": "energy-converter",
+    "name": "Energy Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "joules calories kwh converter online",
+    "description": "Convert joules, calories, and kilowatt-hours.",
+    "privacy": "client-only",
+    "related": [
+      "power-converter",
+      "pressure-converter",
+      "unit-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "power-converter",
+    "slug": "power-converter",
+    "name": "Power Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "watts horsepower power converter",
+    "description": "Convert watts, kilowatts, and mechanical horsepower.",
+    "privacy": "client-only",
+    "related": [
+      "energy-converter",
+      "pressure-converter",
+      "unit-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "angle-converter",
+    "slug": "angle-converter",
+    "name": "Angle Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "degrees radians gradians converter",
+    "description": "Convert angles between degrees, radians, and gradians.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "physics-solver",
+      "base-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "fuel-economy",
+    "slug": "fuel-economy-converter",
+    "name": "Fuel Economy Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "mpg to liters per 100km converter",
+    "description": "Convert fuel economy between MPG and L/100km.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "fuel-cost",
+      "speed-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "cooking-converter",
+    "slug": "cooking-converter",
+    "name": "Cooking Measurement Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "cups tbsp ml grams cooking converter",
+    "description": "Convert cups, tablespoons, milliliters, and grams.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "height-weight",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "frequency-converter",
+    "slug": "frequency-converter",
+    "name": "Frequency Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "hz khz mhz frequency converter",
+    "description": "Convert frequency between Hz, kHz, and MHz.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "audio-generator",
+      "physics-solver"
+    ],
+    "popular": false
+  },
+  {
+    "id": "torque-converter",
+    "slug": "torque-converter",
+    "name": "Torque Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "nm lb-ft torque converter online",
+    "description": "Convert torque between newton-meters and pound-feet.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "power-converter",
+      "pressure-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "kelvin-converter",
+    "slug": "kelvin-converter",
+    "name": "Kelvin Temperature Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "celsius kelvin fahrenheit converter",
+    "description": "Convert between Kelvin, Celsius, and Fahrenheit.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "epoch-converter",
+      "timezone-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "nautical-converter",
+    "slug": "nautical-mile-converter",
+    "name": "Nautical Mile Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "nautical miles km miles converter",
+    "description": "Convert nautical miles to kilometers and statute miles.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "speed-converter",
+      "gps-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "stone-converter",
+    "slug": "stone-converter",
+    "name": "Stone to KG Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "stone to kg pounds converter uk",
+    "description": "Convert stone and pounds to kilograms.",
+    "privacy": "client-only",
+    "related": [
+      "height-weight",
+      "unit-converter",
+      "bmi-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "area-converter",
+    "slug": "square-feet-converter",
+    "name": "Square Feet Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "square feet to square meters converter",
+    "description": "Convert area between square feet and square meters.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "aspect-ratio",
+      "storage-converter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "data-rate",
+    "slug": "data-rate-converter",
+    "name": "Data Rate Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "mbps to mbs data rate converter",
+    "description": "Convert data transfer rates between Mbps and MB/s.",
+    "privacy": "client-only",
+    "related": [
+      "storage-converter",
+      "unit-converter",
+      "binary-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "shoe-size",
+    "slug": "shoe-size-converter",
+    "name": "Shoe Size Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "us uk eu shoe size converter online",
+    "description": "Convert shoe sizes between US, UK, and EU standards.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "height-weight",
+      "ring-size"
+    ],
+    "popular": false
+  },
+  {
+    "id": "ring-size",
+    "slug": "ring-size-converter",
+    "name": "Ring Size Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "ring size us uk mm converter",
+    "description": "Convert ring sizes between US, UK, and millimeters.",
+    "privacy": "client-only",
+    "related": [
+      "shoe-size",
+      "unit-converter",
+      "aspect-ratio"
+    ],
+    "popular": false
+  },
+  {
+    "id": "rgb-cmyk",
+    "slug": "rgb-cmyk-converter",
+    "name": "RGB to CMYK Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "rgb to cmyk color converter print",
+    "description": "Convert RGB screen colors to CMYK for print design.",
+    "privacy": "client-only",
+    "related": [
+      "color-picker",
+      "palette-picker",
+      "css-gradient"
+    ],
+    "popular": false
+  },
+  {
+    "id": "hours-decimal",
+    "slug": "hours-to-decimal-converter",
+    "name": "Hours to Decimal Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "hours minutes to decimal hours converter",
+    "description": "Convert hours and minutes to decimal hour values.",
+    "privacy": "client-only",
+    "related": [
+      "hours-calculator",
+      "date-duration",
+      "stopwatch"
+    ],
+    "popular": false
+  },
+  {
+    "id": "fuel-cost",
+    "slug": "fuel-cost-calculator",
+    "name": "Fuel Cost Calculator",
+    "category": "converter",
+    "status": "live",
+    "keywords": "fuel cost trip calculator mpg",
+    "description": "Estimate trip fuel cost from distance and economy.",
+    "privacy": "client-only",
+    "related": [
+      "fuel-economy",
+      "unit-converter",
+      "percentage-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "speed-converter",
+    "slug": "speed-converter",
+    "name": "Speed Converter",
+    "category": "converter",
+    "status": "live",
+    "keywords": "speed converter m/s km/h mph",
+    "description": "Convert speed between m/s, km/h, and mph.",
+    "privacy": "client-only",
+    "related": [
+      "unit-converter",
+      "fuel-economy",
+      "physics-solver"
+    ],
+    "popular": false
+  },
+  {
+    "id": "scientific-calc",
+    "slug": "scientific-calculator",
+    "name": "Scientific Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "scientific calculator online free",
+    "description": "Perform advanced math with trig, log, and power functions.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "equation-solver",
+      "fraction-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "fraction-calc",
+    "slug": "fraction-calculator",
+    "name": "Fraction Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "fraction calculator add multiply online",
+    "description": "Add, subtract, multiply, and simplify fractions.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "scientific-calc",
+      "equation-solver"
+    ],
+    "popular": false
+  },
+  {
+    "id": "gpa-calculator",
+    "slug": "gpa-calculator",
+    "name": "GPA Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "gpa calculator grade point average online",
+    "description": "Calculate weighted GPA from course grades and credits.",
+    "privacy": "client-only",
+    "related": [
+      "percentage-calculator",
+      "scientific-calc",
+      "salary-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "iban-validator",
+    "slug": "iban-validator",
+    "name": "IBAN Validator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "iban validator check online free",
+    "description": "Validate International Bank Account Numbers locally.",
+    "privacy": "client-only",
+    "related": [
+      "credit-card-validator",
+      "hash-generator",
+      "sales-tax"
+    ],
+    "popular": false
+  },
+  {
+    "id": "html-to-markdown",
+    "slug": "html-to-markdown",
+    "name": "HTML to Markdown",
+    "category": "developer",
+    "status": "live",
+    "keywords": "html to markdown converter online",
+    "description": "Convert HTML markup into clean Markdown text.",
+    "privacy": "client-only",
+    "related": [
+      "markdown-to-html",
+      "html-minifier",
+      "markdown-editor"
+    ],
+    "popular": false
+  },
+  {
+    "id": "xml-to-json",
+    "slug": "xml-to-json",
+    "name": "XML to JSON Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "xml to json converter online free",
+    "description": "Parse XML documents into JSON structure locally.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "xml-formatter",
+      "yaml-json"
+    ],
+    "popular": false
+  },
+  {
+    "id": "json-to-xml",
+    "slug": "json-to-xml",
+    "name": "JSON to XML Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json to xml converter online free",
+    "description": "Convert JSON data into XML markup locally.",
+    "privacy": "client-only",
+    "related": [
+      "xml-to-json",
+      "json-formatter",
+      "xml-formatter"
+    ],
+    "popular": false
+  },
+  {
+    "id": "unicode-escape",
+    "slug": "unicode-converter",
+    "name": "Unicode Escape Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "unicode escape unescape converter online",
+    "description": "Convert text to Unicode escape sequences and back.",
+    "privacy": "client-only",
+    "related": [
+      "html-entities",
+      "hex-text",
+      "binary-text"
+    ],
+    "popular": false
+  },
+  {
+    "id": "ascii-table",
+    "slug": "ascii-table",
+    "name": "ASCII Table Reference",
+    "category": "developer",
+    "status": "live",
+    "keywords": "ascii table character codes reference",
+    "description": "Look up ASCII character codes and symbols instantly.",
+    "privacy": "client-only",
+    "related": [
+      "hex-text",
+      "binary-text",
+      "unicode-escape"
+    ],
+    "popular": false
+  },
+  {
+    "id": "instagram-formatter",
+    "slug": "instagram-line-breaks",
+    "name": "Instagram Line Break Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "instagram caption line breaks online",
+    "description": "Add invisible line breaks for Instagram captions.",
+    "privacy": "client-only",
+    "related": [
+      "tweet-counter",
+      "word-counter",
+      "hashtag-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "hashtag-generator",
+    "slug": "hashtag-generator",
+    "name": "Hashtag Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "hashtag generator instagram online",
+    "description": "Generate relevant hashtags from keywords for social posts.",
+    "privacy": "client-only",
+    "related": [
+      "keyword-density",
+      "instagram-formatter",
+      "slugify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "week-number",
+    "slug": "week-number-calculator",
+    "name": "Week Number Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "week number calculator iso online",
+    "description": "Find ISO week number for any calendar date.",
+    "privacy": "client-only",
+    "related": [
+      "epoch-converter",
+      "date-duration",
+      "age-calculator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "iso-timestamp",
+    "slug": "iso-timestamp-converter",
+    "name": "ISO Timestamp Converter",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "iso 8601 timestamp converter online",
+    "description": "Convert dates to ISO 8601 format and parse timestamps.",
+    "privacy": "client-only",
+    "related": [
+      "epoch-converter",
+      "timezone-converter",
+      "cron-parser"
+    ],
+    "popular": false
+  },
+  {
+    "id": "flexbox-gen",
+    "slug": "flexbox-generator",
+    "name": "CSS Flexbox Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css flexbox generator online",
+    "description": "Build flexbox layouts with live preview and CSS output.",
+    "privacy": "client-only",
+    "related": [
+      "css-grid-gen",
+      "css-box-shadow",
+      "pixel-to-rem"
+    ],
+    "popular": false
+  },
+  {
+    "id": "css-grid-gen",
+    "slug": "css-grid-generator",
+    "name": "CSS Grid Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css grid generator online",
+    "description": "Design CSS grid layouts with visual controls.",
+    "privacy": "client-only",
+    "related": [
+      "flexbox-gen",
+      "css-box-shadow",
+      "aspect-ratio"
+    ],
+    "popular": false
+  },
+  {
+    "id": "color-shades",
+    "slug": "color-shades-generator",
+    "name": "Color Shades Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "color shades tints generator hex online",
+    "description": "Generate tints and shades from any base hex color.",
+    "privacy": "client-only",
+    "related": [
+      "color-picker",
+      "css-gradient",
+      "palette-picker"
+    ],
+    "popular": false
+  },
+  {
+    "id": "meme-generator",
+    "slug": "meme-generator",
+    "name": "Meme Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "meme generator online free",
+    "description": "Add top and bottom text to images for memes.",
+    "privacy": "client-only",
+    "related": [
+      "quote-card",
+      "image-watermark",
+      "image-resizer"
+    ],
+    "popular": false
+  },
+  {
+    "id": "signature-pad",
+    "slug": "signature-generator",
+    "name": "Draw Signature",
+    "category": "design",
+    "status": "live",
+    "keywords": "draw signature online download png",
+    "description": "Draw and download your signature as a PNG image.",
+    "privacy": "client-only",
+    "related": [
+      "invoice-pdf",
+      "email-signature",
+      "favicon-generator"
+    ],
+    "popular": false
+  },
+  {
+    "id": "json-schema",
+    "slug": "json-schema-validator",
+    "name": "JSON Schema Validator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json schema validator online",
+    "description": "Validate JSON documents against a schema definition.",
+    "privacy": "client-only",
+    "related": [
+      "json-formatter",
+      "yaml-json",
+      "regex-tester"
+    ],
+    "popular": false
+  },
+  {
+    "id": "http-status",
+    "slug": "http-status-codes",
+    "name": "HTTP Status Codes",
+    "category": "developer",
+    "status": "live",
+    "keywords": "http status codes reference lookup",
+    "description": "Search HTTP status codes with meanings and usage notes.",
+    "privacy": "client-only",
+    "related": [
+      "nginx-generator",
+      "webhook-tester",
+      "regex-cheatsheet"
+    ],
+    "popular": false
+  },
+  {
+    "id": "extract-urls",
+    "slug": "extract-urls",
+    "name": "Extract URLs from Text",
+    "category": "text",
+    "status": "live",
+    "keywords": "extract urls from text online",
+    "description": "Pull all URLs from pasted text or HTML content.",
+    "privacy": "client-only",
+    "related": [
+      "query-string",
+      "link-opener",
+      "slugify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "extract-emails",
+    "slug": "extract-emails",
+    "name": "Extract Emails from Text",
+    "category": "text",
+    "status": "live",
+    "keywords": "extract email addresses from text online",
+    "description": "Find and list email addresses in any text block.",
+    "privacy": "client-only",
+    "related": [
+      "extract-urls",
+      "find-replace",
+      "list-dedupe"
+    ],
+    "popular": false
+  },
+  {
+    "id": "transpose-text",
+    "slug": "transpose-text",
+    "name": "Transpose Text Columns",
+    "category": "text",
+    "status": "live",
+    "keywords": "transpose rows columns text online",
+    "description": "Swap rows and columns in tabular text data.",
+    "privacy": "client-only",
+    "related": [
+      "csv-to-json",
+      "text-joiner",
+      "array-to-table"
+    ],
+    "popular": false
+  },
+  {
+    "id": "column-to-rows",
+    "slug": "columns-to-rows",
+    "name": "Columns to Rows",
+    "category": "text",
+    "status": "live",
+    "keywords": "convert columns to rows text online",
+    "description": "Transform column data into row format.",
+    "privacy": "client-only",
+    "related": [
+      "transpose-text",
+      "text-joiner",
+      "csv-to-json"
+    ],
+    "popular": false
+  },
+  {
+    "id": "business-days",
+    "slug": "business-days-calculator",
+    "name": "Business Days Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "business days calculator exclude weekends",
+    "description": "Count business days between two dates.",
+    "privacy": "client-only",
+    "related": [
+      "date-duration",
+      "age-calculator",
+      "week-number"
+    ],
+    "popular": false
+  },
+  {
+    "id": "car-loan",
+    "slug": "car-loan-calculator",
+    "name": "Car Loan Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "car loan calculator monthly payment",
+    "description": "Estimate auto loan payments with down payment and rate.",
+    "privacy": "client-only",
+    "related": [
+      "loan-calculator",
+      "mortgage-calculator",
+      "compound-interest"
+    ],
+    "popular": false
+  },
+  {
+    "id": "debt-payoff",
+    "slug": "debt-payoff-calculator",
+    "name": "Debt Payoff Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "debt payoff calculator snowball avalanche",
+    "description": "Plan debt payoff with extra monthly payments.",
+    "privacy": "client-only",
+    "related": [
+      "loan-calculator",
+      "compound-interest",
+      "yearly-savings"
+    ],
+    "popular": false
+  },
+  {
+    "id": "csv-to-xml",
+    "slug": "csv-to-xml",
+    "name": "CSV to XML Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "csv to xml converter online free",
+    "description": "Convert CSV spreadsheet data into XML format.",
+    "privacy": "client-only",
+    "related": [
+      "csv-to-json",
+      "xml-to-json",
+      "json-to-xml"
+    ],
+    "popular": false
+  },
+  {
+    "id": "xml-to-csv",
+    "slug": "xml-to-csv",
+    "name": "XML to CSV Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "xml to csv converter online free",
+    "description": "Convert XML data into CSV spreadsheet format.",
+    "privacy": "client-only",
+    "related": [
+      "csv-to-xml",
+      "xml-to-json",
+      "json-to-csv"
+    ],
+    "popular": false
+  },
+  {
+    "id": "qr-decoder",
+    "slug": "qr-code-decoder",
+    "name": "QR Code Decoder",
+    "category": "web",
+    "status": "live",
+    "keywords": "qr code decoder reader online",
+    "description": "Decode QR codes from uploaded images locally.",
+    "privacy": "client-only",
+    "related": [
+      "qr-code",
+      "barcode",
+      "file-identify"
+    ],
+    "popular": false
+  },
+  {
+    "id": "pdf-reorder",
+    "slug": "pdf-reorder-pages",
+    "name": "PDF Page Reorder",
+    "category": "document",
+    "status": "live",
+    "keywords": "reorder pdf pages online free",
+    "description": "Reorder PDF pages by specifying a new page sequence.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "pdf-extract-text",
+    "slug": "pdf-text-extractor",
+    "name": "PDF Text Extractor",
+    "category": "document",
+    "status": "live",
+    "keywords": "extract text from pdf online free",
+    "description": "Extract readable text from PDF documents locally.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "pdf-watermark",
+    "slug": "pdf-watermark",
+    "name": "PDF Watermark",
+    "category": "document",
+    "status": "live",
+    "keywords": "add watermark to pdf online free",
+    "description": "Add text watermarks to every PDF page.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "pdf-unlock",
+    "slug": "pdf-unlock",
+    "name": "PDF Unlock (Remove Password)",
+    "category": "document",
+    "status": "live",
+    "keywords": "unlock pdf remove password online",
+    "description": "Open password-protected PDFs if you know the password.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "heic-converter",
+    "slug": "heic-to-jpg",
+    "name": "HEIC to JPG",
+    "category": "image",
+    "status": "live",
+    "keywords": "heic to jpg converter online free",
+    "description": "Convert iPhone HEIC photos to JPG when supported by your browser.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "avif-converter",
+    "slug": "avif-converter",
+    "name": "AVIF Converter",
+    "category": "image",
+    "status": "live",
+    "keywords": "avif to png jpg converter online",
+    "description": "Convert AVIF images to PNG or JPG locally.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "image-sharpen",
+    "slug": "image-sharpen",
+    "name": "Image Sharpen",
+    "category": "image",
+    "status": "live",
+    "keywords": "sharpen image online free",
+    "description": "Sharpen blurry photos using canvas filters.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "image-border",
+    "slug": "image-border",
+    "name": "Add Image Border",
+    "category": "image",
+    "status": "live",
+    "keywords": "add border to image online free",
+    "description": "Add colored borders around images before download.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "gif-maker",
+    "slug": "gif-maker",
+    "name": "GIF Maker",
+    "category": "image",
+    "status": "live",
+    "keywords": "create gif from images online free",
+    "description": "Combine images into an animated GIF.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "transparent-png",
+    "slug": "transparent-png-maker",
+    "name": "Transparent PNG Maker",
+    "category": "image",
+    "status": "live",
+    "keywords": "make png transparent background online",
+    "description": "Remove solid-color backgrounds from simple images.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "image-collage",
+    "slug": "photo-collage-maker",
+    "name": "Photo Collage Maker",
+    "category": "image",
+    "status": "live",
+    "keywords": "photo collage maker online free",
+    "description": "Arrange multiple photos into a simple collage grid.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "video-rotate",
+    "slug": "video-rotate",
+    "name": "Rotate Video",
+    "category": "video",
+    "status": "live",
+    "keywords": "rotate video online free",
+    "description": "Rotate video 90 or 180 degrees locally.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "video-merge",
+    "slug": "video-merger",
+    "name": "Video Merger",
+    "category": "video",
+    "status": "live",
+    "keywords": "merge combine videos online free",
+    "description": "Join multiple video clips into one file.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "video-crop",
+    "slug": "video-cropper",
+    "name": "Video Cropper",
+    "category": "video",
+    "status": "live",
+    "keywords": "crop video online free",
+    "description": "Crop video to a custom aspect ratio.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "mov-converter",
+    "slug": "mov-to-mp4",
+    "name": "MOV to MP4",
+    "category": "video",
+    "status": "live",
+    "keywords": "mov to mp4 converter online free",
+    "description": "Convert MOV files to MP4 in your browser.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "audio-speed",
+    "slug": "audio-speed-changer",
+    "name": "Audio Speed Changer",
+    "category": "video",
+    "status": "live",
+    "keywords": "change audio speed online free",
+    "description": "Speed up or slow down audio without changing pitch much.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "audio-volume",
+    "slug": "audio-volume-booster",
+    "name": "Audio Volume Booster",
+    "category": "audio",
+    "status": "live",
+    "keywords": "boost audio volume online free",
+    "description": "Increase audio volume before export.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "audio-reverse",
+    "slug": "reverse-audio",
+    "name": "Reverse Audio",
+    "category": "audio",
+    "status": "live",
+    "keywords": "reverse audio online free",
+    "description": "Play audio backwards for creative effects.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "record-audio",
+    "slug": "audio-recorder",
+    "name": "Audio Recorder",
+    "category": "audio",
+    "status": "live",
+    "keywords": "record audio online microphone free",
+    "description": "Record audio from your microphone in the browser.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "ogg-converter",
+    "slug": "ogg-converter",
+    "name": "OGG Converter",
+    "category": "audio",
+    "status": "live",
+    "keywords": "ogg to mp3 wav converter online",
+    "description": "Convert OGG audio to WAV format locally.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "flac-converter",
+    "slug": "flac-converter",
+    "name": "FLAC Converter",
+    "category": "audio",
+    "status": "live",
+    "keywords": "flac to wav mp3 converter online",
+    "description": "Convert FLAC audio using browser decoding.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "sha512-hash",
+    "slug": "sha512-hash-generator",
+    "name": "SHA-512 Hash Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "sha512 hash generator online",
+    "description": "Generate SHA-512 hashes from text or files.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "sha384-hash",
+    "slug": "sha384-hash-generator",
+    "name": "SHA-384 Hash Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "sha384 hash generator online",
+    "description": "Generate SHA-384 cryptographic hashes locally.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "hmac-generator",
+    "slug": "hmac-generator",
+    "name": "HMAC Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "hmac sha256 generator online",
+    "description": "Generate HMAC signatures with a secret key.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "pbkdf2-generator",
+    "slug": "pbkdf2-generator",
+    "name": "PBKDF2 Key Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "pbkdf2 generator online",
+    "description": "Derive keys using PBKDF2 with Web Crypto.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "htpasswd-generator",
+    "slug": "htpasswd-generator",
+    "name": "Htpasswd Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "htpasswd generator apache online",
+    "description": "Generate Apache htpasswd bcrypt entries.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "api-key-generator",
+    "slug": "api-key-generator",
+    "name": "API Key Generator",
+    "category": "security",
+    "status": "live",
+    "keywords": "api key generator random online",
+    "description": "Generate secure random API keys and tokens.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "caesar-cipher",
+    "slug": "caesar-cipher",
+    "name": "Caesar Cipher",
+    "category": "security",
+    "status": "live",
+    "keywords": "caesar cipher encoder decoder online",
+    "description": "Encode and decode Caesar cipher with custom shift.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "atbash-cipher",
+    "slug": "atbash-cipher",
+    "name": "Atbash Cipher",
+    "category": "security",
+    "status": "live",
+    "keywords": "atbash cipher encoder online",
+    "description": "Apply the Atbash alphabet substitution cipher.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "vigenere-cipher",
+    "slug": "vigenere-cipher",
+    "name": "Vigenère Cipher",
+    "category": "security",
+    "status": "live",
+    "keywords": "vigenere cipher encoder decoder online",
+    "description": "Encrypt and decrypt text with a Vigenère keyword.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "base32-encoder",
+    "slug": "base32-encoder",
+    "name": "Base32 Encoder & Decoder",
+    "category": "developer",
+    "status": "live",
+    "keywords": "base32 encode decode online",
+    "description": "Encode and decode Base32 strings locally.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "base58-encoder",
+    "slug": "base58-encoder",
+    "name": "Base58 Encoder",
+    "category": "developer",
+    "status": "live",
+    "keywords": "base58 encode decode bitcoin online",
+    "description": "Encode and decode Base58 data locally.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "punycode-converter",
+    "slug": "punycode-converter",
+    "name": "Punycode Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "punycode idn converter online",
+    "description": "Convert international domain names to Punycode and back.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "json-diff",
+    "slug": "json-diff",
+    "name": "JSON Diff Compare",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json diff compare online free",
+    "description": "Compare two JSON documents and highlight differences.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "jsonpath-tester",
+    "slug": "jsonpath-tester",
+    "name": "JSONPath Tester",
+    "category": "developer",
+    "status": "live",
+    "keywords": "jsonpath tester query online",
+    "description": "Query JSON documents using JSONPath expressions.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "json-merge",
+    "slug": "json-merge",
+    "name": "JSON Merge Tool",
+    "category": "developer",
+    "status": "live",
+    "keywords": "merge json objects online",
+    "description": "Deep merge two JSON objects into one.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "graphql-formatter",
+    "slug": "graphql-formatter",
+    "name": "GraphQL Formatter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "graphql formatter beautify online",
+    "description": "Format and indent GraphQL queries for readability.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "curl-converter",
+    "slug": "curl-to-fetch",
+    "name": "cURL to Fetch Converter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "curl to javascript fetch converter",
+    "description": "Convert cURL commands into JavaScript fetch code.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "utm-builder",
+    "slug": "utm-builder",
+    "name": "UTM Link Builder",
+    "category": "web",
+    "status": "live",
+    "keywords": "utm parameter builder campaign url",
+    "description": "Build campaign URLs with UTM tracking parameters.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "utm-parser",
+    "slug": "utm-parser",
+    "name": "UTM Parameter Parser",
+    "category": "web",
+    "status": "live",
+    "keywords": "utm parameter parser online",
+    "description": "Parse UTM campaign parameters from any URL.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "docker-compose-gen",
+    "slug": "docker-compose-generator",
+    "name": "Docker Compose Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "docker compose generator yaml online",
+    "description": "Generate docker-compose.yml from simple service inputs.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "gitignore-advanced",
+    "slug": "gitignore-advanced",
+    "name": "Advanced .gitignore Builder",
+    "category": "developer",
+    "status": "live",
+    "keywords": "gitignore builder multiple stacks online",
+    "description": "Build combined gitignore rules for polyglot projects.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "readme-generator",
+    "slug": "readme-generator",
+    "name": "README Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "readme generator markdown github online",
+    "description": "Generate GitHub README markdown from project details.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "semver-calculator",
+    "slug": "semver-calculator",
+    "name": "SemVer Calculator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "semver version bump calculator online",
+    "description": "Bump semantic version numbers by major minor patch.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "chmod-calculator",
+    "slug": "chmod-calculator",
+    "name": "Chmod Calculator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "chmod calculator unix permissions online",
+    "description": "Convert between chmod numeric and symbolic permissions.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "crontab-generator",
+    "slug": "crontab-generator",
+    "name": "Crontab Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "crontab generator linux schedule online",
+    "description": "Build full crontab entries with timezone notes.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "mac-generator",
+    "slug": "mac-address-generator",
+    "name": "MAC Address Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "mac address generator random online",
+    "description": "Generate random MAC addresses for testing.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "cidr-calculator",
+    "slug": "cidr-calculator",
+    "name": "CIDR Subnet Calculator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "cidr subnet calculator online",
+    "description": "Calculate IP subnet ranges from CIDR notation.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "ipv6-converter",
+    "slug": "ipv6-converter",
+    "name": "IPv6 Address Formatter",
+    "category": "developer",
+    "status": "live",
+    "keywords": "ipv6 address expand compress online",
+    "description": "Expand or compress IPv6 address notation.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "mime-lookup",
+    "slug": "mime-type-lookup",
+    "name": "MIME Type Lookup",
+    "category": "developer",
+    "status": "live",
+    "keywords": "mime type lookup file extension online",
+    "description": "Look up MIME types for file extensions.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "http-header-parser",
+    "slug": "http-header-parser",
+    "name": "HTTP Header Parser",
+    "category": "developer",
+    "status": "live",
+    "keywords": "http header parser online",
+    "description": "Parse raw HTTP request and response headers.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "jwt-rs256-decoder",
+    "slug": "jwt-rs256-decoder",
+    "name": "JWT RS256 Decoder",
+    "category": "security",
+    "status": "live",
+    "keywords": "jwt rs256 decode inspect online",
+    "description": "Decode JWT tokens and inspect RS256 header metadata.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "pemcert-decoder",
+    "slug": "pem-decoder",
+    "name": "PEM Certificate Decoder",
+    "category": "security",
+    "status": "live",
+    "keywords": "pem certificate decoder online",
+    "description": "Decode PEM certificates to readable fields.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "factorial-calc",
+    "slug": "factorial-calculator",
+    "name": "Factorial Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "factorial calculator n online",
+    "description": "Calculate factorials for integers up to 170.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "permutation-calc",
+    "slug": "permutation-calculator",
+    "name": "Permutation & Combination",
+    "category": "math",
+    "status": "live",
+    "keywords": "permutation combination calculator online",
+    "description": "Calculate nPr and nCr permutations and combinations.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "stats-calculator",
+    "slug": "statistics-calculator",
+    "name": "Statistics Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "mean median mode standard deviation online",
+    "description": "Calculate mean, median, mode, and standard deviation.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "quadratic-calc",
+    "slug": "quadratic-calculator",
+    "name": "Quadratic Formula Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "quadratic formula calculator online",
+    "description": "Solve quadratic equations using the quadratic formula.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "pythagorean-calc",
+    "slug": "pythagorean-calculator",
+    "name": "Pythagorean Theorem Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "pythagorean theorem calculator online",
+    "description": "Find hypotenuse or missing side of a right triangle.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "circle-calc",
+    "slug": "circle-calculator",
+    "name": "Circle Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "circle area circumference calculator online",
+    "description": "Calculate circle area and circumference from radius.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "triangle-area",
+    "slug": "triangle-area-calculator",
+    "name": "Triangle Area Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "triangle area calculator online",
+    "description": "Calculate triangle area from base and height.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "volume-calc",
+    "slug": "volume-calculator",
+    "name": "Volume Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "volume calculator cube sphere cylinder online",
+    "description": "Calculate volume of common 3D shapes.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "log-calculator",
+    "slug": "logarithm-calculator",
+    "name": "Logarithm Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "logarithm calculator ln log10 online",
+    "description": "Calculate natural and base-10 logarithms.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "apy-calculator",
+    "slug": "apy-calculator",
+    "name": "APY Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "apy calculator annual percentage yield online",
+    "description": "Calculate APY from interest rate and compounding frequency.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "rule-of-72",
+    "slug": "rule-of-72-calculator",
+    "name": "Rule of 72 Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "rule of 72 calculator investment doubling",
+    "description": "Estimate years to double an investment at a given rate.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "inflation-calc",
+    "slug": "inflation-calculator",
+    "name": "Inflation Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "inflation calculator purchasing power online",
+    "description": "Estimate purchasing power change over time.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "hourly-salary",
+    "slug": "hourly-to-salary-calculator",
+    "name": "Hourly to Salary Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "hourly to salary calculator annual income",
+    "description": "Convert hourly wage to annual salary and back.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "paycheck-calc",
+    "slug": "paycheck-calculator",
+    "name": "Paycheck Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "paycheck calculator net pay online",
+    "description": "Estimate net pay from gross salary and deductions.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "retirement-calc",
+    "slug": "retirement-calculator",
+    "name": "Retirement Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "retirement savings calculator online",
+    "description": "Project retirement savings growth over time.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "stripe-fee",
+    "slug": "stripe-fee-calculator",
+    "name": "Stripe Fee Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "stripe fee calculator online",
+    "description": "Calculate Stripe processing fees and net payout.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "paypal-fee",
+    "slug": "paypal-fee-calculator",
+    "name": "PayPal Fee Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "paypal fee calculator online",
+    "description": "Calculate PayPal transaction fees and net received.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "cpm-calculator",
+    "slug": "cpm-calculator",
+    "name": "CPM Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "cpm calculator advertising online",
+    "description": "Calculate cost per thousand impressions for ads.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "ctr-calculator",
+    "slug": "ctr-calculator",
+    "name": "CTR Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "ctr calculator click through rate online",
+    "description": "Calculate click-through rate from clicks and impressions.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "roas-calculator",
+    "slug": "roas-calculator",
+    "name": "ROAS Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "roas calculator return on ad spend online",
+    "description": "Calculate return on ad spend from revenue and cost.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "amazon-fba",
+    "slug": "amazon-fba-calculator",
+    "name": "Amazon FBA Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "amazon fba fee calculator online",
+    "description": "Estimate Amazon FBA fees and net profit.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "ideal-weight",
+    "slug": "ideal-weight-calculator",
+    "name": "Ideal Weight Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "ideal body weight calculator online",
+    "description": "Estimate ideal weight using standard medical formulas.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "body-fat",
+    "slug": "body-fat-calculator",
+    "name": "Body Fat Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "body fat percentage calculator online",
+    "description": "Estimate body fat percentage from measurements.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "macro-calculator",
+    "slug": "macro-calculator",
+    "name": "Macro Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "macro nutrient calculator online",
+    "description": "Calculate daily protein carbs fat targets from calories.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "water-intake",
+    "slug": "water-intake-calculator",
+    "name": "Water Intake Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "daily water intake calculator online",
+    "description": "Estimate daily water intake based on weight and activity.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "pace-calculator",
+    "slug": "running-pace-calculator",
+    "name": "Running Pace Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "running pace calculator min per mile km online",
+    "description": "Calculate running pace from distance and time.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "one-rep-max",
+    "slug": "one-rep-max-calculator",
+    "name": "One Rep Max Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "one rep max calculator gym online",
+    "description": "Estimate one-rep max from weight and reps.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "pregnancy-due",
+    "slug": "pregnancy-due-date",
+    "name": "Pregnancy Due Date Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "pregnancy due date calculator online",
+    "description": "Calculate estimated due date from last menstrual period.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "ovulation-calc",
+    "slug": "ovulation-calculator",
+    "name": "Ovulation Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "ovulation calculator fertile window online",
+    "description": "Estimate ovulation and fertile window dates.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "days-until",
+    "slug": "days-until-calculator",
+    "name": "Days Until Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "days until date countdown online",
+    "description": "Count days remaining until any future date.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "date-add",
+    "slug": "date-add-subtract",
+    "name": "Add/Subtract Days from Date",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "add subtract days from date online",
+    "description": "Add or subtract days weeks months from a date.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "world-clock",
+    "slug": "world-clock",
+    "name": "World Clock",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "world clock multiple timezones online",
+    "description": "View current time in cities around the world.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "meeting-planner",
+    "slug": "meeting-time-planner",
+    "name": "Meeting Time Planner",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "meeting time planner timezones online",
+    "description": "Find overlapping meeting times across timezones.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "unix-ms",
+    "slug": "unix-milliseconds-converter",
+    "name": "Unix Milliseconds Converter",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "unix timestamp milliseconds converter online",
+    "description": "Convert Unix timestamps in milliseconds to dates.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "zalgo-text",
+    "slug": "zalgo-text-generator",
+    "name": "Zalgo Text Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "zalgo glitch text generator online",
+    "description": "Generate creepy Zalgo glitch text effects.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "bubble-text",
+    "slug": "bubble-text-generator",
+    "name": "Bubble Text Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "bubble text generator unicode online",
+    "description": "Convert text to bubble Unicode characters.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "wide-text",
+    "slug": "wide-text-generator",
+    "name": "Wide Text Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "wide text generator aesthetic online",
+    "description": "Convert text to wide fullwidth Unicode characters.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "small-caps",
+    "slug": "small-caps-generator",
+    "name": "Small Caps Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "small caps text generator online",
+    "description": "Convert text to Unicode small capitals.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "bold-text",
+    "slug": "bold-text-generator",
+    "name": "Bold Text Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "bold text generator unicode social media",
+    "description": "Generate bold Unicode text for social posts.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "italic-text",
+    "slug": "italic-text-generator",
+    "name": "Italic Text Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "italic text generator unicode online",
+    "description": "Generate italic Unicode text for bios and posts.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "invisible-char",
+    "slug": "invisible-character",
+    "name": "Invisible Character Copy",
+    "category": "text",
+    "status": "live",
+    "keywords": "invisible character zero width copy online",
+    "description": "Copy invisible zero-width characters for formatting.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "duplicate-finder",
+    "slug": "duplicate-word-finder",
+    "name": "Duplicate Word Finder",
+    "category": "text",
+    "status": "live",
+    "keywords": "find duplicate words in text online",
+    "description": "Find repeated words and phrases in your text.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "syllable-counter",
+    "slug": "syllable-counter",
+    "name": "Syllable Counter",
+    "category": "text",
+    "status": "live",
+    "keywords": "syllable counter online free",
+    "description": "Count syllables in words and sentences.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "flesch-score",
+    "slug": "readability-score",
+    "name": "Readability Score",
+    "category": "text",
+    "status": "live",
+    "keywords": "flesch reading ease score online",
+    "description": "Calculate Flesch reading ease and grade level.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "sort-paragraphs",
+    "slug": "sort-paragraphs",
+    "name": "Sort Paragraphs",
+    "category": "text",
+    "status": "live",
+    "keywords": "sort paragraphs alphabetically online",
+    "description": "Sort paragraphs A–Z or by length.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "remove-punctuation",
+    "slug": "remove-punctuation",
+    "name": "Remove Punctuation",
+    "category": "text",
+    "status": "live",
+    "keywords": "remove punctuation from text online",
+    "description": "Strip punctuation marks from text instantly.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "sentence-capitalize",
+    "slug": "capitalize-sentences",
+    "name": "Capitalize Sentences",
+    "category": "text",
+    "status": "live",
+    "keywords": "capitalize sentences online free",
+    "description": "Capitalize the first letter of every sentence.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "word-frequency",
+    "slug": "word-frequency-counter",
+    "name": "Word Frequency Counter",
+    "category": "text",
+    "status": "live",
+    "keywords": "word frequency counter online",
+    "description": "Count how often each word appears in text.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "ngram-generator",
+    "slug": "ngram-generator",
+    "name": "N-Gram Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "ngram generator text analysis online",
+    "description": "Generate n-grams from text for NLP analysis.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "csv-excel",
+    "slug": "csv-to-excel",
+    "name": "CSV to Excel (TSV)",
+    "category": "developer",
+    "status": "live",
+    "keywords": "csv to excel download online free",
+    "description": "Convert CSV data to Excel-compatible TSV download.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "excel-csv",
+    "slug": "excel-to-csv",
+    "name": "Excel to CSV",
+    "category": "developer",
+    "status": "live",
+    "keywords": "excel to csv converter online free",
+    "description": "Convert tab-separated spreadsheet data to CSV.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "schema-generator",
+    "slug": "schema-markup-generator",
+    "name": "Schema Markup Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "schema org json-ld generator online",
+    "description": "Generate JSON-LD schema markup for SEO.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "faq-schema",
+    "slug": "faq-schema-generator",
+    "name": "FAQ Schema Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "faq schema json-ld generator online",
+    "description": "Build FAQ structured data for rich search results.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "breadcrumb-schema",
+    "slug": "breadcrumb-schema-generator",
+    "name": "Breadcrumb Schema Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "breadcrumb schema generator online",
+    "description": "Generate breadcrumb JSON-LD for search engines.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "twitter-card",
+    "slug": "twitter-card-generator",
+    "name": "Twitter Card Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "twitter card meta tags generator online",
+    "description": "Generate Twitter/X card meta tags for link previews.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "linkedin-preview",
+    "slug": "linkedin-post-preview",
+    "name": "LinkedIn Post Preview",
+    "category": "web",
+    "status": "live",
+    "keywords": "linkedin post preview generator online",
+    "description": "Preview how your post will look on LinkedIn.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "canonical-tag",
+    "slug": "canonical-tag-generator",
+    "name": "Canonical Tag Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "canonical url tag generator seo online",
+    "description": "Generate canonical link tags for duplicate content.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "hreflang-generator",
+    "slug": "hreflang-generator",
+    "name": "Hreflang Tag Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "hreflang tag generator international seo",
+    "description": "Build hreflang alternate link tags for multilingual sites.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "css-animation",
+    "slug": "css-animation-generator",
+    "name": "CSS Animation Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css animation keyframes generator online",
+    "description": "Build CSS keyframe animations with live preview.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "css-filter",
+    "slug": "css-filter-generator",
+    "name": "CSS Filter Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css filter generator blur brightness online",
+    "description": "Design CSS filter effects with live image preview.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "css-text-shadow",
+    "slug": "css-text-shadow-generator",
+    "name": "CSS Text Shadow Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css text shadow generator online",
+    "description": "Create CSS text-shadow effects with live preview.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "css-spinner",
+    "slug": "css-spinner-generator",
+    "name": "CSS Loading Spinner Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "css loading spinner generator online",
+    "description": "Generate pure CSS loading spinner animations.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "css-glass",
+    "slug": "glassmorphism-generator",
+    "name": "Glassmorphism Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "glassmorphism css generator online",
+    "description": "Generate glassmorphism UI CSS with blur and transparency.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "wcag-contrast",
+    "slug": "wcag-contrast-checker",
+    "name": "WCAG Contrast Checker",
+    "category": "design",
+    "status": "live",
+    "keywords": "wcag color contrast checker online",
+    "description": "Check color contrast ratios for WCAG AA and AAA compliance.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "golden-ratio",
+    "slug": "golden-ratio-calculator",
+    "name": "Golden Ratio Calculator",
+    "category": "design",
+    "status": "live",
+    "keywords": "golden ratio calculator design online",
+    "description": "Calculate golden ratio proportions for layouts.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "business-card",
+    "slug": "business-card-generator",
+    "name": "Business Card Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "business card generator online free",
+    "description": "Design a simple business card and download as PNG.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "certificate-gen",
+    "slug": "certificate-generator",
+    "name": "Certificate Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "certificate generator online free download",
+    "description": "Create award certificates as downloadable images.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "wheel-spinner",
+    "slug": "wheel-spinner",
+    "name": "Wheel Spinner",
+    "category": "text",
+    "status": "live",
+    "keywords": "wheel spinner random picker online",
+    "description": "Spin a wheel to pick random winners or choices.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "lottery-numbers",
+    "slug": "lottery-number-generator",
+    "name": "Lottery Number Generator",
+    "category": "math",
+    "status": "live",
+    "keywords": "lottery number generator random online",
+    "description": "Generate random lottery number combinations.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "bingo-card",
+    "slug": "bingo-card-generator",
+    "name": "Bingo Card Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "bingo card generator online free",
+    "description": "Generate printable bingo cards with random numbers.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "team-generator",
+    "slug": "team-generator",
+    "name": "Team Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "random team generator online free",
+    "description": "Split a list of names into random balanced teams.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "decision-maker",
+    "slug": "decision-maker",
+    "name": "Decision Maker",
+    "category": "text",
+    "status": "live",
+    "keywords": "decision maker yes no maybe online",
+    "description": "Get a random decision when you cannot choose.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "magic-8ball",
+    "slug": "magic-8-ball",
+    "name": "Magic 8 Ball",
+    "category": "text",
+    "status": "live",
+    "keywords": "magic 8 ball online free",
+    "description": "Ask the Magic 8 Ball for a random answer.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "rock-paper-scissors",
+    "slug": "rock-paper-scissors",
+    "name": "Rock Paper Scissors",
+    "category": "text",
+    "status": "live",
+    "keywords": "rock paper scissors online game",
+    "description": "Play rock paper scissors against the computer.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "yes-no-oracle",
+    "slug": "yes-no-oracle",
+    "name": "Yes or No Oracle",
+    "category": "text",
+    "status": "live",
+    "keywords": "yes no oracle random answer online",
+    "description": "Get instant yes or no answers to your questions.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "bracket-generator",
+    "slug": "tournament-bracket-generator",
+    "name": "Tournament Bracket Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "tournament bracket generator online free",
+    "description": "Generate single-elimination tournament brackets.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "name-combiner",
+    "slug": "name-combiner",
+    "name": "Name Combiner",
+    "category": "text",
+    "status": "live",
+    "keywords": "combine names generator online",
+    "description": "Combine two names into creative blended options.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "steps-converter",
+    "slug": "steps-to-miles-calculator",
+    "name": "Steps to Miles Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "steps to miles km calculator online",
+    "description": "Convert step count to miles or kilometers walked.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "sleep-calculator",
+    "slug": "sleep-calculator",
+    "name": "Sleep Cycle Calculator",
+    "category": "datetime",
+    "status": "live",
+    "keywords": "sleep calculator wake up time online",
+    "description": "Find optimal wake-up times based on sleep cycles.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "json-to-ts",
+    "slug": "json-to-typescript",
+    "name": "JSON to TypeScript",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json to typescript interface generator online",
+    "description": "Generate TypeScript interfaces from JSON data.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "json-to-go",
+    "slug": "json-to-go",
+    "name": "JSON to Go Struct",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json to go struct generator online",
+    "description": "Generate Go struct types from JSON objects.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "json-to-python",
+    "slug": "json-to-python",
+    "name": "JSON to Python Dataclass",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json to python dataclass generator online",
+    "description": "Generate Python dataclass definitions from JSON.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "sql-to-json",
+    "slug": "sql-to-json",
+    "name": "SQL Insert to JSON",
+    "category": "developer",
+    "status": "live",
+    "keywords": "sql insert to json converter online",
+    "description": "Parse SQL INSERT statements into JSON arrays.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "html-table-json",
+    "slug": "html-table-to-json",
+    "name": "HTML Table to JSON",
+    "category": "developer",
+    "status": "live",
+    "keywords": "html table to json converter online",
+    "description": "Convert HTML table markup into JSON data.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "markdown-table",
+    "slug": "markdown-table-generator",
+    "name": "Markdown Table Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "markdown table generator online",
+    "description": "Build markdown tables from CSV-like input.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "lorem-json",
+    "slug": "json-data-generator",
+    "name": "JSON Data Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "json mock data generator online",
+    "description": "Generate sample JSON objects for testing APIs.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "fake-user",
+    "slug": "fake-user-generator",
+    "name": "Fake User Data Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "fake user data generator testing online",
+    "description": "Generate fake user profiles for testing and demos.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "nanoid-generator",
+    "slug": "nanoid-generator",
+    "name": "Nano ID Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "nanoid generator online free",
+    "description": "Generate compact unique Nano ID strings.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "ulid-generator",
+    "slug": "ulid-generator",
+    "name": "ULID Generator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "ulid generator sortable id online",
+    "description": "Generate sortable ULID unique identifiers.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "slug-bulk",
+    "slug": "bulk-slug-generator",
+    "name": "Bulk Slug Generator",
+    "category": "web",
+    "status": "live",
+    "keywords": "bulk slug generator urls online",
+    "description": "Generate URL slugs for multiple titles at once.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "color-palette-gen",
+    "slug": "color-palette-generator",
+    "name": "Color Palette Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "color palette generator from hex online",
+    "description": "Generate harmonious color palettes from a base color.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "gradient-palette",
+    "slug": "gradient-palette-generator",
+    "name": "Gradient Palette Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "gradient color palette generator online",
+    "description": "Generate multi-stop gradient color palettes.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "favicon-from-text",
+    "slug": "text-favicon-generator",
+    "name": "Text Favicon Generator",
+    "category": "design",
+    "status": "live",
+    "keywords": "text favicon generator online free",
+    "description": "Create favicons from initials or emoji text.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "invoice-number",
+    "slug": "invoice-number-generator",
+    "name": "Invoice Number Generator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "invoice number generator sequential online",
+    "description": "Generate sequential invoice numbers with prefixes.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "receipt-maker",
+    "slug": "receipt-generator",
+    "name": "Simple Receipt Generator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "receipt generator online free pdf",
+    "description": "Create simple receipts as printable PDFs.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "quote-calculator",
+    "slug": "quote-calculator",
+    "name": "Project Quote Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "project quote calculator freelance online",
+    "description": "Calculate project quotes from hours rate and expenses.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "unit-price",
+    "slug": "unit-price-calculator",
+    "name": "Unit Price Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "unit price calculator compare deals online",
+    "description": "Compare unit prices to find the best deal.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "markup-calculator",
+    "slug": "markup-calculator",
+    "name": "Markup Calculator",
+    "category": "finance",
+    "status": "live",
+    "keywords": "markup calculator cost price online",
+    "description": "Calculate selling price from cost and markup percentage.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "vat-calculator",
+    "slug": "vat-calculator",
+    "name": "VAT Calculator UK/EU",
+    "category": "finance",
+    "status": "live",
+    "keywords": "vat calculator add remove online",
+    "description": "Add or remove VAT from prices for UK and EU.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "currency-format",
+    "slug": "currency-formatter",
+    "name": "Currency Formatter",
+    "category": "finance",
+    "status": "live",
+    "keywords": "currency number formatter online",
+    "description": "Format numbers as currency for any locale.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "number-format",
+    "slug": "number-formatter",
+    "name": "Number Formatter",
+    "category": "math",
+    "status": "live",
+    "keywords": "number formatter commas decimals online",
+    "description": "Format numbers with commas and decimal places.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "binary-calculator",
+    "slug": "binary-calculator",
+    "name": "Binary Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "binary calculator add subtract online",
+    "description": "Add and subtract binary numbers.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "hex-calculator",
+    "slug": "hex-calculator",
+    "name": "Hexadecimal Calculator",
+    "category": "math",
+    "status": "live",
+    "keywords": "hex calculator add subtract online",
+    "description": "Perform arithmetic on hexadecimal numbers.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "subnet-mask",
+    "slug": "subnet-mask-calculator",
+    "name": "Subnet Mask Calculator",
+    "category": "developer",
+    "status": "live",
+    "keywords": "subnet mask calculator online",
+    "description": "Calculate subnet masks and network addresses.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "port-lookup",
+    "slug": "port-number-lookup",
+    "name": "Port Number Lookup",
+    "category": "developer",
+    "status": "live",
+    "keywords": "port number lookup tcp udp online",
+    "description": "Look up common TCP and UDP port numbers.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "ascii-art-banner",
+    "slug": "ascii-banner-generator",
+    "name": "ASCII Banner Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "ascii banner generator terminal online",
+    "description": "Create large ASCII art banners from text.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "figlet-text",
+    "slug": "figlet-text-generator",
+    "name": "FIGlet Text Generator",
+    "category": "text",
+    "status": "live",
+    "keywords": "figlet ascii art text generator online",
+    "description": "Generate FIGlet-style ASCII art text.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "dot-matrix",
+    "slug": "dot-matrix-text",
+    "name": "Dot Matrix Text",
+    "category": "text",
+    "status": "live",
+    "keywords": "dot matrix text generator online",
+    "description": "Render text in dot matrix LED style.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "encrypt-text",
+    "slug": "text-encrypt-decrypt",
+    "name": "Text Encrypt & Decrypt (AES)",
+    "category": "security",
+    "status": "live",
+    "keywords": "aes text encrypt decrypt online browser",
+    "description": "Encrypt and decrypt text with a passphrase using AES.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "hash-compare",
+    "slug": "hash-compare",
+    "name": "Hash Compare Tool",
+    "category": "security",
+    "status": "live",
+    "keywords": "compare hash checksum online",
+    "description": "Compare two hash strings for equality.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  },
+  {
+    "id": "password-leak",
+    "slug": "password-leak-checker",
+    "name": "Password Breach Checker",
+    "category": "security",
+    "status": "live",
+    "keywords": "password breach checker k-anonymity online",
+    "description": "Check if a password appeared in known breaches using k-anonymity.",
+    "privacy": "client-only",
+    "related": [],
+    "popular": false
+  }
+]
