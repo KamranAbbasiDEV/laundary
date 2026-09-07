@@ -186,6 +186,24 @@ Jot.formatJSON = function (str, indent = 2) {
   return JSON.stringify(JSON.parse(str), null, indent);
 };
 
+Jot.formatBytes = function (bytes) {
+  if (!bytes && bytes !== 0) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+Jot.downloadPdfFromElement = async function (element, filename) {
+  await Jot.loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
+  await html2pdf().set({
+    margin: 10,
+    filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(element).save();
+};
+
 Jot.csvFromJson = function (arr) {
   if (!Array.isArray(arr) || !arr.length) throw new Error('JSON must be a non-empty array of objects');
   const keys = [...new Set(arr.flatMap(Object.keys))];

@@ -979,30 +979,123 @@ JotTools['audio-generator'] = function (root) {
 };
 
 JotTools['image-compressor'] = function (root) {
-  const ui = Jot.ui(`<div class="drop-zone" id="dz">Drop image or click to upload</div><input type="file" id="file" accept="image/*" hidden>
-    <div class="row"><label>Quality<input type="range" id="q" min="0.1" max="1" step="0.05" value="0.8"></label></div>
-    <canvas id="cv" style="display:none"></canvas><img id="prev" style="max-width:100%;margin-top:1rem"><br>
-    <button class="btn" id="dl">Download</button>`);
+  const ui = Jot.ui(`
+    <p class="hint">Compress JPG, PNG, or WebP images locally. Adjust quality and max width, then compare before and after.</p>
+    <input type="file" id="file" accept="image/*">
+    <div class="tool-panel">
+      <p class="tool-panel-title">Settings</p>
+      <div class="row">
+        <label>Max width (px)
+          <select id="maxw">
+            <option value="0">Original size</option>
+            <option value="3840">3840</option>
+            <option value="2560">2560</option>
+            <option value="1920" selected>1920</option>
+            <option value="1280">1280</option>
+            <option value="800">800</option>
+          </select>
+        </label>
+        <label>Output format
+          <select id="fmt">
+            <option value="image/jpeg" selected>JPEG</option>
+            <option value="image/webp">WebP</option>
+            <option value="image/png">PNG</option>
+          </select>
+        </label>
+      </div>
+      <label>Quality <span id="qv" class="range-value">80%</span></label>
+      <div class="range-row">
+        <input type="range" id="q" min="0.1" max="1" step="0.05" value="0.8">
+      </div>
+    </div>
+    <div class="stats" id="stats" style="display:none">
+      <div class="stat"><strong id="orig-size">—</strong>Original</div>
+      <div class="stat"><strong id="new-size">—</strong>Compressed</div>
+      <div class="stat"><strong id="saved">—</strong>Saved</div>
+    </div>
+    <div class="compare-grid" id="compare" style="display:none">
+      <div class="compare-card"><p class="compare-label">Original</p><img id="prev-orig" alt="Original preview"></div>
+      <div class="compare-card"><p class="compare-label">Compressed</p><img id="prev-new" alt="Compressed preview"></div>
+    </div>
+    <canvas id="cv" style="display:none"></canvas>
+    <div class="btn-row">
+      <button class="btn" id="dl" disabled>Download compressed image</button>
+    </div>`);
   root.appendChild(ui);
-  let imgData, loadedImg = null;
+
+  let sourceFile = null;
+  let loadedImg = null;
+  let outputData = null;
+  let outputExt = 'jpg';
+
+  function extForMime(m) {
+    if (m === 'image/webp') return 'webp';
+    if (m === 'image/png') return 'png';
+    return 'jpg';
+  }
+
+  function updateQualityLabel() {
+    Jot.$('#qv', ui).textContent = `${Math.round(+Jot.$('#q', ui).value * 100)}%`;
+  }
+
   function compress() {
     if (!loadedImg) return;
-    const cv = Jot.$('#cv', ui), ctx = cv.getContext('2d');
+    const cv = Jot.$('#cv', ui);
+    const ctx = cv.getContext('2d');
     if (!ctx) return;
-    cv.width = loadedImg.width; cv.height = loadedImg.height;
-    ctx.drawImage(loadedImg, 0, 0);
-    imgData = cv.toDataURL('image/jpeg', +Jot.$('#q', ui).value);
-    Jot.$('#prev', ui).src = imgData;
+
+    const maxW = +Jot.$('#maxw', ui).value;
+    let w = loadedImg.width;
+    let h = loadedImg.height;
+    if (maxW > 0 && w > maxW) {
+      h = Math.round(h * (maxW / w));
+      w = maxW;
+    }
+
+    cv.width = w;
+    cv.height = h;
+    ctx.drawImage(loadedImg, 0, 0, w, h);
+
+    const mime = Jot.$('#fmt', ui).value;
+    const quality = +Jot.$('#q', ui).value;
+    outputExt = extForMime(mime);
+    outputData = mime === 'image/png' ? cv.toDataURL(mime) : cv.toDataURL(mime, quality);
+
+    Jot.$('#prev-orig', ui).src = loadedImg.src;
+    Jot.$('#prev-new', ui).src = outputData;
+    Jot.$('#compare', ui).style.display = '';
+    Jot.$('#stats', ui).style.display = '';
+
+    const newBytes = Math.round((outputData.length - outputData.indexOf(',') - 1) * 0.75);
+    const saved = sourceFile ? Math.max(0, (1 - newBytes / sourceFile.size) * 100) : 0;
+    Jot.$('#orig-size', ui).textContent = Jot.formatBytes(sourceFile?.size);
+    Jot.$('#new-size', ui).textContent = Jot.formatBytes(newBytes);
+    Jot.$('#saved', ui).textContent = `${saved.toFixed(0)}%`;
+    Jot.$('#dl', ui).disabled = false;
   }
-  Jot.$('#dz', ui).onclick = () => Jot.$('#file', ui).click();
-  Jot.$('#file', ui).onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
+
+  Jot.$('#file', ui).addEventListener('change', e => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    sourceFile = f;
     const img = new Image();
     img.onload = () => { loadedImg = img; compress(); };
     img.src = URL.createObjectURL(f);
+  });
+
+  Jot.$('#q', ui).addEventListener('input', () => { updateQualityLabel(); compress(); });
+  Jot.$('#maxw', ui).addEventListener('change', compress);
+  Jot.$('#fmt', ui).addEventListener('change', compress);
+  updateQualityLabel();
+
+  Jot.$('#dl', ui).onclick = () => {
+    if (!outputData) return;
+    const a = document.createElement('a');
+    a.download = `compressed.${outputExt}`;
+    a.href = outputData;
+    a.click();
+    Jot.toast('Download started');
   };
-  Jot.$('#q', ui).oninput = compress;
-  Jot.$('#dl', ui).onclick = () => { if (!imgData) return; const a=document.createElement('a'); a.download='compressed.jpg'; a.href=imgData; a.click(); };
 };
 
 JotTools['data-url'] = function (root) {
@@ -1165,17 +1258,148 @@ JotTools['ip-lookup'] = function (root) {
 };
 
 JotTools['invoice-pdf'] = function (root) {
-  const ui = Jot.ui(`<div class="row"><label>From<input id="from" value="Your Name"></label><label>To<input id="to" value="Client Name"></label></div>
-    <div class="row"><label>Invoice #<input id="num" value="INV-001"></label><label>Amount $<input type="number" id="amt" value="500"></label></div>
-    <textarea id="items" rows="3">Web design services</textarea>
-    <div class="btn-row"><button class="btn" id="go">Generate & Print</button></div><div id="preview" class="preview-box"></div>`);
+  const ui = Jot.ui(`
+    <p class="hint">Fill in your details below. Preview updates live. Download a PDF or print when ready.</p>
+    <div class="tool-panel">
+      <p class="tool-panel-title">Your business</p>
+      <div class="invoice-form-grid">
+        <label>Business name<input type="text" id="biz" value="Your Company LLC"></label>
+        <label>Email<input type="email" id="email" value="you@example.com"></label>
+        <label>Phone<input type="text" id="phone" value="+1 (555) 000-0000"></label>
+        <label>Address<textarea id="bizaddr" rows="2">123 Main Street&#10;City, State 10001</textarea></label>
+      </div>
+    </div>
+    <div class="tool-panel">
+      <p class="tool-panel-title">Bill to</p>
+      <div class="invoice-form-grid">
+        <label>Client name<input type="text" id="to" value="Client Name"></label>
+        <label>Client email<input type="email" id="toemail" value="client@example.com"></label>
+        <label>Client address<textarea id="toaddr" rows="2">456 Client Ave&#10;City, State 20002</textarea></label>
+      </div>
+    </div>
+    <div class="tool-panel">
+      <p class="tool-panel-title">Invoice details</p>
+      <div class="row">
+        <label>Invoice #<input type="text" id="num" value="INV-001"></label>
+        <label>Issue date<input type="date" id="date"></label>
+        <label>Due date<input type="date" id="due"></label>
+        <label>Tax %<input type="number" id="tax" value="0" min="0" step="0.1"></label>
+      </div>
+      <label>Line items</label>
+      <table class="line-items-table">
+        <thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th></th></tr></thead>
+        <tbody id="lines">
+          <tr>
+            <td><input type="text" class="desc" value="Web design services"></td>
+            <td><input type="number" class="qty" value="1" min="0" step="1"></td>
+            <td><input type="number" class="rate" value="500" min="0" step="0.01"></td>
+            <td><button type="button" class="btn btn-secondary rm" disabled>×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="btn-row"><button type="button" class="btn btn-secondary" id="add-line">+ Add line item</button></div>
+      <label>Notes / payment terms<textarea id="notes" rows="2">Payment due within 14 days. Thank you for your business.</textarea></label>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="pdf">Download PDF</button>
+      <button class="btn btn-secondary" id="print">Print invoice</button>
+    </div>
+    <div class="invoice-preview-wrap">
+      <div class="invoice-doc" id="preview"></div>
+    </div>`);
   root.appendChild(ui);
-  Jot.$('#go', ui).onclick = () => {
-    const html = `<h2>INVOICE ${Jot.$('#num',ui).value}</h2><p><strong>From:</strong> ${Jot.$('#from',ui).value}<br><strong>To:</strong> ${Jot.$('#to',ui).value}</p><p>${Jot.$('#items',ui).value}</p><h3>Total: $${Jot.$('#amt',ui).value}</h3>`;
-    Jot.$('#preview', ui).innerHTML = html;
+
+  const today = new Date();
+  const due = new Date(today.getTime() + 14 * 86400000);
+  Jot.$('#date', ui).value = today.toISOString().slice(0, 10);
+  Jot.$('#due', ui).value = due.toISOString().slice(0, 10);
+
+  function money(n) {
+    return `$${Number(n || 0).toFixed(2)}`;
+  }
+
+  function getLines() {
+    return Jot.$$('#lines tr', ui).map(row => ({
+      desc: Jot.$('.desc', row).value.trim() || 'Item',
+      qty: +Jot.$('.qty', row).value || 0,
+      rate: +Jot.$('.rate', row).value || 0
+    }));
+  }
+
+  function render() {
+    const lines = getLines();
+    const subtotal = lines.reduce((s, l) => s + l.qty * l.rate, 0);
+    const taxPct = +Jot.$('#tax', ui).value || 0;
+    const taxAmt = subtotal * (taxPct / 100);
+    const total = subtotal + taxAmt;
+
+    const rows = lines.map(l => `<tr><td>${l.desc}</td><td>${l.qty}</td><td>${money(l.rate)}</td><td>${money(l.qty * l.rate)}</td></tr>`).join('');
+
+    Jot.$('#preview', ui).innerHTML = `
+      <header>
+        <div>
+          <h2>INVOICE</h2>
+          <p><strong>${Jot.$('#biz', ui).value}</strong><br>${Jot.$('#bizaddr', ui).value.replace(/\n/g, '<br>')}<br>${Jot.$('#email', ui).value}<br>${Jot.$('#phone', ui).value}</p>
+        </div>
+        <div style="text-align:right">
+          <p><strong>#${Jot.$('#num', ui).value}</strong></p>
+          <p>Issued: ${Jot.$('#date', ui).value}<br>Due: ${Jot.$('#due', ui).value}</p>
+        </div>
+      </header>
+      <p><strong>Bill to</strong><br>${Jot.$('#to', ui).value}<br>${Jot.$('#toaddr', ui).value.replace(/\n/g, '<br>')}<br>${Jot.$('#toemail', ui).value}</p>
+      <table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="totals">
+        <div><span>Subtotal</span><span>${money(subtotal)}</span></div>
+        <div><span>Tax (${taxPct}%)</span><span>${money(taxAmt)}</span></div>
+        <div class="grand"><span>Total</span><span>${money(total)}</span></div>
+      </div>
+      <p style="margin-top:1.5rem;color:#555">${Jot.$('#notes', ui).value.replace(/\n/g, '<br>')}</p>`;
+  }
+
+  function bindLine(row) {
+    Jot.$$('.desc,.qty,.rate', row).forEach(el => el.addEventListener('input', render));
+    Jot.$('.rm', row).onclick = () => {
+      if (Jot.$$('#lines tr', ui).length <= 1) return;
+      row.remove();
+      render();
+    };
+  }
+
+  Jot.$$('#lines tr', ui).forEach(bindLine);
+
+  Jot.$('#add-line', ui).onclick = () => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td><input type="text" class="desc" value="Service"></td><td><input type="number" class="qty" value="1" min="0"></td><td><input type="number" class="rate" value="0" min="0" step="0.01"></td><td><button type="button" class="btn btn-secondary rm">×</button></td>`;
+    Jot.$('#lines', ui).appendChild(row);
+    bindLine(row);
+    render();
+  };
+
+  Jot.$$('input,textarea,select', ui).forEach(el => el.addEventListener('input', render));
+  render();
+
+  Jot.$('#print', ui).onclick = () => {
+    const html = Jot.$('#preview', ui).innerHTML;
     const w = window.open('', '_blank');
-    w.document.write(`<html><head><title>Invoice</title></head><body>${html}<script>window.print()</script></body></html>`);
+    w.document.write(`<!DOCTYPE html><html><head><title>Invoice ${Jot.$('#num', ui).value}</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#111}table{width:100%;border-collapse:collapse}th,td{padding:8px 0;border-bottom:1px solid #eee;text-align:left}header{display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:16px;margin-bottom:24px}.totals{margin-left:auto;width:280px}.grand{font-weight:700;font-size:18px;border-top:2px solid #111;padding-top:8px}</style></head><body>${html}</body></html>`);
     w.document.close();
+    w.focus();
+    w.print();
+  };
+
+  Jot.$('#pdf', ui).onclick = async () => {
+    const btn = Jot.$('#pdf', ui);
+    btn.disabled = true;
+    btn.textContent = 'Generating PDF…';
+    try {
+      await Jot.downloadPdfFromElement(Jot.$('#preview', ui), `${Jot.$('#num', ui).value || 'invoice'}.pdf`);
+      Jot.toast('PDF downloaded');
+    } catch {
+      Jot.toast('PDF failed — try Print instead');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Download PDF';
+    }
   };
 };
 

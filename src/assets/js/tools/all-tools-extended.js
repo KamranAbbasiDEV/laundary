@@ -391,18 +391,50 @@ JotTools['pdf-to-jpg'] = JotTools['pdf-to-images'] = function (root) {
 };
 
 JotTools['pdf-compressor'] = function (root) {
-  const ui = Jot.ui('<input type="file" accept="application/pdf" id="file"><p style="font-size:.8125rem;color:var(--text-muted)">Re-saves PDF structure locally. For scan-heavy PDFs, use PDF to JPG then back.</p><div class="btn-row"><button class="btn" id="go">Optimize</button></div><div class="output" id="out"></div>');
+  const ui = Jot.ui(`
+    <p class="hint">Upload a PDF to optimize and re-save locally. Best for text-based PDFs — scanned documents may need PDF → JPG first.</p>
+    <input type="file" accept="application/pdf" id="file">
+    <div class="btn-row"><button class="btn" id="go" disabled>Compress & download</button></div>
+    <div class="stats" id="stats" style="display:none">
+      <div class="stat"><strong id="orig">—</strong>Original</div>
+      <div class="stat"><strong id="new">—</strong>Optimized</div>
+      <div class="stat"><strong id="saved">—</strong>Saved</div>
+    </div>
+    <div class="output" id="out"></div>`);
   root.appendChild(ui);
+
+  Jot.$('#file', ui).addEventListener('change', () => {
+    Jot.$('#go', ui).disabled = !Jot.$('#file', ui).files?.[0];
+  });
+
   Jot.$('#go', ui).onclick = async () => {
-    const f = Jot.$('#file', ui).files[0]; if (!f) return;
-    const { PDFDocument } = await Jot._pdfLib();
-    const src = await PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true });
-    const out = await PDFDocument.create();
-    const pages = await out.copyPages(src, src.getPageIndices());
-    pages.forEach(p => out.addPage(p));
-    const bytes = await out.save({ useObjectStreams: true });
-    Jot.download('compressed.pdf', bytes, 'application/pdf');
-    Jot.$('#out', ui).textContent = `Original: ${(f.size/1024).toFixed(0)} KB → New: ${(bytes.length/1024).toFixed(0)} KB`;
+    const f = Jot.$('#file', ui).files?.[0];
+    if (!f) return;
+    const btn = Jot.$('#go', ui);
+    btn.disabled = true;
+    btn.textContent = 'Compressing…';
+    Jot.$('#out', ui).textContent = 'Processing PDF in your browser…';
+    try {
+      const { PDFDocument } = await Jot._pdfLib();
+      const src = await PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true });
+      const out = await PDFDocument.create();
+      const pages = await out.copyPages(src, src.getPageIndices());
+      pages.forEach(p => out.addPage(p));
+      const bytes = await out.save({ useObjectStreams: true });
+      Jot.download('compressed.pdf', bytes, 'application/pdf');
+      const saved = Math.max(0, (1 - bytes.length / f.size) * 100);
+      Jot.$('#orig', ui).textContent = Jot.formatBytes(f.size);
+      Jot.$('#new', ui).textContent = Jot.formatBytes(bytes.length);
+      Jot.$('#saved', ui).textContent = `${saved.toFixed(0)}%`;
+      Jot.$('#stats', ui).style.display = '';
+      Jot.$('#out', ui).textContent = `Done — ${src.getPageCount()} page(s) optimized. Download started.`;
+      Jot.toast('PDF compressed');
+    } catch (e) {
+      Jot.$('#out', ui).textContent = 'Could not compress this PDF. Try a different file.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Compress & download';
+    }
   };
 };
 
