@@ -631,6 +631,158 @@ a:hover { color: var(--link-hover); }
   padding-left: 1.25rem;
 }
 
+.content-block--muted {
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.content-keywords {
+  font-size: 0.875rem !important;
+  color: var(--text-faint) !important;
+}
+
+.editorial-list {
+  margin: 0;
+  padding-left: 1.35rem;
+}
+
+.editorial-list li {
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.related-tools-rich {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 720px;
+}
+
+.related-tool-row {
+  display: block;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.related-tool-row:hover {
+  border-color: var(--text-faint);
+}
+
+.related-tool-row strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.9375rem;
+  margin-bottom: 0.25rem;
+}
+
+.related-tool-row span {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.editorial-section {
+  padding: 3rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.editorial-card {
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.editorial-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.editorial-card p {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  margin: 0 0 1rem;
+}
+
+.editorial-links {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.editorial-links li {
+  margin-bottom: 0.35rem;
+  font-size: 0.9375rem;
+}
+
+.guides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.guide-card {
+  display: block;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.guide-card:hover {
+  border-color: var(--text-faint);
+}
+
+.guide-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.guide-card p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.guide-page .tool-header {
+  margin-bottom: 2rem;
+}
+
+.guide-back {
+  margin: 2rem 0 0;
+  font-size: 0.9375rem;
+}
+
+.guide-back a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.guide-back a:hover {
+  color: var(--text);
+}
+
 .faq-section { margin-bottom: 2.5rem; max-width: 720px; }
 
 .faq-section > h2 {

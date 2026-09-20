@@ -8,6 +8,8 @@ const SRC_ASSETS = path.join(ROOT, 'src', 'assets');
 const site = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'site.json'), 'utf8').replace(/^\uFEFF/, ''));
 const toolsRaw = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'tools.json'), 'utf8').replace(/^\uFEFF/, ''));
 const conversions = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'conversions.json'), 'utf8').replace(/^\uFEFF/, ''));
+const guides = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'guides.json'), 'utf8').replace(/^\uFEFF/, ''));
+const toolContent = require('./tool-content');
 
 const tools = dedupeTools(toolsRaw);
 const liveTools = tools.filter(t => t.status === 'live');
@@ -136,36 +138,17 @@ function getMostUsedTools(limit = 12) {
   return liveTools.filter(t => t.popular).slice(0, limit);
 }
 
-function defaultFaqs(tool) {
-  const upload = requiresUpload(tool);
-  return [
-    {
-      q: `Is ${tool.name} free to use?`,
-      a: `Yes. ${tool.name} on JotNexus is 100% free with no signup required.`
-    },
-    {
-      q: 'Is my data uploaded to a server?',
-      a: upload
-        ? 'You may upload a file from your device, but it is processed locally in your browser. Your file is not sent to JotNexus servers.'
-        : tool.privacy === 'client-only'
-          ? 'No. This tool runs entirely in your browser. Your data never leaves your device.'
-          : 'Most processing happens in your browser. Some features may use lightweight public APIs — see the privacy badge on the tool page.'
-    },
-    {
-      q: 'Does JotNexus work on mobile?',
-      a: 'Yes. All JotNexus tools are responsive and work on phones, tablets, and desktops.'
-    },
-    {
-      q: `How do I use ${tool.name}?`,
-      a: upload
-        ? `Drag and drop your file onto the upload area, or click to browse. Then use the action button — results appear instantly in your browser. No account required.`
-        : `Enter your input in the tool above and results update instantly. No account or download required.`
-    },
-    {
-      q: `Can I use ${tool.name} on my phone?`,
-      a: 'Yes. JotNexus tools work on iPhone, Android, tablets, and desktop browsers.'
-    }
-  ];
+const contentHelpers = {
+  esc,
+  getCategoryName,
+  categoryPageUrl,
+  siteName: site.name,
+  requiresUpload,
+  liveToolCount: liveTools.length
+};
+
+function toolFaqs(tool) {
+  return toolContent.buildToolFaqs(tool, contentHelpers);
 }
 
 function buildFaqHtml(faqs) {
@@ -219,20 +202,15 @@ function buildWebPageSchema(title, description, url) {
   });
 }
 
-function buildHowToSchema(tool) {
-  if (!requiresUpload(tool)) return null;
+function buildHowToSchema(tool, steps) {
   return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'HowTo',
     name: `How to use ${tool.name} online free`,
     description: tool.description,
-    totalTime: 'PT1M',
+    totalTime: requiresUpload(tool) ? 'PT3M' : 'PT1M',
     tool: [{ '@type': 'HowToTool', name: 'Web browser' }],
-    step: [
-      { '@type': 'HowToStep', position: 1, name: 'Open the tool', text: `Open ${tool.name} on JotNexus in any modern browser.` },
-      { '@type': 'HowToStep', position: 2, name: 'Add your file', text: 'Drag and drop your file onto the upload area, or click to browse from your device.' },
-      { '@type': 'HowToStep', position: 3, name: 'Process and download', text: 'Click the action button. Your file is processed locally in your browser, then download the result.' }
-    ]
+    step: toolContent.buildHowToSchemaSteps(tool, steps)
   });
 }
 
@@ -245,26 +223,12 @@ function toolSeoDescription(tool) {
   const extra = upload
     ? 'Drag and drop or upload your file — processed locally in your browser.'
     : 'Instant results in your browser. No download required.';
-  return metaDesc(`${tool.description} Free ${getCategoryName(tool.category).toLowerCase()} tool — ${extra} ${tool.keywords.split(' ').slice(0, 8).join(', ')}.`);
+  return metaDesc(`${tool.description} Free ${getCategoryName(tool.category).toLowerCase()} tool — ${extra}`);
 }
 
-function toolSeoBody(tool) {
-  const upload = requiresUpload(tool);
-  const cat = getCategoryName(tool.category);
-  const catLink = categoryPageUrl(tool.category);
-  const terms = tool.keywords.split(' ').slice(0, 8).join(', ');
-  if (upload) {
-    return `${esc(tool.name)} is a free online ${esc(cat.toLowerCase())} tool on ${esc(site.name)}. ${esc(tool.description)} Drag and drop your file or click to upload — processing happens on your device, not our servers. Works on desktop and mobile. Also try other <a href="${catLink}">${esc(cat)} tools</a>. Searches: ${esc(terms)}.`;
-  }
-  return `${esc(tool.name)} is a free online ${esc(cat.toLowerCase())} tool on ${esc(site.name)}. ${esc(tool.description)} Paste or type your input above for instant results — no account, no install. Browse more <a href="${catLink}">${esc(cat)} tools</a>. Searches: ${esc(terms)}.`;
-}
-
-function toolHowItWorks(tool) {
-  const upload = requiresUpload(tool);
-  if (upload) {
-    return esc(`${tool.description} Drag and drop a file onto the upload area above, or click to browse. Processing runs entirely in your browser — your file is never sent to JotNexus servers.`);
-  }
-  return esc(`${tool.description} Enter your input above for instant results. Everything runs in your browser — no account and no data sent to our servers.`);
+function editorialList(items, ordered = false) {
+  const tag = ordered ? 'ol' : 'ul';
+  return `<${tag} class="editorial-list">${items.map(i => `<li>${esc(i)}</li>`).join('')}</${tag}>`;
 }
 
 function adSlot(id, type = 'display') {
@@ -282,7 +246,7 @@ function adSlot(id, type = 'display') {
     data-full-width-responsive="true"></ins>`;
 }
 
-function layout({ title, description, canonical, bodyClass = '', content, scripts = [], jsonLd = [], keywords = '' }) {
+function layout({ title, description, canonical, bodyClass = '', content, scripts = [], jsonLd = [], keywords = '', robots = 'index, follow, max-image-preview:large' }) {
   const scriptTags = scripts.map(s => `<script src="/assets/js/${s}" defer></script>`).join('\n');
   const desc = metaDesc(description);
   const allLd = [buildOrgSchema(), ...jsonLd];
@@ -298,7 +262,7 @@ function layout({ title, description, canonical, bodyClass = '', content, script
   <meta name="description" content="${esc(desc)}">
   ${kw}
   ${gsv}
-  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="robots" content="${esc(robots)}">
   <meta name="author" content="${esc(site.name)}">
   <link rel="canonical" href="${esc(canonical)}">
   <link rel="sitemap" type="application/xml" href="/sitemap.xml">
@@ -331,8 +295,9 @@ function layout({ title, description, canonical, bodyClass = '', content, script
       </a>
       <nav class="header-nav">
         <a href="/tools/">Categories</a>
+        <a href="/guides/">Guides</a>
         <a href="/converters/">Converters</a>
-        <a href="/privacy/">Privacy</a>
+        <a href="/about/">About</a>
       </nav>
     </div>
   </header>
@@ -345,7 +310,9 @@ function layout({ title, description, canonical, bodyClass = '', content, script
       </div>
       <div class="footer-links">
         <a href="/tools/">All categories</a>
+        <a href="/guides/">Guides</a>
         <a href="/converters/">Converters</a>
+        <a href="/about/">About</a>
         <a href="/#tools">All tools</a>
         <a href="/privacy/">Privacy</a>
         <a href="/terms/">Terms</a>
@@ -385,15 +352,51 @@ function relatedTools(tool) {
     .slice(0, 6);
   if (!related.length) return '';
   return `<section class="related-tools">
-    <h2>Related Tools</h2>
-    <div class="related-grid">${related.map(r =>
-      `<a class="related-card" href="/${r.slug}/">${esc(r.name)}</a>`
+    <h2>Related tools</h2>
+    <div class="related-tools-rich">${related.map(r =>
+      `<a class="related-tool-row" href="/${r.slug}/">
+        <strong>${esc(r.name)}</strong>
+        <span>${esc(r.description)}</span>
+      </a>`
     ).join('')}</div>
   </section>`;
 }
 
+function toolEditorialHtml(tool) {
+  const ed = toolContent.buildToolEditorial(tool, contentHelpers);
+  return `
+      <div class="content-block">
+        <h2>When to use ${esc(tool.name)}</h2>
+        ${editorialList(ed.useCases)}
+      </div>
+      <div class="content-block">
+        <h2>How to use ${esc(tool.name)}</h2>
+        ${editorialList(ed.steps, true)}
+      </div>
+      <div class="content-block">
+        <h2>About this free ${esc(getCategoryName(tool.category).toLowerCase())} tool</h2>
+        <p>${ed.intro}</p>
+        <p>${ed.aboutP2}</p>
+      </div>
+      <div class="content-block">
+        <h2>Tips and best practices</h2>
+        ${editorialList(ed.tips)}
+      </div>
+      <div class="content-block content-block--muted">
+        <h2>Limitations to know</h2>
+        ${editorialList(ed.limits)}
+      </div>
+      <div class="content-block">
+        <h2>Privacy</h2>
+        <p>${tool.privacy === 'client-only'
+    ? 'This tool processes data entirely in your browser. Nothing is sent to JotNexus servers. Read our <a href="/guides/browser-privacy-for-file-tools/">guide to local file processing</a> for details.'
+    : 'Most processing happens locally. Some features may call third-party APIs — only when necessary and indicated by the privacy badge above.'}</p>
+      </div>`;
+}
+
 function toolPage(tool) {
-  const faqs = defaultFaqs(tool);
+  const faqs = toolFaqs(tool);
+  const editorial = toolContent.buildToolEditorial(tool, contentHelpers);
   const canonical = `${site.domain}/${tool.slug}/`;
   const isLive = tool.status === 'live';
 
@@ -405,7 +408,6 @@ function toolPage(tool) {
       </div>`;
 
   const content = `
-    ${adSlot('header-leaderboard', 'leaderboard')}
     <article class="tool-page container">
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href="${categoryPageUrl(tool.category)}">${esc(getCategoryName(tool.category))}</a><span aria-hidden="true">/</span><span aria-current="page">${esc(tool.name)}</span></nav>
       <header class="tool-header">
@@ -417,38 +419,20 @@ function toolPage(tool) {
         <p class="tool-workspace-label">Tool</p>
         ${toolArea}
       </section>
-      ${adSlot('in-content-1', 'rectangle')}
-      <div class="content-block">
-        <h2>How it works</h2>
-        <p>${toolHowItWorks(tool)}</p>
-        <ul>
-          <li>${requiresUpload(tool) ? 'Drag and drop or click to upload your file' : 'Type or paste your input above'}</li>
-          <li>Free to use — no signup or install</li>
-          <li>Works on desktop, tablet, and mobile</li>
-          <li>Processed locally in your browser for privacy</li>
-        </ul>
-      </div>
-      <div class="content-block">
-        <h2>About this free ${esc(getCategoryName(tool.category).toLowerCase())} tool</h2>
-        <p>${toolSeoBody(tool)}</p>
-      </div>
-      <div class="content-block">
-        <h2>Privacy</h2>
-        <p>${tool.privacy === 'client-only' ? 'This tool processes data entirely in your browser. Nothing is sent to JotNexus servers.' : 'Most processing happens locally. Some features may call third-party APIs — only when necessary and clearly indicated above.'}</p>
-      </div>
+      ${toolEditorialHtml(tool)}
       <section class="faq-section">
-        <h2>Frequently Asked Questions</h2>
+        <h2>Frequently asked questions</h2>
         ${buildFaqHtml(faqs)}
       </section>
       ${relatedTools(tool)}
     </article>
-    ${adSlot('footer', 'leaderboard')}`;
+    ${adSlot('tool-footer', 'leaderboard')}`;
 
   const scripts = isLive ? ['tools/all-tools.js'] : [];
 
   const pageTitle = toolSeoTitle(tool);
   const pageDesc = toolSeoDescription(tool);
-  const howTo = buildHowToSchema(tool);
+  const howTo = buildHowToSchema(tool, editorial.steps);
   const jsonLd = [
     buildBreadcrumbSchema([
       { name: 'Home', url: `${site.domain}/` },
@@ -457,9 +441,9 @@ function toolPage(tool) {
     ]),
     buildWebPageSchema(pageTitle, pageDesc, canonical),
     buildWebAppSchema(tool),
-    buildFaqSchema(tool, faqs)
+    buildFaqSchema(tool, faqs),
+    howTo
   ];
-  if (howTo) jsonLd.push(howTo);
 
   return layout({
     title: pageTitle,
@@ -473,6 +457,24 @@ function toolPage(tool) {
   });
 }
 
+function convertTypeContext(conv) {
+  const type = conv.type || 'unit';
+  const contexts = {
+    length: `${conv.from} and ${conv.to} are length units. Accurate length conversion uses fixed conversion factors — for example, international inch-to-centimeter conversion is based on 2.54 cm per inch. Use this page for furniture dimensions, sewing patterns, travel distances, and engineering sketches when you need a quick ${conv.from} to ${conv.to} result.`,
+    weight: `${conv.from} and ${conv.to} measure mass or weight. Kitchen recipes, shipping labels, and fitness tracking often mix unit systems. Note that US customary units (ounces, pounds) differ from some imperial definitions used elsewhere — this converter uses standard factors for everyday use.`,
+    temperature: `Temperature scales measure thermal energy differently — Celsius and Fahrenheit use different zero points and step sizes, so conversion is a formula, not a simple multiplier. Use this when cooking, reading weather abroad, or checking HVAC settings.`,
+    volume: `Volume units convert liquid and bulk measurements for cooking, chemistry, and fuel. US cups and metric milliliters are common in recipes; always confirm which cup standard a recipe author used when precision matters.`,
+    pressure: `Pressure units appear in tire inflation, weather (barometric pressure), and industrial specs. Convert carefully when safety limits are involved — verify with equipment manuals for critical applications.`,
+    digital: `Digital storage units confuse decimal (KB = 1000 bytes) vs binary (KiB = 1024 bytes) conventions. This converter follows the factors defined in our conversion table — check whether your operating system reports decimal or binary sizes when comparing.`,
+    cooking: `Cooking conversions bridge tablespoons, cups, milliliters, and grams. Volume-to-weight depends on ingredient density — flour and sugar differ. Use weight (grams) when a recipe provides it for better accuracy.`,
+    speed: `Speed conversions help when driving abroad or comparing athletic pace. Remember that mph and km/h are rate units — double-check direction (multiply vs divide) if you calculate by hand.`,
+    area: `Area units scale as square lengths — acres, hectares, square feet, and square meters appear in real estate, agriculture, and floor planning. Always square the linear conversion factor when deriving area yourself.`,
+    energy: `Energy units show up in nutrition (calories vs joules), physics homework, and utility bills. Food labels may use kilocalories labeled as "Calories" — read labels carefully.`,
+    default: `Convert between ${conv.from} and ${conv.to} instantly. Enter a value in the converter above, copy the result, and bookmark this page if you use this pair regularly. For other units, browse our full <a href="/converters/">converters hub</a> or open the general <a href="/unit-converter/">unit converter</a> tool.`
+  };
+  return contexts[type] || contexts.default;
+}
+
 function convertPage(conv) {
   const from = conv.from;
   const to = conv.to;
@@ -481,15 +483,15 @@ function convertPage(conv) {
   const description = metaDesc(`Convert ${from} to ${to} instantly with our free online calculator. No signup, runs in your browser. Accurate ${from} to ${to} conversion at JotNexus.`);
   const canonical = `${site.domain}/convert/${slug}/`;
   const faqs = [
-    { q: `How do I convert ${from} to ${to}?`, a: `Enter a value in ${from} above and the converter instantly shows the equivalent in ${to}. No signup or download required.` },
-    { q: `How many ${to} is 1 ${from}?`, a: `Use the converter above — enter 1 in the ${from} field to see the exact ${to} equivalent instantly.` },
-    { q: `Is this ${from} to ${to} converter free?`, a: 'Yes. This converter is 100% free and runs in your browser on JotNexus.' },
-    { q: 'Is my data sent to a server?', a: 'No. Unit conversion runs entirely in your browser. Your numbers never leave your device.' },
-    { q: `What is ${from} to ${to} used for?`, a: `People use ${from} to ${to} conversion for cooking, travel, science, engineering, schoolwork, and everyday measurements.` }
+    { q: `How do I convert ${from} to ${to}?`, a: `Enter a value in ${from} in the converter above. The equivalent in ${to} appears instantly. You can swap direction by visiting the reverse conversion page or using the unit converter tool.` },
+    { q: `How many ${to} is 1 ${from}?`, a: `Enter 1 in the ${from} field above to see the exact ${to} equivalent. The factor depends on the unit type (${conv.type || 'standard conversion'}).` },
+    { q: `Is this ${from} to ${to} converter free?`, a: 'Yes. This converter is 100% free, requires no account, and runs entirely in your browser on JotNexus.' },
+    { q: 'Is my data sent to a server?', a: 'No. Unit conversion runs locally in JavaScript. Your numbers never leave your device.' },
+    { q: `What is ${from} to ${to} used for?`, a: `People convert ${from} to ${to} for cooking, travel, science, engineering, shopping, and everyday measurements when sources use different unit systems.` },
+    { q: 'How accurate is the conversion?', a: 'We use standard published conversion factors for this unit pair. For financial, medical, or legal decisions, verify critical values independently.' }
   ];
 
   const content = `
-    ${adSlot('header-leaderboard', 'leaderboard')}
     <article class="tool-page container">
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/converters/">Converters</a><span aria-hidden="true">/</span><span aria-current="page">${esc(from)} to ${esc(to)}</span></nav>
       <header class="tool-header">
@@ -501,15 +503,30 @@ function convertPage(conv) {
         <p class="tool-workspace-label">Converter</p>
         <div id="tool-root" class="tool-root" data-tool="unit-converter" data-from="${esc(from)}" data-to="${esc(to)}"></div>
       </section>
-      ${adSlot('in-content-1', 'rectangle')}
       <div class="content-block">
-        <h2>About this ${esc(from)} to ${esc(to)} converter</h2>
-        <p>Use this free online converter to transform ${esc(from)} values into ${esc(to)} instantly. Enter a number above, copy the result, and bookmark this page for quick access. Part of JotNexus — ${liveTools.length}+ free tools with no account required.</p>
-        <p>Looking for other units? Browse our <a href="/converters/">full converters hub</a> with ${conversions.length}+ dedicated conversion pages.</p>
+        <h2>About ${esc(from)} to ${esc(to)} conversion</h2>
+        <p>${convertTypeContext(conv)}</p>
+        <p>Need a different pair? Browse our <a href="/converters/">full converters hub</a> with ${conversions.length}+ dedicated pages, or use the interactive <a href="/unit-converter/">unit converter</a> for multi-category conversions in one tool.</p>
+      </div>
+      <div class="content-block">
+        <h2>How to use this converter</h2>
+        <ol class="editorial-list">
+          <li>Enter the amount in ${esc(from)} in the input field.</li>
+          <li>Read the converted value in ${esc(to)} — updates instantly as you type.</li>
+          <li>Copy the result or bookmark this page for quick access later.</li>
+        </ol>
       </div>
       <section class="faq-section">
-        <h2>Frequently Asked Questions</h2>
+        <h2>Frequently asked questions</h2>
         ${buildFaqHtml(faqs)}
+      </section>
+      <section class="related-tools">
+        <h2>Related converters</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/convert/${esc(to)}-to-${esc(from)}/">${esc(to)} → ${esc(from)}</a>
+          <a class="related-card" href="/unit-converter/">All-in-one unit converter</a>
+          <a class="related-card" href="/converters/">Converters A–Z</a>
+        </div>
       </section>
     </article>`;
 
@@ -520,6 +537,7 @@ function convertPage(conv) {
     keywords: `${from} to ${to}, convert ${from} to ${to}, ${from} ${to} calculator, ${to} converter, unit converter online free`,
     canonical,
     bodyClass: 'page-tool page-convert',
+    robots: 'noindex, follow',
     content,
     scripts: ['tools/all-tools.js'],
     jsonLd: [
@@ -641,8 +659,25 @@ function homePage() {
       </div>
     </section>
     ${adSlot('home-mid', 'leaderboard')}
-    <nav class="section-jump container" aria-label="Tool categories"><a class="section-jump-link" href="/tools/">All categories</a><a class="section-jump-link" href="/converters/">Converters hub</a>${jumpLinks}<a class="section-jump-link" href="#tools">All tools</a></nav>
+    <nav class="section-jump container" aria-label="Tool categories"><a class="section-jump-link" href="/tools/">All categories</a><a class="section-jump-link" href="/guides/">Guides</a><a class="section-jump-link" href="/converters/">Converters hub</a>${jumpLinks}<a class="section-jump-link" href="#tools">All tools</a></nav>
     ${sectionHtml}
+    <section class="editorial-section">
+      <div class="container editorial-grid">
+        <div class="editorial-card">
+          <h2>Guides &amp; how-tos</h2>
+          <p>Step-by-step articles for merging PDFs, compressing images, creating QR codes, and more — written for real workflows, not keyword stuffing.</p>
+          <ul class="editorial-links">${guides.slice(0, 4).map(g =>
+            `<li><a href="/guides/${g.slug}/">${esc(g.title)}</a></li>`
+          ).join('')}</ul>
+          <p><a class="section-more" href="/guides/">Browse all guides →</a></p>
+        </div>
+        <div class="editorial-card">
+          <h2>Built for quality, not clutter</h2>
+          <p>JotNexus is maintained as a curated utility hub — each tool page includes instructions, use cases, tips, and privacy details. File tools process locally in your browser; we do not store your uploads.</p>
+          <p><a class="section-more" href="/about/">About JotNexus →</a></p>
+        </div>
+      </div>
+    </section>
     <section class="values-strip">
       <div class="container">
         <h2>Why ${esc(site.name)}</h2>
@@ -705,7 +740,7 @@ function convertersHubPage() {
       </header>
       <section class="tool-section-head"><h2>Interactive converter tools</h2></section>
       <div class="tools-grid section-grid">${converterTools}</div>
-      <section class="tool-section-head" style="margin-top:2.5rem"><h2>All conversion pages (${conversions.length})</h2><p>SEO-optimized pages for specific unit pairs</p></section>
+      <section class="tool-section-head" style="margin-top:2.5rem"><h2>Quick conversion pages (${conversions.length})</h2><p>Bookmarkable pages for specific unit pairs — use the hub above or the all-in-one unit converter for everything else.</p></section>
       <div class="converter-hub-grid">${sections}</div>
     </article>`;
 
@@ -735,8 +770,9 @@ function categoryLandingPage(page) {
     .map(p => `<a class="related-card" href="/${p.slug}/">${esc(p.h1)}</a>`)
     .join('');
 
+  const profile = toolContent.buildToolEditorial({ slug: page.slug, category: page.category || (page.categories && page.categories[0]) || 'text', name: page.h1, description: page.description, keywords: page.description }, contentHelpers);
+
   const content = `
-    ${adSlot('header-leaderboard', 'leaderboard')}
     <article class="tool-page container category-page">
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/tools/">Categories</a><span aria-hidden="true">/</span><span aria-current="page">${esc(page.h1)}</span></nav>
       <header class="category-hero">
@@ -744,17 +780,22 @@ function categoryLandingPage(page) {
         <p class="tool-lead">${esc(page.intro)}</p>
         <p class="category-stat">${list.length} free tools · No signup · ${UPLOAD_CATEGORIES.has(page.category) || (page.categories || []).some(c => UPLOAD_CATEGORIES.has(c)) ? 'Local file processing' : 'Runs in your browser'}</p>
       </header>
-      ${adSlot('in-content-1', 'rectangle')}
+      <div class="content-block">
+        <h2>What you can do here</h2>
+        ${editorialList(profile.useCases.slice(0, 5))}
+      </div>
       <div class="tools-grid section-grid">${cards}</div>
       <section class="content-block">
         <h2>About ${esc(page.h1)} on ${esc(site.name)}</h2>
-        <p>${esc(page.description)} Browse all ${list.length} tools below, or explore other categories.</p>
+        <p>${esc(page.description)} Each tool includes step-by-step instructions, FAQs, and privacy information. We add and refine tools based on everyday tasks — merging PDFs, resizing photos, formatting JSON, and calculating loans — not to inflate page counts.</p>
+        <p>Read our <a href="/guides/">guides</a> for workflow tips, or jump to a popular tool from the list above.</p>
       </section>
       <section class="related-tools">
         <h2>More tool categories</h2>
-        <div class="related-grid">${otherCats}<a class="related-card" href="/converters/">Converters A–Z</a></div>
+        <div class="related-grid">${otherCats}<a class="related-card" href="/converters/">Converters A–Z</a><a class="related-card" href="/guides/">Guides &amp; tutorials</a></div>
       </section>
-    </article>`;
+    </article>
+    ${adSlot('category-footer', 'rectangle')}`;
 
   return layout({
     title: `${page.title} | ${site.name}`,
@@ -835,6 +876,151 @@ function toolsIndexPage() {
   });
 }
 
+function aboutPage() {
+  const content = `
+    <article class="guide-page container">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">About</span></nav>
+      <header class="tool-header">
+        <h1>About ${esc(site.name)}</h1>
+        <p class="tool-lead">${esc(site.tagline)}</p>
+      </header>
+      <div class="content-block">
+        <h2>What we build</h2>
+        <p>${esc(site.name)} is a free utility hub with ${liveTools.length}+ browser-based tools for documents, images, video, audio, developers, finance, and everyday tasks. Every tool is designed to solve a specific job — merge a PDF, compress a photo, format JSON, calculate a loan — without asking you to create an account or install desktop software.</p>
+        <p>We focus on <strong>useful tools with clear instructions</strong>, not empty landing pages. Each tool page includes when to use it, step-by-step guidance, tips, limitations, and privacy details so you know exactly what happens to your data.</p>
+      </div>
+      <div class="content-block">
+        <h2>Privacy-first file processing</h2>
+        <p>Many file tools (PDF, image, video, audio) let you upload from your device, but processing runs <strong>locally in your browser</strong> using JavaScript and WebAssembly. Your files are not uploaded to ${esc(site.name)} servers for conversion or storage. Read our <a href="/guides/browser-privacy-for-file-tools/">guide to local processing</a> and full <a href="/privacy/">Privacy Policy</a>.</p>
+        <p>A small number of tools use public APIs for lookups (DNS, IP geolocation, live currency rates). Those pages are clearly marked with an API privacy badge.</p>
+      </div>
+      <div class="content-block">
+        <h2>How we maintain the catalog</h2>
+        <p>We curate and improve tools continuously — fixing UX issues, adding previews, expanding instructions, and retiring broken patterns. Popular workflows (PDF merge, image compress, QR codes, invoices) receive extra polish because they solve daily problems for the most people.</p>
+        <p>Our <a href="/guides/">guides section</a> publishes practical how-tos that go beyond a single tool — merging contracts, optimizing images for the web, creating invoices as a freelancer, and similar real-world tasks.</p>
+      </div>
+      <div class="content-block">
+        <h2>Free to use, supported by ads</h2>
+        <p>${esc(site.name)} is free for personal and commercial use. We display advertisements through Google AdSense to cover hosting and development. Ads appear after tool content on each page — not before you can use the tool. See our <a href="/terms/">Terms of Service</a> for acceptable use and disclaimers.</p>
+      </div>
+      <div class="content-block">
+        <h2>Contact</h2>
+        <p>Questions, corrections, or partnership inquiries: <a href="mailto:${site.contactEmail}">${site.contactEmail}</a></p>
+      </div>
+    </article>`;
+
+  return layout({
+    title: `About ${site.name} — Free Online Tools Hub`,
+    description: metaDesc(`${site.name} offers ${liveTools.length}+ free browser-based utilities with local file processing, guides, and no signup required.`),
+    canonical: `${site.domain}/about/`,
+    bodyClass: 'page-about',
+    content,
+    jsonLd: [
+      buildBreadcrumbSchema([
+        { name: 'Home', url: `${site.domain}/` },
+        { name: 'About', url: `${site.domain}/about/` }
+      ]),
+      buildWebPageSchema(`About ${site.name}`, site.description, `${site.domain}/about/`)
+    ]
+  });
+}
+
+function guidesHubPage() {
+  const cards = guides.map(g => `
+    <a class="guide-card" href="/guides/${g.slug}/">
+      <h2>${esc(g.title)}</h2>
+      <p>${esc(g.description)}</p>
+    </a>`).join('');
+
+  const content = `
+    <article class="guide-page container">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Guides</span></nav>
+      <header class="tool-header">
+        <h1>Guides &amp; tutorials</h1>
+        <p class="tool-lead">Practical how-tos for PDFs, images, QR codes, invoices, and privacy — written for real tasks, linked to the tools that solve them.</p>
+      </header>
+      <div class="guides-grid">${cards}</div>
+    </article>`;
+
+  return layout({
+    title: `Guides & Tutorials — ${site.name}`,
+    description: metaDesc('Step-by-step guides for merging PDFs, compressing images, creating QR codes, formatting JSON, and more — free on JotNexus.'),
+    canonical: `${site.domain}/guides/`,
+    bodyClass: 'page-guides',
+    content,
+    jsonLd: [
+      buildBreadcrumbSchema([
+        { name: 'Home', url: `${site.domain}/` },
+        { name: 'Guides', url: `${site.domain}/guides/` }
+      ]),
+      JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'JotNexus guides',
+        url: `${site.domain}/guides/`,
+        description: 'Practical tutorials for common utility workflows',
+        hasPart: guides.map(g => ({
+          '@type': 'Article',
+          name: g.title,
+          url: `${site.domain}/guides/${g.slug}/`
+        }))
+      })
+    ]
+  });
+}
+
+function guidePage(guide) {
+  const canonical = `${site.domain}/guides/${guide.slug}/`;
+  const sections = (guide.sections || []).map(s =>
+    `<div class="content-block"><h2>${esc(s.h2)}</h2><p>${esc(s.body)}</p></div>`
+  ).join('\n');
+
+  const toolLinks = (guide.toolSlugs || [])
+    .map(slug => getToolBySlug(slug))
+    .filter(Boolean)
+    .map(t => `<a class="related-card" href="/${t.slug}/">${esc(t.name)}</a>`)
+    .join('');
+
+  const content = `
+    <article class="guide-page container">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/guides/">Guides</a><span aria-hidden="true">/</span><span aria-current="page">${esc(guide.title)}</span></nav>
+      <header class="tool-header">
+        <h1>${esc(guide.title)}</h1>
+        <p class="tool-lead">${esc(guide.description)}</p>
+      </header>
+      ${sections}
+      ${toolLinks ? `<section class="related-tools"><h2>Related tools</h2><div class="related-grid">${toolLinks}</div></section>` : ''}
+      <p class="guide-back"><a href="/guides/">← All guides</a></p>
+    </article>
+    ${adSlot('guide-footer', 'rectangle')}`;
+
+  return layout({
+    title: `${guide.title} | ${site.name}`,
+    description: guide.description,
+    canonical,
+    bodyClass: 'page-guide',
+    content,
+    jsonLd: [
+      buildBreadcrumbSchema([
+        { name: 'Home', url: `${site.domain}/` },
+        { name: 'Guides', url: `${site.domain}/guides/` },
+        { name: guide.title, url: canonical }
+      ]),
+      JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: guide.title,
+        description: guide.description,
+        url: canonical,
+        author: { '@type': 'Organization', name: site.name },
+        publisher: { '@type': 'Organization', name: site.name, url: site.domain },
+        inLanguage: 'en',
+        isPartOf: { '@type': 'WebSite', name: site.name, url: site.domain }
+      })
+    ]
+  });
+}
+
 function termsPage() {
   const content = `
     <article class="legal-page container">
@@ -909,8 +1095,10 @@ Sitemap: ${site.domain}/sitemap.xml
 
 function sitemapPriority(url) {
   if (url === `${site.domain}/`) return '1.0';
-  if (url.includes('/convert/')) return '0.7';
+  if (url.includes('/convert/')) return '0.0';
   if (url.includes('/privacy/') || url.includes('/terms/')) return '0.3';
+  if (url.includes('/about/')) return '0.8';
+  if (url.includes('/guides/')) return '0.85';
   const path = url.replace(site.domain, '');
   if (path === '/tools/' || path === '/converters/') return '0.9';
   const seg = path.split('/').filter(Boolean)[0];
@@ -918,8 +1106,13 @@ function sitemapPriority(url) {
   return '0.8';
 }
 
+function sitemapInclude(url) {
+  return !url.includes('/convert/');
+}
+
 function sitemapXml(urls) {
-  const body = urls.map(u => `  <url><loc>${u}</loc><changefreq>weekly</changefreq><priority>${sitemapPriority(u)}</priority></url>`).join('\n');
+  const indexed = urls.filter(sitemapInclude);
+  const body = indexed.map(u => `  <url><loc>${u}</loc><changefreq>weekly</changefreq><priority>${sitemapPriority(u)}</priority></url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${body}
@@ -947,13 +1140,20 @@ function build() {
   const publicDir = path.join(ROOT, 'public');
   if (fs.existsSync(publicDir)) copyDir(publicDir, DIST);
 
-  const urls = [`${site.domain}/`, `${site.domain}/tools/`, `${site.domain}/privacy/`, `${site.domain}/terms/`, `${site.domain}/converters/`];
+  const urls = [`${site.domain}/`, `${site.domain}/tools/`, `${site.domain}/about/`, `${site.domain}/guides/`, `${site.domain}/privacy/`, `${site.domain}/terms/`, `${site.domain}/converters/`];
 
   writePage('index.html', homePage());
   writePage('tools/index.html', toolsIndexPage());
+  writePage('about/index.html', aboutPage());
+  writePage('guides/index.html', guidesHubPage());
   writePage('privacy/index.html', privacyPage());
   writePage('terms/index.html', termsPage());
   writePage('converters/index.html', convertersHubPage());
+
+  for (const guide of guides) {
+    writePage(`guides/${guide.slug}/index.html`, guidePage(guide));
+    urls.push(`${site.domain}/guides/${guide.slug}/`);
+  }
 
   for (const page of categoryPages) {
     writePage(`${page.slug}/index.html`, categoryLandingPage(page));
@@ -968,14 +1168,14 @@ function build() {
   for (const conv of conversions) {
     const slug = `${conv.from}-to-${conv.to}`;
     writePage(`convert/${slug}/index.html`, convertPage(conv));
-    urls.push(`${site.domain}/convert/${slug}/`);
   }
 
   fs.writeFileSync(path.join(DIST, 'robots.txt'), robotsTxt(), 'utf8');
   fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sitemapXml(urls), 'utf8');
 
   console.log(`✓ Built ${site.name}`);
-  console.log(`  ${liveTools.length} live tools · ${tools.length} total pages · ${conversions.length} convert pages · ${categoryPages.length} category pages`);
+  console.log(`  ${liveTools.length} live tools · ${tools.length} total pages · ${conversions.length} convert pages (noindex) · ${guides.length} guides · ${categoryPages.length} category pages`);
+  console.log(`  Sitemap: ${urls.filter(sitemapInclude).length} indexed URLs`);
   console.log(`  Output: dist/`);
 }
 

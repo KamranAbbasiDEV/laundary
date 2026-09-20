@@ -1,0 +1,170 @@
+[
+  {
+    "slug": "merge-pdf-files-online",
+    "title": "How to Merge PDF Files Online (Free & Private)",
+    "description": "Step-by-step guide to combining multiple PDFs in your browser without uploading to a cloud server. Best practices for order, file size, and quality.",
+    "toolSlugs": ["pdf-merger", "pdf-splitter", "pdf-compressor"],
+    "sections": [
+      {
+        "h2": "Why merge PDFs in the browser?",
+        "body": "Combining PDFs is routine work — packaging signed contracts, merging scanned receipts, or assembling report appendices. Cloud merge tools upload your documents to their servers, which may be fine for public brochures but risky for HR, legal, or medical files. Browser-based merging keeps files on your device: you pick files locally, the merge runs with JavaScript and WebAssembly libraries, and you download the result. JotNexus PDF Merger follows that model with no account required."
+      },
+      {
+        "h2": "Step-by-step: merge PDFs on JotNexus",
+        "body": "Open the PDF Merger tool. Upload each PDF in the order you want pages to appear — most merge tools process files top-to-bottom. If you need a cover page from file B before file A, reorder before merging. Click merge and wait for the progress indicator; large scans can take 10–30 seconds on a typical laptop. Download the combined PDF and scroll through it in Preview, Adobe Reader, or Chrome to confirm page order and that no pages were skipped."
+      },
+      {
+        "h2": "Common mistakes to avoid",
+        "body": "Merging password-protected PDFs usually fails until you remove the password in your PDF reader first. Mixing portrait and landscape pages is allowed but may look uneven in print — rotate pages beforehand if needed. If the output file is huge, run PDF Compressor after merging rather than emailing a 80 MB attachment. Always keep originals until you verify the merged file opens correctly on another device."
+      },
+      {
+        "h2": "When to split instead of merge",
+        "body": "If you only need chapters 3–5 from a 200-page manual, splitting first saves time and bandwidth. Use PDF Splitter to extract ranges, then merge only the sections you need. For recurring workflows (monthly statements), bookmark both tools and name downloads with dates for easy archiving."
+      }
+    ]
+  },
+  {
+    "slug": "compress-images-for-web",
+    "title": "How to Compress Images for Web Without Visible Quality Loss",
+    "description": "Practical guide to shrinking JPG, PNG, and WebP images for faster page loads while keeping photos sharp enough for blogs, shops, and social media.",
+    "toolSlugs": ["image-compressor", "image-resizer", "webp-converter"],
+    "sections": [
+      {
+        "h2": "Why image size matters",
+        "body": "Unoptimized photos are the number-one cause of slow pages. A single 5 MB phone photo can delay Largest Contentful Paint by seconds, hurting SEO and conversions. Compression reduces bytes by removing imperceptible detail (lossy) or optimizing encoding (lossless PNG). The goal is not the smallest file at any cost — it is the smallest file that still looks good at the size you actually display."
+      },
+      {
+        "h2": "Choose the right format",
+        "body": "Use JPG for photographs and complex gradients. Use PNG for logos, screenshots with text, and graphics needing transparency. WebP often beats both on size at similar quality — convert with our WebP tools if your CMS supports it. Avoid PNG for full-bleed photos; file sizes balloon compared to JPG at quality 80–85."
+      },
+      {
+        "h2": "Workflow on JotNexus",
+        "body": "Start with Image Resizer if your CMS needs exact dimensions (e.g. 1200×630 for Open Graph). Then open Image Compressor, upload the resized file, and move the quality slider while watching the estimated output size. Export around 75–85 quality for hero images; thumbnails can go lower. Always open the compressed file at 100% zoom before publishing — banding in skies or soft faces means you went too aggressive."
+      },
+      {
+        "h2": "Batch habits for shops and blogs",
+        "body": "Name files descriptively (product-blue-widget.jpg), compress once, and reuse across channels. Keep a originals folder on disk; never compress the only copy. For retina displays, serve 2× pixel dimensions but compress — a 2400 px wide image at quality 80 often beats a 1200 px image at quality 95 for sharpness and weight."
+      }
+    ]
+  },
+  {
+    "slug": "remove-image-backgrounds",
+    "title": "How to Remove Image Backgrounds in Your Browser",
+    "description": "When automatic background removal works well, how to fix edges, and alternatives for product photos and headshots.",
+    "toolSlugs": ["background-remover", "transparent-png-maker", "image-cropper"],
+    "sections": [
+      {
+        "h2": "What browser background removal can do",
+        "body": "Modern client-side tools segment the subject from the background using color and edge detection — no cloud AI account required. They excel at products on white tables, logos on solid colors, and portraits with simple backdrops. Results export as PNG with transparency so you can drop images onto websites, slides, or marketplaces."
+      },
+      {
+        "h2": "Getting clean edges",
+        "body": "Shoot or choose photos with contrast between subject and background. Hair, glass, and motion blur remain hard cases — expect to touch up in a desktop editor for campaign assets. After removal, use Image Cropper to tighten composition and Transparent PNG export if you need to verify alpha channel in design tools."
+      },
+      {
+        "h2": "Product photo checklist",
+        "body": "Even lighting, minimal shadows, and a plain backdrop reduce cleanup. Export at least 1500 px on the long edge for e-commerce zoom. Compress after background removal — PNGs are larger than JPGs. Test on both light and dark site backgrounds; fringing around edges means you may need feathering in an editor."
+      }
+    ]
+  },
+  {
+    "slug": "create-qr-codes-for-business",
+    "title": "How to Create QR Codes for Menus, Wi‑Fi, and Marketing",
+    "description": "Best practices for QR code size, error correction, logo placement, and testing before print.",
+    "toolSlugs": ["qr-code-generator", "url-encoder", "slugify"],
+    "sections": [
+      {
+        "h2": "Pick the right destination",
+        "body": "QR codes encode URLs or plain text. For marketing, use short, stable landing pages — not deep links that break when you reorganize the site. Encode HTTPS URLs. For Wi‑Fi, use the standard WIFI: format or a hosted setup page that works across iOS and Android."
+      },
+      {
+        "h2": "Size, contrast, and logos",
+        "body": "Print codes at least 2×2 cm (0.8 in) for reliable scanning at arm's length. Keep quiet zone (white margin) around the code. Dark modules on light background scan best. Center logos are fine if they stay small — never cover more than ~15% of the code. Test with multiple phones before printing 500 flyers."
+      },
+      {
+        "h2": "Generate on JotNexus",
+        "body": "Open QR Code Generator, paste your URL, optionally upload a small logo, and download PNG for print or SVG for sharp scaling. Track campaigns with UTM parameters in the URL so analytics show QR traffic separately from organic search."
+      }
+    ]
+  },
+  {
+    "slug": "json-formatting-debugging",
+    "title": "JSON Formatting and Validation for API Debugging",
+    "description": "How developers use JSON formatters safely during integration work, with tips for large payloads and common syntax errors.",
+    "toolSlugs": ["json-formatter", "jwt-decoder", "diff-checker"],
+    "sections": [
+      {
+        "h2": "When to format JSON",
+        "body": "API responses and config files are often minified in production logs. Pasting into a formatter reveals structure, mismatched brackets, and wrong types before you commit bad data. Use minify mode before shipping config to reduce bytes — but always validate after minify."
+      },
+      {
+        "h2": "Safe debugging habits",
+        "body": "Never paste production secrets into any web tool on a shared machine. Redact tokens in logs before formatting. For JWT inspection, decode headers and payloads locally to see exp and aud claims — but verify signatures in your application code, not in a browser utility."
+      },
+      {
+        "h2": "Fixing common errors",
+        "body": "Trailing commas, single quotes instead of double quotes, and unescaped newlines in strings break JSON parsers. The formatter pinpoints line numbers — fix upstream in your source rather than hand-editing large blobs. Use Diff Checker to compare expected vs actual API fixtures during CI failures."
+      }
+    ]
+  },
+  {
+    "slug": "free-invoice-pdf-for-freelancers",
+    "title": "Creating Professional Invoice PDFs as a Freelancer",
+    "description": "Fields to include on invoices, PDF export tips, and how to generate branded invoices without Word or Excel.",
+    "toolSlugs": ["invoice-generator", "pdf-merger", "percentage-calculator"],
+    "sections": [
+      {
+        "h2": "What every invoice needs",
+        "body": "Include your business name, contact, client details, invoice number, issue date, due date, line items with quantities and rates, subtotal, tax if applicable, payment instructions, and currency. Consistent numbering (INV-2026-001) simplifies accounting. Add PO numbers when corporate clients require them."
+      },
+      {
+        "h2": "Using the Invoice Generator",
+        "body": "Fill seller and buyer sections, add line items, optional logo upload, tax and discount fields, and preview live before export. Download PDF for email — keep a copy for taxes. Merge with signed contracts using PDF Merger if clients want one attachment."
+      },
+      {
+        "h2": "Getting paid faster",
+        "body": "State payment terms clearly (Net 15, due on receipt). Link to payment methods in the notes. Send PDFs named with invoice number and client for easy search. Follow up before due date with a polite reminder — not a new invoice unless you use credit notes."
+      }
+    ]
+  },
+  {
+    "slug": "compress-pdf-email-attachment",
+    "title": "How to Compress PDFs for Email Attachments",
+    "description": "Why PDFs get huge, how compression works, and safe workflows before hitting send.",
+    "toolSlugs": ["pdf-compressor", "pdf-merger", "image-compressor"],
+    "sections": [
+      {
+        "h2": "Why PDFs exceed limits",
+        "body": "Scanners embed high-resolution images per page. Presentations exported to PDF carry full-size slides. A 40-page scan can exceed 50 MB while the same content typed as text would be kilobytes. Compression re-encodes images inside the PDF at lower resolution or quality."
+      },
+      {
+        "h2": "Compression workflow",
+        "body": "Upload to PDF Compressor, start with medium quality, and compare output size. If still too large, try strong compression or split into two parts with PDF Splitter. For image-heavy pages, re-scan at 150 DPI instead of 600 DPI when possible — prevention beats compression."
+      },
+      {
+        "h2": "Before you hit send",
+        "body": "Open the compressed PDF on another device to confirm text remains readable. Redact sensitive data before compressing — compression does not remove content, only shrinks it. If email still blocks the file, use a secure file share link and attach a one-page cover PDF with instructions."
+      }
+    ]
+  },
+  {
+    "slug": "browser-privacy-for-file-tools",
+    "title": "How JotNexus Keeps Your Files Private (Local Processing Explained)",
+    "description": "What local browser processing means, when third-party APIs are used, and how to choose tools for sensitive work.",
+    "toolSlugs": ["pdf-merger", "hash-generator", "password-generator"],
+    "sections": [
+      {
+        "h2": "Local vs cloud processing",
+        "body": "Cloud converters upload your file to a remote server, process it, and return a download link. JotNexus file tools load processing libraries into your tab and read files with the File API — bytes stay on your device unless a tool explicitly calls an external API (DNS lookup, live currency rates, etc.). Look for the green Runs locally badge on each tool page."
+      },
+      {
+        "h2": "What still leaves your browser",
+        "body": "Third-party CDNs deliver JavaScript libraries (PDF, image, video engines) — that is code, not your document. Analytics and ads may set cookies per our Privacy Policy. API-based tools send only the query required (e.g. a domain name for DNS), not your uploaded files."
+      },
+      {
+        "h2": "Choosing tools for sensitive work",
+        "body": "For confidential PDFs and photos, prefer client-only tools on a trusted personal device. Clear downloads when finished on shared computers. Browser extensions and screen recorders are outside our control — follow your organization's IT policy for regulated data."
+      }
+    ]
+  }
+]
