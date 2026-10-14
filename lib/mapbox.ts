@@ -12,7 +12,8 @@ export async function geocodeAddress(address: string) {
 export async function calculateRoute(coordinates: [number, number][]) {
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   if (!token) throw new Error('Mapbox is not configured');
-  if (coordinates.length < 2) throw new Error('At least two coordinates are required to calculate a route');
+  if (coordinates.length === 0) throw new Error('At least one valid address is required to calculate a route');
+  if (coordinates.length === 1) return { coordinates, distanceMeters: 0, durationSeconds: 0, source: 'mapbox' };
   const path = coordinates.map(([lng, lat]) => `${lng},${lat}`).join(';');
   const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${path}?overview=full&geometries=geojson&access_token=${token}`;
   const response = await fetch(url);

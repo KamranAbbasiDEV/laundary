@@ -23,6 +23,7 @@ export async function GET() {
   let query = client.from('orders').select('*').order('created_at', { ascending:false });
   if (profile?.role === 'customer') query = query.eq('customer_user_id', user.id);
   if (profile?.role === 'processor' && profile.processor_id) query = query.eq('processor_id', profile.processor_id);
+  if (profile?.role === 'driver') query = query.eq('assigned_driver_id', user.id);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error:error.message }, { status:500 });
   const rows = data ?? [];

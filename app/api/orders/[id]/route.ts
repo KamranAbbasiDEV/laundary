@@ -36,7 +36,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (actor.role === 'processor' && current.processor_id !== actor.processor_id) return NextResponse.json({ error: 'You can only update orders assigned to your processor.' }, { status: 403 });
   const currentDisplay = displayStatus(current.status);
   const allowedByRole: Record<string, OrderStatus[]> = {
-    driver: ['Picked up','At processor','Picked up from processor','QC / Reconciliation','Delivered'],
+    driver: ['Picked up','At processor','Picked up from processor','QC / Reconciliation','Out for delivery','Delivered'],
     processor: ['Processing','Ready for pickup']
   };
   if (body.data.status && allowedByRole[actor.role] && !allowedByRole[actor.role].includes(body.data.status)) return NextResponse.json({ error: 'Your role cannot perform this transition.' }, { status: 403 });

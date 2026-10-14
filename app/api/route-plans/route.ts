@@ -23,6 +23,10 @@ export async function POST(request: Request) {
     const stops = parsed.data.orderIds.map((orderId, index) => ({ route_id: plan.id, route_date: parsed.data.routeDate, route_type: parsed.data.routeType, order_id: orderId, sequence: index + 1, driver_id: parsed.data.driverId ?? null }));
     const { error: stopError } = await auth.client.from('route_stops').insert(stops);
     if (stopError) return NextResponse.json({ error: stopError.message }, { status: 500 });
+    if (parsed.data.driverId) {
+      const { error: assignmentError } = await auth.client.from('orders').update({ assigned_driver_id: parsed.data.driverId }).in('id', parsed.data.orderIds);
+      if (assignmentError) return NextResponse.json({ error: assignmentError.message }, { status: 500 });
+    }
     return NextResponse.json({ plan, geocoded, route }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Route planning failed' }, { status: 502 }); }
 }
