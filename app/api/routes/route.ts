@@ -16,6 +16,6 @@ export async function POST(request: Request) {
     const route = await calculateRoute(coordinates);
     return NextResponse.json({ geocoded, route });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Route calculation failed' }, { status: 502 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Route calculation failed' }, { status: error instanceof Error && error.message.includes('not configured') ? 503 : 502 });
   }
 }

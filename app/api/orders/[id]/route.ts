@@ -17,7 +17,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const body = bodySchema.safeParse(await request.json());
   if (!body.success) return NextResponse.json({ error: 'Invalid update payload' }, { status: 400 });
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return NextResponse.json({ id, ...body.data, persistence: 'local-fallback' });
+  if (!supabase) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
 

@@ -10,5 +10,6 @@ export async function POST(request: Request) {
   if (authClient) { const { data: { user } } = await authClient.auth.getUser(); if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 }); }
   const body = schema.safeParse(await request.json());
   if (!body.success) return NextResponse.json({ error: 'Valid phone number and message are required' }, { status: 400 });
-  return NextResponse.json(await sendOrderNotification({ ...body.data, channel: 'sms' }));
+  const result = await sendOrderNotification({ ...body.data, channel: 'sms' });
+  return NextResponse.json(result, { status: result.delivered ? 200 : 503 });
 }

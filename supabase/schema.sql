@@ -35,7 +35,7 @@ create table public.orders (
   status public.order_status not null default 'created', processor_id uuid, notes text, has_exception boolean not null default false, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 create table public.processors (
-  id uuid primary key default gen_random_uuid(), name text not null, service_area text, capabilities text[] not null default '{}', capacity_percent integer not null default 0, performance_score numeric(5,2) not null default 0, active boolean not null default true, created_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid(), name text not null, address text, service_area text, capabilities text[] not null default '{}', pricing text, capacity_limit integer not null default 0, capacity_percent integer not null default 0, operating_hours text, turnaround_hours numeric(8,2), performance_score numeric(5,2) not null default 0, phone text, active boolean not null default true, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 create table public.order_events (
   id uuid primary key default gen_random_uuid(), order_id uuid not null references public.orders(id) on delete cascade, from_status public.order_status, to_status public.order_status not null, actor_id uuid, note text, created_at timestamptz not null default now()
@@ -70,7 +70,7 @@ insert into storage.buckets (id, name, public) values ('order-photos', 'order-ph
 create policy "authenticated staff can upload order photos" on storage.objects for insert to authenticated with check (bucket_id = 'order-photos');
 create policy "authenticated staff can read order photos" on storage.objects for select to authenticated using (bucket_id = 'order-photos');
 
--- Replace broad demo policies with role-aware production policies.
+-- Replace broad policies with role-aware production policies.
 drop policy if exists "authenticated staff can manage orders" on public.orders;
 drop policy if exists "authenticated staff can manage processors" on public.processors;
 drop policy if exists "authenticated staff can manage events" on public.order_events;

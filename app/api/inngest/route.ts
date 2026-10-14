@@ -8,9 +8,7 @@ const inngestHandler = serve({
 });
 
 export async function GET(request: NextRequest) {
-  if (!process.env.INNGEST_SIGNING_KEY && process.env.NODE_ENV !== 'production') {
-    return NextResponse.json({ status: 'ready', mode: 'local', message: 'Set INNGEST_SIGNING_KEY to register with Inngest Cloud.' });
-  }
+  if (!process.env.INNGEST_SIGNING_KEY) return NextResponse.json({ error: 'INNGEST_SIGNING_KEY is not configured' }, { status: 503 });
   return inngestHandler.GET(request, {});
 }
 

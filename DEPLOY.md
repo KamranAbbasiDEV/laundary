@@ -1,45 +1,31 @@
-# Deploy RinseLine Dispatch for client testing
+# Production deployment
 
-This app is a Next.js server application. For a dummy-data client review, deploy it to Vercel with no environment variables. The app intentionally falls back to local demo behavior when Supabase, Twilio, Mapbox, and Inngest credentials are absent.
+RinseLine is configured as a Next.js server application backed by Supabase. It does not seed demo records or provide a local authentication fallback. Configure the production services before exposing the application.
 
-## Recommended: Vercel preview deployment
+## Required setup
 
-1. Push the repository to GitHub.
-2. In Vercel, choose **Add New Project** and import the repository.
-3. Keep the detected framework as **Next.js**.
-4. Leave the environment-variable section empty for this demo deployment.
-5. Deploy and copy the generated `https://...vercel.app` URL.
-6. Share the `/login` URL with the client.
+1. Create the Supabase project and run [supabase/schema.sql](./supabase/schema.sql).
+2. Configure Supabase Auth email confirmation and redirect URLs for the deployed domain.
+3. Create the first account, then assign its `profiles.role` to `dispatcher` in Supabase.
+4. Add the variables in [.env.example](./.env.example) to the hosting provider.
+5. Create the `order-photos` Storage bucket and verify its policies.
+6. Configure Twilio, Mapbox, and Inngest credentials before enabling those workflows.
+7. Deploy through Vercel or another Node-compatible Next.js host.
 
-The repository’s [vercel.json](./vercel.json) only overrides the build command. Vercel manages the Next.js `.next` output automatically; do not configure `dist` as the output directory.
+## Vercel
 
-## Client demo access
+1. Import the repository into Vercel.
+2. Keep the detected framework as **Next.js**.
+3. Add all production variables from [.env.example](./.env.example).
+4. Deploy and configure Supabase Auth redirect URLs using the deployed domain.
 
-For this temporary review build, use:
+The repository’s [vercel.json](./vercel.json) only sets the build command. Vercel manages the Next.js output automatically.
 
-- Email: `demo@rinseline.test`
-- Password: `demo1234`
-
-Without Supabase variables, the minimal login accepts any valid email and a password of at least four characters. This is demo-only behavior and must not be used for a production deployment.
-
-Open the workspace, then review **Orders**, **Dispatch**, **Processors**, **Routes**, **Driver app**, **Processor portal**, and **Reports**. Use the order detail actions to exercise pickup, processor pickup, and delivery transitions.
-
-## Important demo limitations
-
-- Demo data is seeded in the browser UI. It is not a shared multi-user database.
-- API writes use a local fallback when integration credentials are absent; serverless instances may not retain those writes after a cold start.
-- Photos, SMS, maps, Supabase Auth, background jobs, and RLS are not live until their credentials and database setup are added.
-- Never enter real customer names, phone numbers, addresses, photos, or credentials into this review deployment.
-
-## Before production
-
-Create a separate production deployment and add the variables listed in [.env.example](./.env.example). Then run the SQL in [supabase/schema.sql](./supabase/schema.sql), configure Supabase Auth and Storage, and verify Twilio, Mapbox, and Inngest independently before accepting real orders.
-
-## Local verification
+## Local production verification
 
 ```bash
 npm run build
 npm run start
 ```
 
-Open http://localhost:3000
+Open `http://localhost:3000/login`. Without Supabase variables, the application will intentionally show a configuration error rather than accept fake credentials or display seeded records.

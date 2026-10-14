@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const kind = String(form.get('kind') ?? 'handoff');
   if (!(file instanceof File) || !orderId) return NextResponse.json({ error: 'file and orderId are required' }, { status: 400 });
   if (!file.type.startsWith('image/') || file.size > MAX_FILE_SIZE) return NextResponse.json({ error: 'Only images up to 10 MB are supported' }, { status: 400 });
-  if (!supabaseAdmin) return NextResponse.json({ uploaded: false, persistence: 'local-fallback', fileName: file.name });
+  if (!supabaseAdmin) return NextResponse.json({ error:'Supabase Storage is not configured' }, { status:503 });
   const lookup = await supabaseAdmin.from('orders').select('id').or(`id.eq.${orderId},order_number.eq.${orderId}`).maybeSingle();
   const dbOrderId = lookup.data?.id ?? orderId;
 

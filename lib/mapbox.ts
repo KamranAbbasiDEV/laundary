@@ -1,6 +1,6 @@
 export async function geocodeAddress(address: string) {
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-  if (!token) return { address, coordinates: null as [number, number] | null, source: 'local-fallback' };
+  if (!token) throw new Error('Mapbox is not configured');
   const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(address)}&limit=1&access_token=${token}`;
   const response = await fetch(url, { next: { revalidate: 300 } });
   if (!response.ok) throw new Error(`Mapbox geocoding failed: ${response.status}`);
@@ -11,7 +11,8 @@ export async function geocodeAddress(address: string) {
 
 export async function calculateRoute(coordinates: [number, number][]) {
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-  if (!token || coordinates.length < 2) return { coordinates, distanceMeters: null, durationSeconds: null, source: 'local-fallback' };
+  if (!token) throw new Error('Mapbox is not configured');
+  if (coordinates.length < 2) throw new Error('At least two coordinates are required to calculate a route');
   const path = coordinates.map(([lng, lat]) => `${lng},${lat}`).join(';');
   const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${path}?overview=full&geometries=geojson&access_token=${token}`;
   const response = await fetch(url);

@@ -1,0 +1,12 @@
+import { NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
+
+export async function GET() {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
+  const { data:{ user }, error:userError } = await supabase.auth.getUser();
+  if (userError || !user) return NextResponse.json({ error:'Authentication required' }, { status:401 });
+  const { data:profile, error } = await supabase.from('profiles').select('id,full_name,role,phone,processor_id,driver_id').eq('id',user.id).single();
+  if (error) return NextResponse.json({ error:error.message }, { status:500 });
+  return NextResponse.json({ user:{ id:user.id, email:user.email }, profile });
+}
