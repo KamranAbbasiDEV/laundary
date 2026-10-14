@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function POST(request: Request) {
+  const authClient = await createSupabaseServerClient();
+  if (authClient) { const { data: { user } } = await authClient.auth.getUser(); if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 }); }
   const form = await request.formData();
   const file = form.get('file');
   const orderId = String(form.get('orderId') ?? '');

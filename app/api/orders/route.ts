@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 const orderInput = z.object({
   customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
@@ -10,6 +10,7 @@ const orderInput = z.object({
 export async function POST(request: Request) {
   const parsed = orderInput.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid order payload', details: parsed.error.flatten() }, { status: 400 });
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ order: { ...parsed.data, status: 'Validated', id: `RL-${Date.now()}` }, persistence: 'local-fallback' }, { status: 201 });
 
   const { data, error } = await supabase.from('orders').insert({

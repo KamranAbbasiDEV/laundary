@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
 
@@ -16,9 +16,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { id } = await context.params;
   const body = bodySchema.safeParse(await request.json());
   if (!body.success) return NextResponse.json({ error: 'Invalid update payload' }, { status: 400 });
-  if (!supabaseAdmin) return NextResponse.json({ id, ...body.data, persistence: 'local-fallback' });
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return NextResponse.json({ id, ...body.data, persistence: 'local-fallback' });
 
-  const { data: current, error: readError } = await supabaseAdmin.from('orders').select('id,status').or(`id.eq.${id},order_number.eq.${id}`).maybeSingle();
+  const { data: current, error: readError } = await supabase.from('orders').select('id,status').or(`id.eq.${id},order_number.eq.${id}`).maybeSingle();
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   const currentDisplay = displayStatus(current.status);
@@ -27,8 +28,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.data.status) update.status = dbStatus(body.data.status);
   if (body.data.exception) update.has_exception = true;
-  const { data, error } = await supabaseAdmin.from('orders').update(update).eq('id', current.id).select().single();
+  const { data, error } = await supabase.from('orders').update(update).eq('id', current.id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  await supabaseAdmin.from('order_events').insert({ order_id: current.id, from_status: current.status, to_status: body.data.status ? dbStatus(body.data.status) : current.status, note: body.data.note ?? body.data.exception ?? null });
+  await supabase.from('order_events').insert({ order_id: current.id, from_status: current.status, to_status: body.data.status ? dbStatus(body.data.status) : current.status, note: body.data.note ?? body.data.exception ?? null });
   return NextResponse.json({ order: data, persistence: 'supabase' });
 }

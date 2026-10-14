@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./demo.css";
 
 :root{--navy:#102a43;--navy2:#173f5f;--ink:#1f2933;--muted:#6b7c93;--line:#e5e7eb;--surface:#fff;--canvas:#f5f7fa;--teal:#159a9c;--teal-soft:#e6f7f6;--amber:#b7791f;--amber-soft:#fff7df;--red:#c2413a;--red-soft:#fff0ee;--green:#2f855a;--green-soft:#e8f7ef}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--canvas);color:var(--ink)}body{font-family:Arial,Helvetica,sans-serif;font-size:14px}button,input,select,textarea{font:inherit}button{cursor:pointer}
