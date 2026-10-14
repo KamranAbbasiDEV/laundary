@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   if (!authClient) return NextResponse.json({ error: 'The workspace is not configured.' }, { status: 503 });
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  const { data: profile } = await authClient.from('profiles').select('role,status').eq('id', user.id).single();
+  const { data: profile } = await authClient.from('profiles').select('role,status,processor_id').eq('id', user.id).single();
   if (!profile || profile.status !== 'active' || !['super_admin', 'dispatcher', 'driver', 'processor'].includes(profile.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
   const form = await request.formData();
   const file = form.get('file');
@@ -21,11 +21,13 @@ export async function POST(request: Request) {
   if (!supabaseAdmin) return NextResponse.json({ error:'Supabase Storage is not configured' }, { status:503 });
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId);
   const lookup = isUuid
-    ? await supabaseAdmin.from('orders').select('id').eq('id', orderId).maybeSingle()
-    : await supabaseAdmin.from('orders').select('id').eq('order_number', orderId).maybeSingle();
+    ? await supabaseAdmin.from('orders').select('id,assigned_driver_id,processor_id').eq('id', orderId).maybeSingle()
+    : await supabaseAdmin.from('orders').select('id,assigned_driver_id,processor_id').eq('order_number', orderId).maybeSingle();
   if (lookup.error) return NextResponse.json({ error: lookup.error.message }, { status: 500 });
   if (!lookup.data?.id) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   const dbOrderId = lookup.data.id;
+  if (profile.role === 'driver' && lookup.data.assigned_driver_id !== user.id) return NextResponse.json({ error: 'You can only upload photos for orders assigned to you.' }, { status: 403 });
+  if (profile.role === 'processor' && lookup.data.processor_id !== profile.processor_id) return NextResponse.json({ error: 'You can only upload photos for orders assigned to your processor.' }, { status: 403 });
 
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
   const path = `${dbOrderId}/${kind}/${Date.now()}-${safeName}`;

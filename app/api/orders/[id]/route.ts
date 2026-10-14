@@ -41,6 +41,20 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   };
   if (body.data.status && allowedByRole[actor.role] && !allowedByRole[actor.role].includes(body.data.status)) return NextResponse.json({ error: 'Your role cannot perform this transition.' }, { status: 403 });
   if (body.data.status && !canTransition(currentDisplay, body.data.status)) return NextResponse.json({ error: `Invalid transition from ${currentDisplay} to ${body.data.status}` }, { status: 409 });
+  if (body.data.status === 'Capacity confirmed') {
+    const { data: acceptedOffer, error: offerError } = await supabase.from('processor_offers').select('id').eq('order_id', current.id).eq('status', 'accepted').maybeSingle();
+    if (offerError) return NextResponse.json({ error: offerError.message }, { status: 500 });
+    if (!acceptedOffer) return NextResponse.json({ error: 'A processor must accept this order before capacity can be confirmed.' }, { status: 409 });
+  }
+  if (actor.role === 'driver' && body.data.status) {
+    const requiredHandoff: Partial<Record<OrderStatus, string>> = { 'Picked up': 'customer_pickup', 'At processor': 'processor_dropoff', 'Picked up from processor': 'processor_pickup', 'Delivered': 'customer_delivery' };
+    const stage = requiredHandoff[body.data.status];
+    if (stage) {
+      const { data: handoff, error: handoffError } = await supabase.from('order_handoffs').select('id').eq('order_id', current.id).eq('stage', stage).maybeSingle();
+      if (handoffError) return NextResponse.json({ error: handoffError.message }, { status: 500 });
+      if (!handoff) return NextResponse.json({ error: 'Record the required handoff count before advancing this order.' }, { status: 409 });
+    }
+  }
 
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.data.status) update.status = dbStatus(body.data.status);

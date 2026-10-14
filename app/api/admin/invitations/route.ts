@@ -9,6 +9,8 @@ const inviteSchema = z.object({
   role: z.enum(['dispatcher', 'driver', 'processor']),
   phone: z.string().optional(),
   processorId: z.string().uuid().optional()
+}).superRefine((value, context) => {
+  if (value.role === 'processor' && !value.processorId) context.addIssue({ code: z.ZodIssueCode.custom, path: ['processorId'], message: 'Choose the processor this account represents.' });
 });
 
 async function getAdmin() {
@@ -35,6 +37,10 @@ export async function POST(request: Request) {
   if (!supabaseAdmin) return NextResponse.json({ error: 'User invitations are not configured yet.' }, { status: 503 });
   const parsed = inviteSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Enter a valid name, email, and role.' }, { status: 400 });
+  if (parsed.data.processorId) {
+    const { data: processor, error: processorError } = await auth.client.from('processors').select('id').eq('id', parsed.data.processorId).eq('active', true).maybeSingle();
+    if (processorError || !processor) return NextResponse.json({ error: 'Choose an active, approved processor.' }, { status: 400 });
+  }
   const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || new URL(request.url).origin;
   const { data: invited, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(parsed.data.email, {
     data: { full_name: parsed.data.fullName },

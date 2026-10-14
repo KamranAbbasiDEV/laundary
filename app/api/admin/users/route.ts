@@ -35,6 +35,8 @@ export async function PATCH(request: Request) {
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const parsed = updateSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid user update.' }, { status: 400 });
+  if (parsed.data.role === 'super_admin') return NextResponse.json({ error: 'Super Admin access cannot be granted from this endpoint.' }, { status: 403 });
+  if (parsed.data.userId === auth.user.id && parsed.data.role) return NextResponse.json({ error: 'You cannot change your own Super Admin role.' }, { status: 400 });
   if (parsed.data.userId === auth.user.id && parsed.data.status && parsed.data.status !== 'active') return NextResponse.json({ error: 'You cannot suspend your own Super Admin account.' }, { status: 400 });
   const { userId, ...changes } = parsed.data;
   const update = { ...changes, ...(changes.fullName !== undefined ? { full_name: changes.fullName } : {}), ...(changes.onboardingComplete !== undefined ? { onboarding_complete: changes.onboardingComplete } : {}), updated_at: new Date().toISOString() } as Record<string, unknown>;

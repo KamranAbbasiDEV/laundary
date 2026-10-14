@@ -49,6 +49,7 @@ export async function PATCH(request: Request) {
   const body = parsed.data;
   const { data: application, error: readError } = await client.from('processor_applications').select('*').eq('id', body.id).single();
   if (readError || !application) return NextResponse.json({ error: 'Application not found.' }, { status: 404 });
+  if (application.status !== 'pending') return NextResponse.json({ error: 'This application has already been reviewed.' }, { status: 409 });
   let processorId: string | null = null;
   if (body.status === 'approved') {
     const { data: processor, error: processorError } = await client.from('processors').insert({ name: application.business_name, address: application.address, service_area: application.service_area, capabilities: application.capabilities, pricing: application.pricing, capacity_limit: application.capacity_limit, operating_hours: application.operating_hours, turnaround_hours: application.turnaround_hours, phone: application.phone }).select('id').single();

@@ -12,7 +12,7 @@ const orderInput = z.object({
 function mapOrder(row:Record<string,unknown>, processorName?: string) {
   const statusMap:Record<string,string> = { created:'Created', validated:'Validated', processor_ranked:'Processor ranked', capacity_confirmed:'Capacity confirmed', pickup_scheduled:'Pickup scheduled', picked_up:'Picked up', at_processor:'At processor', processing:'Processing', ready_for_pickup:'Ready for pickup', picked_up_from_processor:'Picked up from processor', qc_reconciliation:'QC / Reconciliation', out_for_delivery:'Out for delivery', delivered:'Delivered', processor_reviewed:'Processor reviewed' };
   const priorityMap:Record<string,string> = { standard:'Standard', priority:'Priority', same_day:'Same day' };
-  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due:row.due_at_label ?? '', status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, exception:row.has_exception ? 'Open exception' : undefined };
+  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due:row.due_at_label ?? '', status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? 'Open exception' : undefined };
 }
 
 export async function GET() {
@@ -62,11 +62,13 @@ export async function POST(request: Request) {
     const ranked = candidates.map(candidate => {
       const capabilities = Array.isArray(candidate.capabilities) ? candidate.capabilities.map(value => String(value).toLowerCase()) : [];
       const capabilityScore = capabilities.some(value => service.includes(value) || value.includes(service)) ? 40 : 10;
-      const capacityScore = Number(candidate.capacity_limit) > Number(candidate.capacity_percent) ? 25 : 0;
+      const capacityScore = Number(candidate.capacity_limit) > 0 && Number(candidate.capacity_percent) < 100 ? 25 : 0;
       return { id: candidate.id, score: capabilityScore + capacityScore + Number(candidate.performance_score ?? 0), turnaround: Number(candidate.turnaround_hours ?? 999) };
     }).sort((a, b) => b.score - a.score || a.turnaround - b.turnaround);
-    await matchingClient.from('processor_offers').insert(ranked.map((candidate, index) => ({ order_id: data.id, processor_id: candidate.id, rank: index + 1, score: candidate.score })));
-    await matchingClient.from('orders').update({ status: 'processor_ranked', updated_at: new Date().toISOString() }).eq('id', data.id);
+    const { error: offerError } = await matchingClient.from('processor_offers').insert(ranked.map((candidate, index) => ({ order_id: data.id, processor_id: candidate.id, rank: index + 1, score: candidate.score, status: index === 0 ? 'pending' : 'withdrawn' })));
+    if (offerError) return NextResponse.json({ order: data, persistence: 'supabase', warning: `Order was created but processor matching needs dispatcher attention: ${offerError.message}` }, { status: 201 });
+    const { error: statusError } = await matchingClient.from('orders').update({ status: 'processor_ranked', updated_at: new Date().toISOString() }).eq('id', data.id);
+    if (statusError) return NextResponse.json({ order: data, persistence: 'supabase', warning: `Order was created but could not enter matching: ${statusError.message}` }, { status: 201 });
     data.status = 'processor_ranked';
   }
   if (process.env.INNGEST_EVENT_KEY) {

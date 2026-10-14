@@ -42,7 +42,7 @@ async function queueProcessorReviews() {
 }
 
 export const orderValidated = inngest.createFunction(
-  { id: 'order-validated-processor-notification', triggers: [{ event: 'rinseline/order.validated' }] },
+  { id: 'processor-offer-notification', triggers: [{ event: 'rinseline/order.validated' }, { event: 'rinseline/order.processor_offer_activated' }] },
   async ({ event, step }) => step.run('notify-pending-processors', () => notifyPendingProcessorOffers(event.data.orderId as string))
 );
 
