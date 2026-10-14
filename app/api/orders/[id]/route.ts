@@ -18,6 +18,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!body.success) return NextResponse.json({ error: 'Invalid update payload' }, { status: 400 });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ id, ...body.data, persistence: 'local-fallback' });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
 
   const { data: current, error: readError } = await supabase.from('orders').select('id,status').or(`id.eq.${id},order_number.eq.${id}`).maybeSingle();
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });

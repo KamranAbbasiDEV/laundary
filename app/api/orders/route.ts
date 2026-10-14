@@ -12,6 +12,8 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'Invalid order payload', details: parsed.error.flatten() }, { status: 400 });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ order: { ...parsed.data, status: 'Validated', id: `RL-${Date.now()}` }, persistence: 'local-fallback' }, { status: 201 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
 
   const { data, error } = await supabase.from('orders').insert({
     customer_name: parsed.data.customer, phone: parsed.data.phone, pickup_address: parsed.data.address,
