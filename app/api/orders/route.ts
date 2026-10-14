@@ -35,7 +35,8 @@ export async function POST(request: Request) {
   if (!supabase) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  const { data:profile } = await supabase.from('profiles').select('role').eq('id',user.id).single();
+  const { data:profile } = await supabase.from('profiles').select('role,status').eq('id',user.id).single();
+  if (!profile || profile.status !== 'active' || !['super_admin', 'dispatcher', 'customer'].includes(profile.role)) return NextResponse.json({ error: 'Your account cannot create orders.' }, { status: 403 });
 
   const { data, error } = await supabase.from('orders').insert({
     customer_name: parsed.data.customer, phone: parsed.data.phone, pickup_address: parsed.data.address,

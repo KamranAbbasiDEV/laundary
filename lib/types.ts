@@ -25,7 +25,8 @@ export type Order = {
   timeline?: OrderEvent[];
 };
 
-export type UserRole = 'dispatcher' | 'driver' | 'processor' | 'customer';
+export type UserRole = 'super_admin' | 'dispatcher' | 'driver' | 'processor' | 'customer';
+export type AccountStatus = 'pending' | 'active' | 'suspended' | 'rejected' | 'deactivated';
 export type OrderEvent = { status: OrderStatus; at: string; actor: string; note?: string };
 export type Processor = { id: string; name: string; address: string; location: string; capabilities: string[]; pricing: string; capacityLimit: number; capacityUsed: number; operatingHours: string; turnaround: string; score: number; queue: number; phone: string; active: boolean };
 export type Driver = { id: string; name: string; phone: string; availability: 'Available' | 'On route' | 'Off duty'; zones: string[]; vehicle: string };

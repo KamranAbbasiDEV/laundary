@@ -1,13 +1,23 @@
 create type public.order_status as enum ('created','validated','processor_ranked','capacity_confirmed','pickup_scheduled','picked_up','at_processor','processing','ready_for_pickup','picked_up_from_processor','qc_reconciliation','out_for_delivery','delivered','processor_reviewed');
 create type public.order_priority as enum ('standard','priority','same_day');
 create type public.exception_type as enum ('pickup_discrepancy','processor_discrepancy','quality_issue','damaged_item','route_issue','missing_customer_specification');
-create type public.app_role as enum ('dispatcher','driver','processor','customer');
+create type public.app_role as enum ('super_admin','dispatcher','driver','processor','customer');
+create type public.account_status as enum ('pending','active','suspended','rejected','deactivated');
+create type public.invitation_status as enum ('pending','accepted','revoked','expired');
+create type public.processor_application_status as enum ('pending','approved','rejected','withdrawn');
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
   role public.app_role not null default 'customer',
+  status public.account_status not null default 'active',
   phone text,
+  avatar_url text,
+  address text,
+  service_zones text[] not null default '{}',
+  availability text,
+  vehicle_details text,
+  onboarding_complete boolean not null default false,
   processor_id uuid,
   driver_id uuid,
   created_at timestamptz not null default now(),
@@ -50,6 +60,54 @@ create table public.order_photos (
   id uuid primary key default gen_random_uuid(), order_id uuid not null references public.orders(id) on delete cascade, storage_path text not null, kind text not null, mime_type text not null, size_bytes integer not null, created_at timestamptz not null default now()
 );
 
+create table public.invitations (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  role public.app_role not null check (role in ('dispatcher','driver','processor')),
+  full_name text not null,
+  phone text,
+  processor_id uuid references public.processors(id) on delete set null,
+  invited_by uuid not null references auth.users(id) on delete restrict,
+  auth_user_id uuid references auth.users(id) on delete set null,
+  status public.invitation_status not null default 'pending',
+  expires_at timestamptz not null default (now() + interval '7 days'),
+  accepted_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (email, role, status)
+);
+
+create table public.processor_applications (
+  id uuid primary key default gen_random_uuid(),
+  applicant_user_id uuid references auth.users(id) on delete set null,
+  business_name text not null,
+  contact_name text not null,
+  email text not null,
+  phone text not null,
+  address text not null,
+  service_area text,
+  capabilities text[] not null default '{}',
+  pricing text,
+  capacity_limit integer not null default 0 check (capacity_limit >= 0),
+  operating_hours text,
+  turnaround_hours numeric(8,2),
+  notes text,
+  status public.processor_application_status not null default 'pending',
+  reviewed_by uuid references auth.users(id) on delete set null,
+  reviewed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.audit_log (
+  id uuid primary key default gen_random_uuid(),
+  actor_id uuid references auth.users(id) on delete set null,
+  action text not null,
+  entity_type text not null,
+  entity_id uuid,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
 alter table public.orders enable row level security;
 alter table public.profiles enable row level security;
 alter table public.processors enable row level security;
@@ -57,6 +115,9 @@ alter table public.order_events enable row level security;
 alter table public.exceptions enable row level security;
 alter table public.route_stops enable row level security;
 alter table public.order_photos enable row level security;
+alter table public.invitations enable row level security;
+alter table public.processor_applications enable row level security;
+alter table public.audit_log enable row level security;
 create policy "authenticated staff can manage orders" on public.orders for all to authenticated using (true) with check (true);
 create policy "users can read their own profile" on public.profiles for select to authenticated using (id = auth.uid() or public.current_user_role() = 'dispatcher');
 create policy "users can update their own profile" on public.profiles for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
@@ -80,15 +141,70 @@ drop policy if exists "authenticated staff can manage photos" on public.order_ph
 drop policy if exists "authenticated staff can upload order photos" on storage.objects;
 drop policy if exists "authenticated staff can read order photos" on storage.objects;
 
-create policy "staff can read orders" on public.orders for select to authenticated using (public.current_user_role() in ('dispatcher','driver','processor') or customer_user_id = auth.uid());
-create policy "staff and customers can create orders" on public.orders for insert to authenticated with check (public.current_user_role() in ('dispatcher','driver','processor') or customer_user_id = auth.uid());
-create policy "operations can update orders" on public.orders for update to authenticated using (public.current_user_role() in ('dispatcher','driver','processor')) with check (public.current_user_role() in ('dispatcher','driver','processor'));
-create policy "processors can read assigned records" on public.processors for select to authenticated using (public.current_user_role() in ('dispatcher','processor'));
-create policy "dispatchers manage processors" on public.processors for all to authenticated using (public.current_user_role() = 'dispatcher') with check (public.current_user_role() = 'dispatcher');
-create policy "operations can read events" on public.order_events for select to authenticated using (public.current_user_role() in ('dispatcher','driver','processor') or exists (select 1 from public.orders o where o.id = order_id and o.customer_user_id = auth.uid()));
-create policy "operations can create events" on public.order_events for insert to authenticated with check (public.current_user_role() in ('dispatcher','driver','processor'));
-create policy "operations can manage exceptions" on public.exceptions for all to authenticated using (public.current_user_role() in ('dispatcher','driver','processor')) with check (public.current_user_role() in ('dispatcher','driver','processor'));
-create policy "operations can manage routes" on public.route_stops for all to authenticated using (public.current_user_role() in ('dispatcher','driver')) with check (public.current_user_role() in ('dispatcher','driver'));
-create policy "operations can manage photos" on public.order_photos for all to authenticated using (public.current_user_role() in ('dispatcher','driver','processor')) with check (public.current_user_role() in ('dispatcher','driver','processor'));
-create policy "operations can upload order photos" on storage.objects for insert to authenticated with check (bucket_id = 'order-photos' and public.current_user_role() in ('dispatcher','driver','processor'));
-create policy "operations can read order photos" on storage.objects for select to authenticated using (bucket_id = 'order-photos' and public.current_user_role() in ('dispatcher','driver','processor'));
+drop policy if exists "users can read their own profile" on public.profiles;
+drop policy if exists "users can update their own profile" on public.profiles;
+drop policy if exists "dispatchers can manage profiles" on public.profiles;
+drop policy if exists "staff can read orders" on public.orders;
+drop policy if exists "staff and customers can create orders" on public.orders;
+drop policy if exists "operations can update orders" on public.orders;
+drop policy if exists "processors can read assigned records" on public.processors;
+drop policy if exists "dispatchers manage processors" on public.processors;
+drop policy if exists "operations can read events" on public.order_events;
+drop policy if exists "operations can create events" on public.order_events;
+drop policy if exists "operations can manage exceptions" on public.exceptions;
+drop policy if exists "operations can manage routes" on public.route_stops;
+drop policy if exists "operations can manage photos" on public.order_photos;
+drop policy if exists "operations can upload order photos" on storage.objects;
+drop policy if exists "operations can read order photos" on storage.objects;
+
+create or replace function public.is_super_admin() returns boolean
+language sql stable security definer set search_path = public
+as $$ select exists (select 1 from public.profiles where id = auth.uid() and role = 'super_admin' and status = 'active') $$;
+
+create or replace function public.is_operations_user() returns boolean
+language sql stable security definer set search_path = public
+as $$ select exists (select 1 from public.profiles where id = auth.uid() and role in ('super_admin','dispatcher','driver','processor') and status = 'active') $$;
+
+create or replace function public.protect_profile_access_fields() returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() = old.id and not public.is_super_admin() then
+    new.role := old.role;
+    new.status := old.status;
+    new.processor_id := old.processor_id;
+    new.driver_id := old.driver_id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_access_fields on public.profiles;
+create trigger protect_profile_access_fields before update on public.profiles
+for each row execute procedure public.protect_profile_access_fields();
+
+create policy "users can read their own profile" on public.profiles for select to authenticated using (id = auth.uid() or public.is_super_admin() or public.current_user_role() = 'dispatcher');
+create policy "users can update their own profile" on public.profiles for update to authenticated using (id = auth.uid() and status = 'active') with check (id = auth.uid());
+create policy "super admins manage profiles" on public.profiles for all to authenticated using (public.is_super_admin()) with check (public.is_super_admin());
+
+create policy "authorized users can read orders" on public.orders for select to authenticated using (public.is_operations_user() or customer_user_id = auth.uid());
+create policy "customers and dispatch can create orders" on public.orders for insert to authenticated with check (public.current_user_role() in ('super_admin','dispatcher') or (public.current_user_role() = 'customer' and customer_user_id = auth.uid()));
+create policy "operations can update orders" on public.orders for update to authenticated using (public.is_operations_user()) with check (public.is_operations_user());
+
+create policy "operations can read processors" on public.processors for select to authenticated using (public.is_operations_user());
+create policy "admins manage processors" on public.processors for all to authenticated using (public.is_super_admin() or public.current_user_role() = 'dispatcher') with check (public.is_super_admin() or public.current_user_role() = 'dispatcher');
+
+create policy "authorized users can read events" on public.order_events for select to authenticated using (public.is_operations_user() or exists (select 1 from public.orders o where o.id = order_id and o.customer_user_id = auth.uid()));
+create policy "operations can create events" on public.order_events for insert to authenticated with check (public.is_operations_user());
+create policy "operations can manage exceptions" on public.exceptions for all to authenticated using (public.is_operations_user()) with check (public.is_operations_user());
+create policy "operations can manage routes" on public.route_stops for all to authenticated using (public.current_user_role() in ('super_admin','dispatcher','driver')) with check (public.current_user_role() in ('super_admin','dispatcher','driver'));
+create policy "operations can manage photos" on public.order_photos for all to authenticated using (public.is_operations_user()) with check (public.is_operations_user());
+create policy "operations can upload order photos" on storage.objects for insert to authenticated with check (bucket_id = 'order-photos' and public.is_operations_user());
+create policy "operations can read order photos" on storage.objects for select to authenticated using (bucket_id = 'order-photos' and public.is_operations_user());
+
+create policy "public can submit processor applications" on public.processor_applications for insert to anon, authenticated with check (status = 'pending');
+create policy "admins can read processor applications" on public.processor_applications for select to authenticated using (public.is_super_admin() or public.current_user_role() = 'dispatcher');
+create policy "admins can update processor applications" on public.processor_applications for update to authenticated using (public.is_super_admin() or public.current_user_role() = 'dispatcher') with check (public.is_super_admin() or public.current_user_role() = 'dispatcher');
+create policy "users can read their own applications" on public.processor_applications for select to authenticated using (applicant_user_id = auth.uid());
+create policy "admins can manage invitations" on public.invitations for all to authenticated using (public.is_super_admin()) with check (public.is_super_admin());
+create policy "admins can read audit log" on public.audit_log for select to authenticated using (public.is_super_admin() or public.current_user_role() = 'dispatcher');

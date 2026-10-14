@@ -5,10 +5,10 @@ export const transitionMap: Record<OrderStatus, OrderStatus[]> = {
 };
 
 export const services = [
-  { name:'Wash & Fold', price:'Configured in Supabase', turnaround:'Configured in Supabase', description:'Everyday clothing, linens, and towels' },
-  { name:'Dry Cleaning', price:'Configured in Supabase', turnaround:'Configured in Supabase', description:'Suits, shirts, dresses, and formalwear' },
-  { name:'Commercial Linen', price:'Configured in Supabase', turnaround:'Configured in Supabase', description:'Hotels, restaurants, studios, and clinics' },
-  { name:'Specialty Care', price:'Configured in Supabase', turnaround:'Configured in Supabase', description:'Delicates, stain treatment, and specialty textiles' }
+  { name:'Wash & Fold', price:'Set by workspace owner', turnaround:'Set by workspace owner', description:'Everyday clothing, linens, and towels' },
+  { name:'Dry Cleaning', price:'Set by workspace owner', turnaround:'Set by workspace owner', description:'Suits, shirts, dresses, and formalwear' },
+  { name:'Commercial Linen', price:'Set by workspace owner', turnaround:'Set by workspace owner', description:'Hotels, restaurants, studios, and clinics' },
+  { name:'Specialty Care', price:'Set by workspace owner', turnaround:'Set by workspace owner', description:'Delicates, stain treatment, and specialty textiles' }
 ];
 
 export const rules = {
