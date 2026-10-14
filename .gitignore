@@ -1,4 +1,10 @@
 node_modules/
+.next/
+AGENTS.md
+*.tsbuildinfo
 dist/
 .DS_Store
 *.log
+.env
+.env.*
+!.env.example

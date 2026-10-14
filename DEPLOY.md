@@ -1,39 +1,45 @@
-# Deploy JotNexus to jotnexus.com
+# Deploy RinseLine Dispatch for client testing
 
-## Quick deploy (free)
+This app is a Next.js server application. For a dummy-data client review, deploy it to Vercel with no environment variables. The app intentionally falls back to local demo behavior when Supabase, Twilio, Mapbox, and Inngest credentials are absent.
 
-### Cloudflare Pages (recommended)
-1. Push this repo to GitHub
-2. Cloudflare Dashboard → Pages → Create project → Connect Git
-3. Build command: `npm run build`
-4. Output directory: `dist`
-5. Add custom domain `jotnexus.com` and `www.jotnexus.com`
+## Recommended: Vercel preview deployment
 
-### Netlify
-1. Connect repo or drag-drop the `dist/` folder
-2. Uses `netlify.toml` automatically
+1. Push the repository to GitHub.
+2. In Vercel, choose **Add New Project** and import the repository.
+3. Keep the detected framework as **Next.js**.
+4. Leave the environment-variable section empty for this demo deployment.
+5. Deploy and copy the generated `https://...vercel.app` URL.
+6. Share the `/login` URL with the client.
 
-### Vercel
-1. Import repo — uses `vercel.json` automatically
+The repository’s [vercel.json](./vercel.json) only overrides the build command. Vercel manages the Next.js `.next` output automatically; do not configure `dist` as the output directory.
 
-## Before launch checklist
+## Client demo access
 
-1. **AdSense** — Replace `ca-pub-XXXXXXXXXXXXXXXX` in `data/site.json` with your real publisher ID after approval
-2. **Google Search Console** — Add property for `https://www.jotnexus.com` and submit `/sitemap.xml`
-3. **DNS** — Point domain to your host (Cloudflare/Netlify/Vercel)
-4. **Email** — Set up `hello@jotnexus.com` for contact (Cloudflare Email Routing is free)
+For this temporary review build, use:
 
-## Local preview
+- Email: `demo@rinseline.test`
+- Password: `demo1234`
+
+Without Supabase variables, the minimal login accepts any valid email and a password of at least four characters. This is demo-only behavior and must not be used for a production deployment.
+
+Open the workspace, then review **Orders**, **Dispatch**, **Processors**, **Routes**, **Driver app**, **Processor portal**, and **Reports**. Use the order detail actions to exercise pickup, processor pickup, and delivery transitions.
+
+## Important demo limitations
+
+- Demo data is seeded in the browser UI. It is not a shared multi-user database.
+- API writes use a local fallback when integration credentials are absent; serverless instances may not retain those writes after a cold start.
+- Photos, SMS, maps, Supabase Auth, background jobs, and RLS are not live until their credentials and database setup are added.
+- Never enter real customer names, phone numbers, addresses, photos, or credentials into this review deployment.
+
+## Before production
+
+Create a separate production deployment and add the variables listed in [.env.example](./.env.example). Then run the SQL in [supabase/schema.sql](./supabase/schema.sql), configure Supabase Auth and Storage, and verify Twilio, Mapbox, and Inngest independently before accepting real orders.
+
+## Local verification
 
 ```bash
 npm run build
-npm run preview
+npm run start
 ```
 
 Open http://localhost:3000
-
-## Add more tools
-
-1. Add entry to `data/tools.json` with `"status": "live"`
-2. Implement `JotTools['your-id']` in `src/assets/js/tools/all-tools.js`
-3. Run `npm run build`

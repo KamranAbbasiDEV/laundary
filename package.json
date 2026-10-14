@@ -1,26 +1,46 @@
 {
-  "name": "jotnexus",
+  "name": "laundry-dispatch",
   "version": "1.0.0",
   "description": "400+ free client-side microtools — jotnexus.com",
   "private": true,
   "scripts": {
-    "build": "node scripts/build.js",
-    "catalog": "node scripts/generate-extended-catalog.js && node scripts/generate-mega-catalog.js",
-    "test": "node scripts/smoke-test.js",
-    "fix": "node scripts/fix-all-tools.js",
-    "polish": "node scripts/polish-tools-batch.js",
-    "audit": "node scripts/audit-tool-gaps.js",
-    "dev": "node scripts/build.js && npx --yes serve dist -l 3000",
-    "preview": "npx --yes serve dist -l 3000"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit"
   },
   "keywords": [
-    "tools",
-    "utilities",
-    "client-side",
-    "seo"
+    "laundry",
+    "dispatch",
+    "logistics",
+    "operations"
   ],
   "license": "MIT",
   "devDependencies": {
-    "jsdom": "^28.1.0"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "jsdom": "^28.1.0",
+    "postcss": "^8.5.30",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
+    "@supabase/supabase-js": "^2.117.3",
+    "@tanstack/react-table": "^9.3.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "inngest": "^4.23.0",
+    "lucide-react": "^1.56.0",
+    "mapbox-gl": "^3.33.0",
+    "next": "^16.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-hook-form": "^7.90.0",
+    "tailwind-merge": "^3.7.0",
+    "twilio": "^6.2.0",
+    "zod": "^4.6.7"
   }
 }
