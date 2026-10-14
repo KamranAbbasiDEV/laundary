@@ -9,6 +9,7 @@ const stages: Record<string, { label: string; stage: string; next: OrderStatus; 
   'Pickup scheduled': { label: 'Confirm customer pickup', stage: 'customer_pickup', next: 'Picked up', kind: 'customer-pickup' },
   'Picked up': { label: 'Confirm processor drop-off', stage: 'processor_dropoff', next: 'At processor', kind: 'processor-dropoff' },
   'Ready for pickup': { label: 'Confirm processor pickup', stage: 'processor_pickup', next: 'Picked up from processor', kind: 'processor-pickup' },
+  'Picked up from processor': { label: 'Complete QC / reconciliation', stage: 'processor_delivery', next: 'QC / Reconciliation', kind: 'qc' },
   'QC / Reconciliation': { label: 'Release for delivery', stage: 'processor_delivery', next: 'Out for delivery', kind: 'qc' },
   'Out for delivery': { label: 'Confirm customer delivery', stage: 'customer_delivery', next: 'Delivered', kind: 'customer-delivery' }
 };
