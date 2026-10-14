@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { inngest } from '@/lib/inngest';
 
 const orderInput = z.object({
   customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
@@ -67,6 +68,9 @@ export async function POST(request: Request) {
     await matchingClient.from('processor_offers').insert(ranked.map((candidate, index) => ({ order_id: data.id, processor_id: candidate.id, rank: index + 1, score: candidate.score })));
     await matchingClient.from('orders').update({ status: 'processor_ranked', updated_at: new Date().toISOString() }).eq('id', data.id);
     data.status = 'processor_ranked';
+  }
+  if (process.env.INNGEST_EVENT_KEY) {
+    try { await inngest.send({ name: 'rinseline/order.validated', data: { orderId: data.id } }); } catch (eventError) { console.error('Unable to queue processor notification', eventError); }
   }
   return NextResponse.json({ order: data, persistence: 'supabase' }, { status: 201 });
 }

@@ -16,7 +16,7 @@ export default function SignupPage() {
     event.preventDefault(); setError(''); setSuccess('');
     if (!isPersistenceConfigured || !supabase) { setError('Account creation is temporarily unavailable. Please try again later.'); return; }
     if (name.trim().length < 2 || !email.includes('@') || password.length < 8) { setError('Enter your name, a valid email, and a password of at least 8 characters.'); return; }
-    const result = await supabase.auth.signUp({ email, password, options: { data: { full_name: name.trim() } } });
+    const result = await supabase.auth.signUp({ email, password, options: { data: { full_name: name.trim() }, emailRedirectTo: `${window.location.origin}/login` } });
     if (result.error) { setError(result.error.message); return; }
     if (!result.data.session) { setSuccess('Account created. Check your inbox to verify your email, then sign in.'); return; }
     window.location.href = '/';

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const profileSchema = z.object({ fullName: z.string().min(2), phone: z.string().min(7), address: z.string().optional(), serviceZones: z.array(z.string()).default([]), availability: z.string().optional(), vehicleDetails: z.string().optional() });
 
@@ -18,6 +19,18 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await client.auth.getUser(); if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   const parsed = profileSchema.safeParse(await request.json()); if (!parsed.success) return NextResponse.json({ error: 'Complete the required profile fields.' }, { status: 400 });
   const item = parsed.data;
-  const { data, error } = await client.from('profiles').update({ full_name: item.fullName, phone: item.phone, address: item.address ?? null, service_zones: item.serviceZones, availability: item.availability ?? null, vehicle_details: item.vehicleDetails ?? null, onboarding_complete: true, updated_at: new Date().toISOString() }).eq('id', user.id).select('id,full_name,role,status,phone,address,service_zones,availability,vehicle_details,onboarding_complete').single();
+  const { data: current, error: currentError } = await client.from('profiles').select('status').eq('id', user.id).single();
+  if (currentError || !current) return NextResponse.json({ error: 'Unable to load your profile.' }, { status: 500 });
+  const update = { full_name: item.fullName, phone: item.phone, address: item.address ?? null, service_zones: item.serviceZones, availability: item.availability ?? null, vehicle_details: item.vehicleDetails ?? null, onboarding_complete: true, updated_at: new Date().toISOString() };
+  if (current.status === 'pending') {
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Invitation activation is not configured.' }, { status: 503 });
+    const { data: invitation } = await supabaseAdmin.from('invitations').select('id,expires_at').eq('auth_user_id', user.id).eq('status', 'pending').maybeSingle();
+    if (!invitation || new Date(invitation.expires_at).getTime() < Date.now()) return NextResponse.json({ error: 'This invitation has expired. Ask a workspace owner to send a new one.' }, { status: 403 });
+    const { data, error } = await supabaseAdmin.from('profiles').update({ ...update, status: 'active' }).eq('id', user.id).select('id,full_name,role,status,phone,address,service_zones,availability,vehicle_details,onboarding_complete').single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await supabaseAdmin.from('invitations').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', invitation.id);
+    return NextResponse.json({ profile: data });
+  }
+  const { data, error } = await client.from('profiles').update(update).eq('id', user.id).select('id,full_name,role,status,phone,address,service_zones,availability,vehicle_details,onboarding_complete').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 }); return NextResponse.json({ profile: data });
 }

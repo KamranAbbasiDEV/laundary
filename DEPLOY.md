@@ -37,7 +37,7 @@ end $$;
 The order API also loads processor names separately, so existing deployments will continue working after the application is redeployed even while Supabase refreshes its schema cache.
 
 The public signup page creates Customer accounts only. The Super Admin invites Dispatchers, Drivers, and approved Processor users from Team and invitations. Processors may also apply at `/apply/processor`; approval creates their processor record before access is invited.
-4. Configure Supabase Auth email confirmation and redirect URLs for the deployed domain, including `/invite`.
+4. Configure Supabase Auth email confirmation and redirect URLs for the deployed domain, including `/login`, `/invite`, `/forgot-password`, and `/reset-password`. Add a custom SMTP provider before real client testing so confirmation, invitation, and password-reset emails are reliably delivered.
 5. Add the variables in [.env.example](./.env.example) to the hosting provider.
 6. Create the `order-photos` Storage bucket and verify its policies.
 7. Configure Twilio, Mapbox, and Inngest credentials before enabling those workflows.
@@ -48,7 +48,7 @@ The public signup page creates Customer accounts only. The Super Admin invites D
 1. Import the repository into Vercel.
 2. Keep the detected framework as **Next.js**.
 3. Add all production variables from [.env.example](./.env.example).
-4. Deploy and configure Supabase Auth redirect URLs using the deployed domain.
+4. Set `NEXT_PUBLIC_SITE_URL` to the deployed domain, deploy, then configure Supabase Auth redirect URLs using that same domain.
 
 The repository’s [vercel.json](./vercel.json) only sets the build command. Vercel manages the Next.js output automatically.
 
