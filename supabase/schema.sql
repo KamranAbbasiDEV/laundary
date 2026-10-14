@@ -47,6 +47,21 @@ create table public.orders (
 create table public.processors (
   id uuid primary key default gen_random_uuid(), name text not null, address text, service_area text, capabilities text[] not null default '{}', pricing text, capacity_limit integer not null default 0, capacity_percent integer not null default 0, operating_hours text, turnaround_hours numeric(8,2), performance_score numeric(5,2) not null default 0, phone text, active boolean not null default true, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'orders_processor_id_fkey'
+      and conrelid = 'public.orders'::regclass
+  ) then
+    alter table public.orders
+      add constraint orders_processor_id_fkey
+      foreign key (processor_id)
+      references public.processors(id)
+      on delete set null;
+  end if;
+end $$;
 create table public.order_events (
   id uuid primary key default gen_random_uuid(), order_id uuid not null references public.orders(id) on delete cascade, from_status public.order_status, to_status public.order_status not null, actor_id uuid, note text, created_at timestamptz not null default now()
 );

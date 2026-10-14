@@ -7,6 +7,7 @@ const applicationSchema = z.object({
   address: z.string().min(5), serviceArea: z.string().optional(), capabilities: z.array(z.string()).min(1), pricing: z.string().optional(),
   capacityLimit: z.number().int().nonnegative(), operatingHours: z.string().optional(), turnaroundHours: z.number().nonnegative(), notes: z.string().optional()
 });
+const decisionSchema = z.object({ id: z.string().uuid(), status: z.enum(['approved', 'rejected', 'withdrawn']) });
 
 export async function POST(request: Request) {
   const client = await createSupabaseServerClient();
@@ -43,8 +44,9 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   const { data: profile } = await client.from('profiles').select('role,status').eq('id', user.id).single();
   if (!profile || !['super_admin', 'dispatcher'].includes(profile.role) || profile.status !== 'active') return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });
-  const body = await request.json() as { id?: string; status?: 'approved' | 'rejected' | 'withdrawn' };
-  if (!body.id || !body.status) return NextResponse.json({ error: 'Application and decision are required.' }, { status: 400 });
+  const parsed = decisionSchema.safeParse(await request.json());
+  if (!parsed.success) return NextResponse.json({ error: 'Application and decision are required.' }, { status: 400 });
+  const body = parsed.data;
   const { data: application, error: readError } = await client.from('processor_applications').select('*').eq('id', body.id).single();
   if (readError || !application) return NextResponse.json({ error: 'Application not found.' }, { status: 404 });
   let processorId: string | null = null;

@@ -7,11 +7,10 @@ const orderInput = z.object({
   service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), notes: z.string().optional()
 });
 
-function mapOrder(row:Record<string,unknown>) {
-  const processor = row.processors as { name?:string } | null;
+function mapOrder(row:Record<string,unknown>, processorName?: string) {
   const statusMap:Record<string,string> = { created:'Created', validated:'Validated', processor_ranked:'Processor ranked', capacity_confirmed:'Capacity confirmed', pickup_scheduled:'Pickup scheduled', picked_up:'Picked up', at_processor:'At processor', processing:'Processing', ready_for_pickup:'Ready for pickup', picked_up_from_processor:'Picked up from processor', qc_reconciliation:'QC / Reconciliation', out_for_delivery:'Out for delivery', delivered:'Delivered', processor_reviewed:'Processor reviewed' };
   const priorityMap:Record<string,string> = { standard:'Standard', priority:'Priority', same_day:'Same day' };
-  return { id:row.order_number ?? row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due:row.due_at_label ?? '', status:statusMap[String(row.status)] ?? row.status, processor:processor?.name ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, exception:row.has_exception ? 'Open exception' : undefined };
+  return { id:row.order_number ?? row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due:row.due_at_label ?? '', status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, exception:row.has_exception ? 'Open exception' : undefined };
 }
 
 export async function GET() {
@@ -20,12 +19,21 @@ export async function GET() {
   const { data:{ user } } = await client.auth.getUser();
   if (!user) return NextResponse.json({ error:'Authentication required' }, { status:401 });
   const { data:profile } = await client.from('profiles').select('role,processor_id,driver_id').eq('id',user.id).single();
-  let query = client.from('orders').select('*, processors(name)').order('created_at', { ascending:false });
+  let query = client.from('orders').select('*').order('created_at', { ascending:false });
   if (profile?.role === 'customer') query = query.eq('customer_user_id', user.id);
   if (profile?.role === 'processor' && profile.processor_id) query = query.eq('processor_id', profile.processor_id);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error:error.message }, { status:500 });
-  return NextResponse.json({ orders:(data ?? []).map(mapOrder) });
+  const rows = data ?? [];
+  const processorNames = new Map<string, string>();
+  if (profile?.role && profile.role !== 'customer') {
+    const processorIds = [...new Set(rows.map(row => row.processor_id).filter((id): id is string => typeof id === 'string'))];
+    if (processorIds.length) {
+      const { data: processorRows } = await client.from('processors').select('id,name').in('id', processorIds);
+      (processorRows ?? []).forEach(processor => processorNames.set(processor.id, processor.name));
+    }
+  }
+  return NextResponse.json({ orders: rows.map(row => mapOrder(row, typeof row.processor_id === 'string' ? processorNames.get(row.processor_id) : undefined)) });
 }
 
 export async function POST(request: Request) {

@@ -4,7 +4,8 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
 
-const bodySchema = z.object({ status: z.string().optional(), exception: z.string().optional(), note: z.string().optional() });
+const statusSchema = z.enum(['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed']);
+const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), note: z.string().trim().max(1000).optional() });
 const displayStatus = (value: string): OrderStatus => ({
   created:'Created',validated:'Validated',processor_ranked:'Processor ranked',capacity_confirmed:'Capacity confirmed',pickup_scheduled:'Pickup scheduled',picked_up:'Picked up',at_processor:'At processor',processing:'Processing',ready_for_pickup:'Ready for pickup',picked_up_from_processor:'Picked up from processor',qc_reconciliation:'QC / Reconciliation',out_for_delivery:'Out for delivery',delivered:'Delivered',processor_reviewed:'Processor reviewed'
 } as Record<string, OrderStatus>)[value] ?? value as OrderStatus;
@@ -14,6 +15,8 @@ const dbStatus = (value: string) => ({
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
+  const isUuid = z.string().uuid().safeParse(id).success;
+  if (!isUuid && !/^RL-\d{6}$/i.test(id)) return NextResponse.json({ error: 'Invalid order identifier' }, { status: 400 });
   const body = bodySchema.safeParse(await request.json());
   if (!body.success) return NextResponse.json({ error: 'Invalid update payload' }, { status: 400 });
   const supabase = await createSupabaseServerClient();
@@ -21,11 +24,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
 
-  const { data: current, error: readError } = await supabase.from('orders').select('id,status').or(`id.eq.${id},order_number.eq.${id}`).maybeSingle();
+  const currentQuery = isUuid
+    ? supabase.from('orders').select('id,status').eq('id', id).maybeSingle()
+    : supabase.from('orders').select('id,status').eq('order_number', id).maybeSingle();
+  const { data: current, error: readError } = await currentQuery;
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   const currentDisplay = displayStatus(current.status);
-  if (body.data.status && !canTransition(currentDisplay, body.data.status as OrderStatus)) return NextResponse.json({ error: `Invalid transition from ${currentDisplay} to ${body.data.status}` }, { status: 409 });
+  if (body.data.status && !canTransition(currentDisplay, body.data.status)) return NextResponse.json({ error: `Invalid transition from ${currentDisplay} to ${body.data.status}` }, { status: 409 });
 
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.data.status) update.status = dbStatus(body.data.status);
