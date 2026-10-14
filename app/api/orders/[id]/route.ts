@@ -23,14 +23,23 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!supabase) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const { data: actor } = await supabase.from('profiles').select('role,status,processor_id,driver_id').eq('id', user.id).single();
+  if (!actor || actor.status !== 'active' || !['super_admin','dispatcher','driver','processor'].includes(actor.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
 
   const currentQuery = isUuid
-    ? supabase.from('orders').select('id,status').eq('id', id).maybeSingle()
-    : supabase.from('orders').select('id,status').eq('order_number', id).maybeSingle();
+    ? supabase.from('orders').select('id,status,assigned_driver_id,processor_id').eq('id', id).maybeSingle()
+    : supabase.from('orders').select('id,status,assigned_driver_id,processor_id').eq('order_number', id).maybeSingle();
   const { data: current, error: readError } = await currentQuery;
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+  if (actor.role === 'driver' && current.assigned_driver_id !== user.id) return NextResponse.json({ error: 'You can only update orders assigned to you.' }, { status: 403 });
+  if (actor.role === 'processor' && current.processor_id !== actor.processor_id) return NextResponse.json({ error: 'You can only update orders assigned to your processor.' }, { status: 403 });
   const currentDisplay = displayStatus(current.status);
+  const allowedByRole: Record<string, OrderStatus[]> = {
+    driver: ['Picked up','At processor','Picked up from processor','QC / Reconciliation','Delivered'],
+    processor: ['Processing','Ready for pickup']
+  };
+  if (body.data.status && allowedByRole[actor.role] && !allowedByRole[actor.role].includes(body.data.status)) return NextResponse.json({ error: 'Your role cannot perform this transition.' }, { status: 403 });
   if (body.data.status && !canTransition(currentDisplay, body.data.status)) return NextResponse.json({ error: `Invalid transition from ${currentDisplay} to ${body.data.status}` }, { status: 409 });
 
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };

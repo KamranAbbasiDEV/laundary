@@ -8,14 +8,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { statuses } from '@/lib/order-statuses';
 import { canTransition } from '@/lib/workflow';
 import type { AccountStatus, Order, OrderStatus, Processor, UserRole } from '@/lib/types';
-import WorkspaceModule from './workspace-module';
+import WorkspaceModule from './workspace-module-enhanced';
 import { Button } from './ui/button';
 
 const orderSchema=z.object({customer:z.string().min(2,'Customer name is required'),phone:z.string().min(7,'Phone number is required'),address:z.string().min(5,'Pickup address is required'),service:z.string().min(1,'Choose a service'),bags:z.number().min(1,'At least one bag is required'),due:z.string().min(1,'Select a pickup window'),notes:z.string().optional()});
 type OrderForm=z.infer<typeof orderSchema>;
 type Profile={full_name:string;role:UserRole;status:AccountStatus;phone?:string;processor_id?:string;driver_id?:string;onboarding_complete?:boolean};
 const roleLabels:Record<UserRole,string>={super_admin:'Super Admin',dispatcher:'Dispatcher',driver:'Driver',processor:'Processor',customer:'Customer'};
-const roleNav:Record<UserRole,string[]>={super_admin:['Overview','Orders','Dispatch','Processors','Routes','Team','Reports','Settings','Help'],dispatcher:['Overview','Orders','Dispatch','Processors','Routes','Reports','Settings','Help'],driver:['Overview','Driver app','Orders','Help'],processor:['Overview','Processor portal','Orders','Help'],customer:['Customer portal','Orders','Help']};
+const roleNav:Record<UserRole,string[]>={super_admin:['Overview','Orders','Dispatch','Processors','Routes','Team','Reports','Payments','Settings','Help'],dispatcher:['Overview','Orders','Dispatch','Processors','Routes','Reports','Payments','Settings','Help'],driver:['Overview','Driver app','Orders','Help'],processor:['Overview','Processor portal','Orders','Help'],customer:['Customer portal','Orders','Help']};
 const statusTone=(status:OrderStatus)=>status==='Delivered'||status==='Processor reviewed'?'status-green':status==='Processing'||status==='At processor'?'status-amber':status==='Ready for pickup'||status==='Picked up from processor'?'status-purple':'status-teal';
 
 function Brand(){return <div className="brand"><div className="brand-mark">RL</div><div><div className="brand-name">RinseLine</div><div className="brand-sub">Dispatch control</div></div></div>}

@@ -2,6 +2,7 @@ export type OrderStatus = 'Created' | 'Validated' | 'Processor ranked' | 'Capaci
 
 export type Order = {
   id: string;
+  internalId?: string;
   customer: string;
   phone: string;
   address: string;

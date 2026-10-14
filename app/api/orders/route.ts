@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const orderInput = z.object({
   customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
@@ -10,7 +11,7 @@ const orderInput = z.object({
 function mapOrder(row:Record<string,unknown>, processorName?: string) {
   const statusMap:Record<string,string> = { created:'Created', validated:'Validated', processor_ranked:'Processor ranked', capacity_confirmed:'Capacity confirmed', pickup_scheduled:'Pickup scheduled', picked_up:'Picked up', at_processor:'At processor', processing:'Processing', ready_for_pickup:'Ready for pickup', picked_up_from_processor:'Picked up from processor', qc_reconciliation:'QC / Reconciliation', out_for_delivery:'Out for delivery', delivered:'Delivered', processor_reviewed:'Processor reviewed' };
   const priorityMap:Record<string,string> = { standard:'Standard', priority:'Priority', same_day:'Same day' };
-  return { id:row.order_number ?? row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due:row.due_at_label ?? '', status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, exception:row.has_exception ? 'Open exception' : undefined };
+  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due:row.due_at_label ?? '', status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, exception:row.has_exception ? 'Open exception' : undefined };
 }
 
 export async function GET() {
@@ -52,5 +53,19 @@ export async function POST(request: Request) {
     notes: parsed.data.notes ?? null, status: 'validated', customer_user_id: profile?.role === 'customer' ? user.id : null
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const matchingClient = supabaseAdmin ?? supabase;
+  const { data: candidates } = await matchingClient.from('processors').select('id,capabilities,capacity_limit,capacity_percent,turnaround_hours,performance_score').eq('active', true);
+  if (candidates?.length) {
+    const service = parsed.data.service.toLowerCase();
+    const ranked = candidates.map(candidate => {
+      const capabilities = Array.isArray(candidate.capabilities) ? candidate.capabilities.map(value => String(value).toLowerCase()) : [];
+      const capabilityScore = capabilities.some(value => service.includes(value) || value.includes(service)) ? 40 : 10;
+      const capacityScore = Number(candidate.capacity_limit) > Number(candidate.capacity_percent) ? 25 : 0;
+      return { id: candidate.id, score: capabilityScore + capacityScore + Number(candidate.performance_score ?? 0), turnaround: Number(candidate.turnaround_hours ?? 999) };
+    }).sort((a, b) => b.score - a.score || a.turnaround - b.turnaround);
+    await matchingClient.from('processor_offers').insert(ranked.map((candidate, index) => ({ order_id: data.id, processor_id: candidate.id, rank: index + 1, score: candidate.score })));
+    await matchingClient.from('orders').update({ status: 'processor_ranked', updated_at: new Date().toISOString() }).eq('id', data.id);
+    data.status = 'processor_ranked';
+  }
   return NextResponse.json({ order: data, persistence: 'supabase' }, { status: 201 });
 }

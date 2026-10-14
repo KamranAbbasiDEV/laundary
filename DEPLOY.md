@@ -5,7 +5,8 @@ RinseLine is configured as a Next.js server application backed by Supabase. It d
 ## Required setup
 
 1. Create the Supabase project and run [supabase/schema.sql](./supabase/schema.sql).
-2. Create the first owner account through the signup page, then promote that account once in the SQL editor:
+2. Run the additive workflow migration at [supabase/migrations/20261014_core_workflow_upgrade.sql](./supabase/migrations/20261014_core_workflow_upgrade.sql).
+3. Create the first owner account through the signup page, then promote that account once in the SQL editor:
 
 ```sql
 update public.profiles
@@ -36,11 +37,11 @@ end $$;
 The order API also loads processor names separately, so existing deployments will continue working after the application is redeployed even while Supabase refreshes its schema cache.
 
 The public signup page creates Customer accounts only. The Super Admin invites Dispatchers, Drivers, and approved Processor users from Team and invitations. Processors may also apply at `/apply/processor`; approval creates their processor record before access is invited.
-3. Configure Supabase Auth email confirmation and redirect URLs for the deployed domain, including `/invite`.
-4. Add the variables in [.env.example](./.env.example) to the hosting provider.
-5. Create the `order-photos` Storage bucket and verify its policies.
-6. Configure Twilio, Mapbox, and Inngest credentials before enabling those workflows.
-7. Deploy through Vercel or another Node-compatible Next.js host.
+4. Configure Supabase Auth email confirmation and redirect URLs for the deployed domain, including `/invite`.
+5. Add the variables in [.env.example](./.env.example) to the hosting provider.
+6. Create the `order-photos` Storage bucket and verify its policies.
+7. Configure Twilio, Mapbox, and Inngest credentials before enabling those workflows.
+8. Deploy through Vercel or another Node-compatible Next.js host.
 
 ## Vercel
 
