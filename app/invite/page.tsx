@@ -32,6 +32,27 @@ export default function InvitePage() {
     }
 
     const establishSession = async () => {
+      // Supabase invitation emails return an implicit-flow token in the URL hash.
+      // @supabase/ssr uses PKCE by default, so explicitly persist that valid invite
+      // session into its cookie storage before checking the current session.
+      const hash = new URLSearchParams(window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash);
+      const accessToken = hash.get('access_token');
+      const refreshToken = hash.get('refresh_token');
+      const hashError = hash.get('error_description');
+      if (hashError) {
+        if (active) { setError(decodeURIComponent(hashError.replace(/\+/g, ' '))); setInviteState('missing'); }
+        return;
+      }
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await client.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (sessionError) {
+          if (active) { setError('This invitation link is invalid or expired. Ask the workspace owner to send a new invitation.'); setInviteState('missing'); }
+          return;
+        }
+        window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+        if (active) setInviteState('ready');
+        return;
+      }
       const code = url.searchParams.get('code');
       if (code) {
         const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
