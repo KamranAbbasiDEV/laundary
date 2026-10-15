@@ -30,7 +30,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   // A recovery link is the reliable, secure setup link for both unconfirmed
   // and confirmed accounts after an invitation has expired.
   const delivery = 'password_setup';
-  const result = await supabaseAdmin.auth.resetPasswordForEmail(invitation.email, { redirectTo: `${origin}/reset-password` });
+  // `/invite` is the account-setup surface and is already in the invitation redirect allow-list.
+  // A recovery session can safely set a password there and continue into onboarding.
+  const result = await supabaseAdmin.auth.resetPasswordForEmail(invitation.email, { redirectTo: `${origin}/invite` });
   if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 });
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const { error: updateError } = await supabaseAdmin.from('invitations').update({ status: 'pending', expires_at: expiresAt }).eq('id', invitation.id);
