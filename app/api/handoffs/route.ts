@@ -36,13 +36,14 @@ export async function POST(request: Request) {
   const parsed = handoffSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid handoff data.', details: parsed.error.flatten() }, { status: 400 });
   const item = parsed.data;
-  const { data: order, error: orderError } = await auth.client.from('orders').select('id,expected_bags,assigned_driver_id').eq('id', item.orderId).single();
+  const { data: order, error: orderError } = await auth.client.from('orders').select('id,expected_bags,assigned_driver_id,has_exception').eq('id', item.orderId).single();
   if (orderError || !order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (auth.profile.role === 'driver' && order.assigned_driver_id !== auth.user.id) return NextResponse.json({ error: 'You can only record handoffs for orders assigned to you.' }, { status: 403 });
   const { data, error } = await auth.client.from('order_handoffs').upsert({ order_id: item.orderId, stage: item.stage, expected_bags: order.expected_bags, actual_bags: item.actualBags, discrepancy: item.discrepancy ?? null, notes: item.notes ?? null, confirmed_by: auth.user.id, confirmed_at: new Date().toISOString() }, { onConflict: 'order_id,stage' }).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const column = item.stage === 'customer_pickup' ? 'actual_bags' : item.stage === 'processor_dropoff' ? 'processor_bags' : item.stage === 'processor_pickup' ? 'completed_bags' : 'delivered_bags';
-  const { error: updateError } = await auth.client.from('orders').update({ [column]: item.actualBags, has_exception: Boolean(item.discrepancy), updated_at: new Date().toISOString() }).eq('id', item.orderId);
+  // A later clean handoff must not erase an earlier discrepancy awaiting review.
+  const { error: updateError } = await auth.client.from('orders').update({ [column]: item.actualBags, has_exception: order.has_exception || Boolean(item.discrepancy), updated_at: new Date().toISOString() }).eq('id', item.orderId);
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
   return NextResponse.json({ handoff: data }, { status: 201 });
 }
