@@ -9,8 +9,9 @@ const updateSchema = z.object({
   status: z.enum(['pending', 'active', 'suspended', 'rejected', 'deactivated']).optional(),
   fullName: z.string().min(2).optional(),
   phone: z.string().optional(),
-  onboardingComplete: z.boolean().optional()
-}).refine((value) => value.role || value.status || value.fullName || value.phone !== undefined || value.onboardingComplete !== undefined, 'No changes supplied');
+  onboardingComplete: z.boolean().optional(),
+  processorId: z.string().uuid().nullable().optional()
+}).refine((value) => value.role || value.status || value.fullName || value.phone !== undefined || value.onboardingComplete !== undefined || value.processorId !== undefined, 'No changes supplied');
 
 async function getAdmin() {
   const client = await createSupabaseServerClient();
@@ -38,13 +39,22 @@ export async function PATCH(request: Request) {
   if (parsed.data.role === 'super_admin') return NextResponse.json({ error: 'Super Admin access cannot be granted from this endpoint.' }, { status: 403 });
   if (parsed.data.userId === auth.user.id && parsed.data.role) return NextResponse.json({ error: 'You cannot change your own Super Admin role.' }, { status: 400 });
   if (parsed.data.userId === auth.user.id && parsed.data.status && parsed.data.status !== 'active') return NextResponse.json({ error: 'You cannot suspend your own Super Admin account.' }, { status: 400 });
-  const { data: target, error: targetError } = await auth.client.from('profiles').select('status,onboarding_complete').eq('id', parsed.data.userId).maybeSingle();
+  const { data: target, error: targetError } = await auth.client.from('profiles').select('role,status,onboarding_complete').eq('id', parsed.data.userId).maybeSingle();
   if (targetError || !target) return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
   if (parsed.data.status === 'active' && !target.onboarding_complete) return NextResponse.json({ error: 'This user must complete secure account setup before access can be activated. Send a fresh setup link instead.' }, { status: 409 });
+  if (parsed.data.processorId !== undefined) {
+    const nextRole = parsed.data.role ?? target.role;
+    if (nextRole !== 'processor') return NextResponse.json({ error: 'Only processor accounts can be linked to a processor facility.' }, { status: 400 });
+    if (parsed.data.processorId) {
+      const { data: processor, error: processorError } = await auth.client.from('processors').select('id').eq('id', parsed.data.processorId).eq('active', true).maybeSingle();
+      if (processorError || !processor) return NextResponse.json({ error: 'Choose an active processor facility.' }, { status: 400 });
+    }
+  }
   const { userId, ...changes } = parsed.data;
-  const update = { ...changes, ...(changes.fullName !== undefined ? { full_name: changes.fullName } : {}), ...(changes.onboardingComplete !== undefined ? { onboarding_complete: changes.onboardingComplete } : {}), updated_at: new Date().toISOString() } as Record<string, unknown>;
+  const update = { ...changes, ...(changes.fullName !== undefined ? { full_name: changes.fullName } : {}), ...(changes.onboardingComplete !== undefined ? { onboarding_complete: changes.onboardingComplete } : {}), ...(changes.processorId !== undefined ? { processor_id: changes.processorId } : {}), updated_at: new Date().toISOString() } as Record<string, unknown>;
   delete update.fullName;
   delete update.onboardingComplete;
+  delete update.processorId;
   const writer = supabaseAdmin ?? auth.client;
   const { data, error } = await writer.from('profiles').update(update).eq('id', userId).select('id,full_name,role,status,phone,processor_id,driver_id,onboarding_complete').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

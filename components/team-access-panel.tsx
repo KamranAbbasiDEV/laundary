@@ -5,7 +5,7 @@ import { Check, Mail, RefreshCw, UserPlus, X } from 'lucide-react';
 import { Button } from './ui/button';
 import type { Processor, UserRole } from '@/lib/types';
 
-type TeamUser = { id: string; full_name: string; role: UserRole; status: string; onboarding_complete?: boolean };
+type TeamUser = { id: string; full_name: string; role: UserRole; status: string; onboarding_complete?: boolean; processor_id?: string | null };
 type Invitation = { id: string; email: string; full_name: string; role: UserRole; status: string; auth_user_id?: string | null };
 type Application = { id: string; business_name: string; contact_name: string; email: string; address: string; capabilities: string[]; status: string };
 type InviteForm = { fullName: string; email: string; role: 'dispatcher' | 'driver' | 'processor'; phone: string; processorId: string };
@@ -17,6 +17,7 @@ export default function TeamAccessPanel({ processors, notify }: { processors: Pr
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [invite, setInvite] = useState<InviteForm>({ fullName: '', email: '', role: 'driver', phone: '', processorId: '' });
+  const [processorAssignments, setProcessorAssignments] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState('');
 
   const load = useCallback(async () => {
@@ -63,6 +64,17 @@ export default function TeamAccessPanel({ processors, notify }: { processors: Pr
     notify(status === 'suspended' ? 'Account suspended' : 'Account reactivated');
     await load();
   }
+  async function linkProcessor(user: TeamUser) {
+    const processorId = processorAssignments[user.id] ?? user.processor_id ?? '';
+    if (!processorId) { notify('Choose the processor facility this account represents'); return; }
+    setBusy(user.id);
+    const response = await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, processorId }) });
+    const body = await response.json();
+    setBusy('');
+    if (!response.ok) { notify(body.error || 'Unable to link processor account'); return; }
+    notify('Processor account linked to its facility');
+    await load();
+  }
 
   async function review(application: Application, status: 'approved' | 'rejected') {
     setBusy(application.id);
@@ -88,7 +100,7 @@ export default function TeamAccessPanel({ processors, notify }: { processors: Pr
 
     <section className="panel" style={{ marginBottom: 18 }}><div className="panel-heading"><div><h2>Processor applications</h2><p>Approve facilities before inviting their processor account.</p></div></div><div className="table-wrap"><table><thead><tr><th>Business</th><th>Contact</th><th>Capabilities</th><th>Status</th><th>Decision</th></tr></thead><tbody>{applications.map(application => <tr key={application.id}><td>{application.business_name}<div className="customer-location">{application.address}</div></td><td>{application.contact_name}<div className="customer-location">{application.email}</div></td><td>{application.capabilities.join(' · ')}</td><td>{badge(application.status)}</td><td>{application.status === 'pending' && <div style={{ display: 'flex', gap: 7 }}><Button size="sm" onClick={() => void review(application, 'approved')} disabled={busy === application.id}><Check size={13} />Approve</Button><Button size="sm" variant="destructive" onClick={() => void review(application, 'rejected')} disabled={busy === application.id}><X size={13} />Reject</Button></div>}</td></tr>)}</tbody></table>{!applications.length && <div className="empty">No processor applications yet.</div>}</div></section>
 
-    <div className="dashboard-grid"><section className="panel"><div className="panel-heading"><div><h2>Current accounts</h2><p>Access activates automatically after secure setup. Pending users can receive a fresh password setup link.</p></div><Button variant="outline" size="sm" onClick={() => void load()}><RefreshCw size={14} />Refresh</Button></div><div className="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Access</th><th>Setup</th><th>Action</th></tr></thead><tbody>{users.map(user => { const pending = pendingByUser.get(user.id); const setup = user.onboarding_complete ? 'complete' : pending ? 'setup pending' : 'not started'; return <tr key={user.id}><td>{user.full_name}</td><td>{badge(user.role)}</td><td>{badge(user.status)}</td><td>{badge(setup)}</td><td>{user.role !== 'super_admin' && <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>{pending && !user.onboarding_complete && <Button size="sm" variant="outline" onClick={() => void resend(pending)} disabled={busy === pending.id}><Mail size={13} />{busy === pending.id ? 'Sending...' : 'Resend setup'}</Button>}{user.status === 'active' && <Button size="sm" variant="destructive" onClick={() => void changeStatus(user, 'suspended')} disabled={busy === user.id}>Suspend</Button>}{user.status === 'suspended' && user.onboarding_complete && <Button size="sm" onClick={() => void changeStatus(user, 'active')} disabled={busy === user.id}>Reactivate</Button>}</div>}</td></tr>; })}</tbody></table>{!users.length && <div className="empty">No team accounts found.</div>}</div></section>
+    <div className="dashboard-grid"><section className="panel"><div className="panel-heading"><div><h2>Current accounts</h2><p>Access activates automatically after secure setup. Pending users can receive a fresh password setup link.</p></div><Button variant="outline" size="sm" onClick={() => void load()}><RefreshCw size={14} />Refresh</Button></div><div className="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Access</th><th>Setup</th><th>Action</th></tr></thead><tbody>{users.map(user => { const pending = pendingByUser.get(user.id); const setup = user.onboarding_complete ? 'complete' : pending ? 'setup pending' : 'not started'; return <tr key={user.id}><td>{user.full_name}</td><td>{badge(user.role)}</td><td>{badge(user.status)}</td><td>{badge(setup)}</td><td>{user.role !== 'super_admin' && <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', alignItems: 'center' }}>{user.role === 'processor' && <><select className="form-control" aria-label={`Processor facility for ${user.full_name}`} style={{ minWidth: 160, width: 'auto' }} value={processorAssignments[user.id] ?? user.processor_id ?? ''} onChange={event => setProcessorAssignments(current => ({ ...current, [user.id]: event.target.value }))}><option value="">Link facility</option>{processors.map(processor => <option key={processor.id} value={processor.id}>{processor.name}</option>)}</select><Button size="sm" variant="outline" onClick={() => void linkProcessor(user)} disabled={busy === user.id || !(processorAssignments[user.id] ?? user.processor_id)}>{busy === user.id ? 'Linking...' : 'Link facility'}</Button></>}{pending && !user.onboarding_complete && <Button size="sm" variant="outline" onClick={() => void resend(pending)} disabled={busy === pending.id}><Mail size={13} />{busy === pending.id ? 'Sending...' : 'Resend setup'}</Button>}{user.status === 'active' && <Button size="sm" variant="destructive" onClick={() => void changeStatus(user, 'suspended')} disabled={busy === user.id}>Suspend</Button>}{user.status === 'suspended' && user.onboarding_complete && <Button size="sm" onClick={() => void changeStatus(user, 'active')} disabled={busy === user.id}>Reactivate</Button>}</div>}</td></tr>; })}</tbody></table>{!users.length && <div className="empty">No team accounts found.</div>}</div></section>
       <section className="panel"><div className="panel-heading"><div><h2>Invitation history</h2><p>Restore an incomplete invitation without removing any existing account.</p></div></div><div className="table-wrap"><table><thead><tr><th>Recipient</th><th>Role</th><th>Setup status</th><th>Action</th></tr></thead><tbody>{invitations.map(invitation => <tr key={invitation.id}><td>{invitation.full_name}<div className="customer-location">{invitation.email}</div></td><td>{invitation.role}</td><td>{badge(invitation.status)}</td><td>{invitation.status === 'pending' && !invitation.auth_user_id && <Button size="sm" variant="outline" onClick={() => void resend(invitation)} disabled={busy === invitation.id}><Mail size={13} />{busy === invitation.id ? 'Restoring...' : 'Restore account'}</Button>}</td></tr>)}</tbody></table>{!invitations.length && <div className="empty">No invitations sent yet.</div>}</div></section>
     </div>
   </>;
