@@ -38,6 +38,18 @@ The order API also loads processor names separately, so existing deployments wil
 
 The public signup page creates Customer accounts only. The Super Admin invites Dispatchers, Drivers, and approved Processor users from Team and invitations. Processors may also apply at `/apply/processor`; approval creates their processor record before access is invited.
 4. Configure Supabase Auth email confirmation and redirect URLs for the deployed domain, including `/login`, `/invite`, `/forgot-password`, and `/reset-password`. Add a custom SMTP provider before real client testing so confirmation, invitation, and password-reset emails are reliably delivered.
+
+### Protect invitation links from email scanners
+
+The application stores a pending invitation for seven days, but Supabase controls the one-time email token separately. In **Authentication → Sign In / Providers → Email**, set **Email OTP expiration** to `86400` seconds (24 hours). Do not set a longer expiry without a deliberate security review.
+
+In **Authentication → Emails → Invite user**, change the invitation button URL to the following wrapper URL. It prevents email-security scanners from consuming the actual one-time token before the recipient clicks **Accept invitation** in the app:
+
+```html
+<a href="{{ .SiteURL }}/invite?confirmation_url={{ .ConfirmationURL }}">Accept invitation</a>
+```
+
+Keep `https://your-domain.com/invite` in the Auth redirect allow list. Send a fresh invitation after changing this template; an already consumed link cannot be restored.
 5. Add the variables in [.env.example](./.env.example) to the hosting provider.
 6. Create the `order-photos` Storage bucket and verify its policies.
 7. Configure Twilio, Mapbox, and Inngest credentials before enabling those workflows.
