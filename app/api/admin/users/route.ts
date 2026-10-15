@@ -38,6 +38,9 @@ export async function PATCH(request: Request) {
   if (parsed.data.role === 'super_admin') return NextResponse.json({ error: 'Super Admin access cannot be granted from this endpoint.' }, { status: 403 });
   if (parsed.data.userId === auth.user.id && parsed.data.role) return NextResponse.json({ error: 'You cannot change your own Super Admin role.' }, { status: 400 });
   if (parsed.data.userId === auth.user.id && parsed.data.status && parsed.data.status !== 'active') return NextResponse.json({ error: 'You cannot suspend your own Super Admin account.' }, { status: 400 });
+  const { data: target, error: targetError } = await auth.client.from('profiles').select('status,onboarding_complete').eq('id', parsed.data.userId).maybeSingle();
+  if (targetError || !target) return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
+  if (parsed.data.status === 'active' && !target.onboarding_complete) return NextResponse.json({ error: 'This user must complete secure account setup before access can be activated. Send a fresh setup link instead.' }, { status: 409 });
   const { userId, ...changes } = parsed.data;
   const update = { ...changes, ...(changes.fullName !== undefined ? { full_name: changes.fullName } : {}), ...(changes.onboardingComplete !== undefined ? { onboarding_complete: changes.onboardingComplete } : {}), updated_at: new Date().toISOString() } as Record<string, unknown>;
   delete update.fullName;

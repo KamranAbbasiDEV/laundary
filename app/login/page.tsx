@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { supabase, isPersistenceConfigured } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { BrandLockup } from '@/components/brand-lockup';
 
 export default function LoginPage() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState('');
@@ -16,7 +17,7 @@ export default function LoginPage() {
     window.location.href = '/';
   }
   return <main className="login-shell"><section className="login-card">
-    <div className="brand"><div className="brand-mark">RL</div><div><div className="brand-name">RinseLine</div><div className="brand-sub">Laundry delivery, coordinated</div></div></div>
+    <BrandLockup subtitle="Laundry delivery, coordinated" />
     <h1>Welcome back</h1><p>Sign in to manage pickups, processing, routes, and deliveries.</p>
     <form className="login-form" onSubmit={submit}>
       <div className="form-field"><label htmlFor="email">Email address</label><input id="email" className="form-control" type="email" placeholder="you@example.com" value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" /></div>

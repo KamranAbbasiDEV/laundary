@@ -10,7 +10,8 @@ export async function GET() {
   if (!client) return NextResponse.json({ error: 'The workspace is not configured.' }, { status: 503 });
   const { data: { user } } = await client.auth.getUser(); if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   const { data, error } = await client.from('profiles').select('id,full_name,role,status,phone,address,service_zones,availability,vehicle_details,onboarding_complete').eq('id', user.id).single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 }); return NextResponse.json({ profile: data });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ profile: data });
 }
 
 export async function PATCH(request: Request) {
@@ -32,5 +33,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ profile: data });
   }
   const { data, error } = await client.from('profiles').update(update).eq('id', user.id).select('id,full_name,role,status,phone,address,service_zones,availability,vehicle_details,onboarding_complete').single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 }); return NextResponse.json({ profile: data });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (supabaseAdmin) await supabaseAdmin.from('invitations').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('auth_user_id', user.id).eq('status', 'pending');
+  return NextResponse.json({ profile: data });
 }

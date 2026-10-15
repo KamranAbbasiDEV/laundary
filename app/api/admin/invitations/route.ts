@@ -26,7 +26,7 @@ async function getAdmin() {
 export async function GET() {
   const auth = await getAdmin();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const { data, error } = await auth.client.from('invitations').select('id,email,role,full_name,phone,status,expires_at,accepted_at,created_at,processor_id').order('created_at', { ascending: false });
+  const { data, error } = await auth.client.from('invitations').select('id,email,role,full_name,phone,status,expires_at,accepted_at,created_at,processor_id,auth_user_id').order('created_at', { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ invitations: data ?? [] });
 }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { supabase, isPersistenceConfigured } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { BrandLockup } from '@/components/brand-lockup';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -23,7 +24,7 @@ export default function SignupPage() {
   }
 
   return <main className="login-shell"><section className="login-card">
-    <div className="brand"><div className="brand-mark">RL</div><div><div className="brand-name">RinseLine</div><div className="brand-sub">Laundry delivery, coordinated</div></div></div>
+    <BrandLockup subtitle="Laundry delivery, coordinated" />
     <h1>Create your account</h1><p>Set up a customer account to schedule pickups, manage preferences, and follow every order.</p>
     <form className="login-form" onSubmit={submit}>
       <div className="form-field"><label htmlFor="name">Full name</label><input id="name" className="form-control" placeholder="Your full name" value={name} onChange={event => setName(event.target.value)} autoComplete="name" /></div>

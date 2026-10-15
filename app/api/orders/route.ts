@@ -48,6 +48,10 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   const { data:profile } = await supabase.from('profiles').select('role,status').eq('id',user.id).single();
   if (!profile || profile.status !== 'active' || !['super_admin', 'dispatcher', 'customer'].includes(profile.role)) return NextResponse.json({ error: 'Your account cannot create orders.' }, { status: 403 });
+  const matchingClient = supabaseAdmin ?? supabase;
+  const { data: workspace } = await matchingClient.from('workspace_settings').select('services,matching_rules').eq('id', 'default').maybeSingle();
+  const configuredServices = Array.isArray(workspace?.services) ? workspace.services.map(service => typeof service === 'object' && service ? String((service as Record<string, unknown>).name ?? '').trim().toLowerCase() : '').filter(Boolean) : [];
+  if (configuredServices.length && !configuredServices.includes(parsed.data.service.trim().toLowerCase())) return NextResponse.json({ error: 'Choose a service from the active workspace service catalog.' }, { status: 400 });
 
   const { data, error } = await supabase.from('orders').insert({
     customer_name: parsed.data.customer, phone: parsed.data.phone, pickup_address: parsed.data.address,
@@ -55,15 +59,21 @@ export async function POST(request: Request) {
     notes: parsed.data.notes ?? null, status: 'validated', customer_user_id: profile?.role === 'customer' ? user.id : null
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const matchingClient = supabaseAdmin ?? supabase;
-  const { data: candidates } = await matchingClient.from('processors').select('id,capabilities,capacity_limit,capacity_percent,turnaround_hours,performance_score').eq('active', true);
+  const defaultWeights = { capability: 30, capacity: 20, turnaround: 15, pricing: 10, performance: 5 };
+  const configuredWeights = workspace?.matching_rules && typeof workspace.matching_rules === 'object' && !Array.isArray(workspace.matching_rules) ? workspace.matching_rules as Record<string, unknown> : {};
+  const weights = { ...defaultWeights, ...Object.fromEntries(Object.entries(configuredWeights).filter(([, value]) => typeof value === 'number' && value >= 0)) } as Record<string, number>;
+  const { data: candidates } = await matchingClient.from('processors').select('id,capabilities,pricing,capacity_limit,capacity_percent,turnaround_hours,performance_score').eq('active', true);
   if (candidates?.length) {
     const service = parsed.data.service.toLowerCase();
     const ranked = candidates.map(candidate => {
       const capabilities = Array.isArray(candidate.capabilities) ? candidate.capabilities.map(value => String(value).toLowerCase()) : [];
-      const capabilityScore = capabilities.some(value => service.includes(value) || value.includes(service)) ? 40 : 10;
-      const capacityScore = Number(candidate.capacity_limit) > 0 && Number(candidate.capacity_percent) < 100 ? 25 : 0;
-      return { id: candidate.id, score: capabilityScore + capacityScore + Number(candidate.performance_score ?? 0), turnaround: Number(candidate.turnaround_hours ?? 999) };
+      const capabilityScore = capabilities.some(value => service.includes(value) || value.includes(service)) ? weights.capability : 0;
+      const capacityScore = Number(candidate.capacity_limit) > 0 && Number(candidate.capacity_percent) < 100 ? weights.capacity : 0;
+      const turnaroundHours = Number(candidate.turnaround_hours ?? 0);
+      const turnaroundScore = turnaroundHours > 0 ? Math.max(0, weights.turnaround * (1 - Math.min(turnaroundHours, 96) / 96)) : 0;
+      const pricingScore = candidate.pricing ? weights.pricing : 0;
+      const performanceScore = Math.max(0, Math.min(100, Number(candidate.performance_score ?? 0))) / 100 * weights.performance;
+      return { id: candidate.id, score: capabilityScore + capacityScore + turnaroundScore + pricingScore + performanceScore, turnaround: turnaroundHours || 999 };
     }).sort((a, b) => b.score - a.score || a.turnaround - b.turnaround);
     const { error: offerError } = await matchingClient.from('processor_offers').insert(ranked.map((candidate, index) => ({ order_id: data.id, processor_id: candidate.id, rank: index + 1, score: candidate.score, status: index === 0 ? 'pending' : 'withdrawn' })));
     if (offerError) return NextResponse.json({ order: data, persistence: 'supabase', warning: `Order was created but processor matching needs dispatcher attention: ${offerError.message}` }, { status: 201 });

@@ -6,6 +6,8 @@ export const inngest = new Inngest({ id: 'rinseline-dispatch' });
 
 async function notifyPendingProcessorOffers(orderId: string) {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
+  const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('company_name').eq('id', 'default').maybeSingle();
+  const companyName = workspace?.company_name?.trim() || 'RinseLine';
   const { data: offers, error } = await supabaseAdmin.from('processor_offers').select('id,processor_id,orders(order_number,service_type,expected_bags,due_at_label),processors(name,phone)').eq('order_id', orderId).eq('status', 'pending');
   if (error) throw new Error(error.message);
   let notified = 0;
@@ -16,7 +18,7 @@ async function notifyPendingProcessorOffers(orderId: string) {
     if (!recipient || !order) continue;
     const { data: alreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', recipient).eq('event', 'processor_offer').limit(1);
     if (alreadyLogged?.length) continue;
-    const message = `New RinseLine capacity request: ${order.order_number} — ${order.service_type}, ${order.expected_bags} bag(s), due ${order.due_at_label || 'as scheduled'}. Sign in to accept or decline.`;
+    const message = `New ${companyName} capacity request: ${order.order_number} — ${order.service_type}, ${order.expected_bags} bag(s), due ${order.due_at_label || 'as scheduled'}. Sign in to accept or decline.`;
     const result = await sendOrderNotification({ to: recipient, message, channel: 'sms' });
     const { error: logError } = await supabaseAdmin.from('notification_log').insert({ order_id: orderId, recipient, channel: 'sms', event: 'processor_offer', message, status: result.delivered ? 'sent' : 'queued', provider_id: result.delivered ? result.sid : null, error_message: result.delivered ? null : result.reason ?? null, sent_at: result.delivered ? new Date().toISOString() : null });
     if (logError) throw new Error(logError.message);
