@@ -39,7 +39,13 @@ export default function DriverWorkflowPanel({ orders, notify, onStatusChange }: 
     if (!activeOrder.internalId) { notify('This order is missing its internal identifier'); return; }
     setBusy(true);
     if (action.stage) {
-      const handoff = await fetch('/api/handoffs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: activeOrder.internalId, stage: action.stage, actualBags: Number(count || activeOrder.bags), discrepancy: note || undefined, notes: note || undefined }) });
+      const actualBags = Number(count || activeOrder.bags);
+      // A handoff note is operational context, not automatically an exception.
+      // Count mismatches are the objective discrepancy signal; the note documents it.
+      const discrepancy = actualBags !== activeOrder.bags
+        ? note || `Expected ${activeOrder.bags} bags; recorded ${actualBags}.`
+        : undefined;
+      const handoff = await fetch('/api/handoffs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: activeOrder.internalId, stage: action.stage, actualBags, discrepancy, notes: note || undefined }) });
       const body = await handoff.json();
       if (!handoff.ok) { setBusy(false); notify(body.error || 'Unable to save handoff'); return; }
     }
