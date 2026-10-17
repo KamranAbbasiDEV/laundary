@@ -42,7 +42,7 @@ create table public.orders (
   id uuid primary key default gen_random_uuid(), order_number text not null unique default ('RL-' || floor(random() * 900000 + 100000)::text), customer_name text not null, phone text not null,
   pickup_address text not null, service_type text not null, item_description text, expected_bags integer not null check (expected_bags > 0), customer_user_id uuid references auth.users(id),
   due_at timestamptz, due_at_label text, priority public.order_priority not null default 'standard',
-  status public.order_status not null default 'created', processor_id uuid, notes text, has_exception boolean not null default false, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+  status public.order_status not null default 'created', processor_id uuid, notes text, has_exception boolean not null default false, archived_at timestamptz, archived_by uuid references auth.users(id) on delete set null, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 create table public.processors (
   id uuid primary key default gen_random_uuid(), name text not null, address text, service_area text, capabilities text[] not null default '{}', pricing text, capacity_limit integer not null default 0, capacity_percent integer not null default 0, operating_hours text, turnaround_hours numeric(8,2), performance_score numeric(5,2) not null default 0, phone text, active boolean not null default true, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
@@ -205,6 +205,7 @@ create policy "super admins manage profiles" on public.profiles for all to authe
 create policy "authorized users can read orders" on public.orders for select to authenticated using (public.is_operations_user() or customer_user_id = auth.uid());
 create policy "customers and dispatch can create orders" on public.orders for insert to authenticated with check (public.current_user_role() in ('super_admin','dispatcher') or (public.current_user_role() = 'customer' and customer_user_id = auth.uid()));
 create policy "operations can update orders" on public.orders for update to authenticated using (public.is_operations_user()) with check (public.is_operations_user());
+create policy "super admins delete orders" on public.orders for delete to authenticated using (public.is_super_admin());
 
 create policy "operations can read processors" on public.processors for select to authenticated using (public.is_operations_user());
 create policy "admins manage processors" on public.processors for all to authenticated using (public.is_super_admin() or public.current_user_role() = 'dispatcher') with check (public.is_super_admin() or public.current_user_role() = 'dispatcher');
@@ -223,3 +224,4 @@ create policy "admins can update processor applications" on public.processor_app
 create policy "users can read their own applications" on public.processor_applications for select to authenticated using (applicant_user_id = auth.uid());
 create policy "admins can manage invitations" on public.invitations for all to authenticated using (public.is_super_admin()) with check (public.is_super_admin());
 create policy "admins can read audit log" on public.audit_log for select to authenticated using (public.is_super_admin() or public.current_user_role() = 'dispatcher');
+create policy "super admins write audit log" on public.audit_log for insert to authenticated with check (public.is_super_admin());

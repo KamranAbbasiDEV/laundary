@@ -12,7 +12,7 @@ const orderInput = z.object({
 function mapOrder(row:Record<string,unknown>, processorName?: string) {
   const statusMap:Record<string,string> = { created:'Created', validated:'Validated', processor_ranked:'Processor ranked', capacity_confirmed:'Capacity confirmed', pickup_scheduled:'Pickup scheduled', picked_up:'Picked up', at_processor:'At processor', processing:'Processing', ready_for_pickup:'Ready for pickup', picked_up_from_processor:'Picked up from processor', qc_reconciliation:'QC / Reconciliation', out_for_delivery:'Out for delivery', delivered:'Delivered', processor_reviewed:'Processor reviewed' };
   const priorityMap:Record<string,string> = { standard:'Standard', priority:'Priority', same_day:'Same day' };
-  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due:row.due_at_label ?? '', status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? 'Open exception' : undefined };
+  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due:row.due_at_label ?? '', status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? 'Open exception' : undefined, archived:Boolean(row.archived_at) };
 }
 
 export async function GET() {
@@ -25,6 +25,7 @@ export async function GET() {
   if (profile?.role === 'customer') query = query.eq('customer_user_id', user.id);
   if (profile?.role === 'processor' && profile.processor_id) query = query.eq('processor_id', profile.processor_id);
   if (profile?.role === 'driver') query = query.eq('assigned_driver_id', user.id);
+  if (profile?.role !== 'super_admin') query = query.is('archived_at', null);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error:error.message }, { status:500 });
   const rows = data ?? [];

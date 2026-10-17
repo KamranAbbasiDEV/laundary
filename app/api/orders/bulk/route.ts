@@ -10,7 +10,7 @@ const toDisplayStatus = (value: string) => ({ created: 'Created', validated: 'Va
 
 const payloadSchema = z.object({
   orderIds: z.array(z.string().uuid()).min(1).max(100),
-  action: z.enum(['set_status', 'record_exception', 'resolve_exception']),
+  action: z.enum(['set_status', 'record_exception', 'resolve_exception', 'archive', 'restore']),
   status: z.enum(statuses).optional(),
   reason: z.string().trim().min(3).max(1000).optional()
 }).superRefine((value, context) => {
@@ -31,6 +31,7 @@ export async function PATCH(request: Request) {
   const role = auth.profile.role;
   if (role === 'customer') return NextResponse.json({ error: 'Customers cannot bulk-manage operational orders.' }, { status: 403 });
   if (role === 'driver') return NextResponse.json({ error: 'Driver handoffs must be completed one stop at a time with required evidence.' }, { status: 403 });
+  if (['archive', 'restore'].includes(payload.action) && role !== 'super_admin') return NextResponse.json({ error: 'Only Super Admin can archive or restore orders.' }, { status: 403 });
   if (role === 'processor' && orders.some(order => order.processor_id !== auth.profile.processor_id)) return NextResponse.json({ error: 'You can only update your facility\'s orders.' }, { status: 403 });
   if (role === 'processor' && (payload.action !== 'set_status' || !payload.status || !['Processing', 'Ready for pickup'].includes(payload.status))) return NextResponse.json({ error: 'Processors can bulk-start work or mark work ready only.' }, { status: 403 });
   if (role === 'dispatcher' && payload.action === 'set_status') return NextResponse.json({ error: 'Dispatch changes status through routing and exception actions, not a bulk override.' }, { status: 403 });
@@ -40,7 +41,7 @@ export async function PATCH(request: Request) {
   }
 
   const now = new Date().toISOString();
-  const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : { has_exception: false, updated_at: now };
+  const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : payload.action === 'resolve_exception' ? { has_exception: false, updated_at: now } : payload.action === 'archive' ? { archived_at: now, archived_by: auth.user.id, updated_at: now } : { archived_at: null, archived_by: null, updated_at: now };
   const { error: updateError } = await auth.client.from('orders').update(update).in('id', payload.orderIds);
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
 
@@ -49,7 +50,7 @@ export async function PATCH(request: Request) {
     from_status: order.status,
     to_status: payload.action === 'set_status' ? toDatabaseStatus(payload.status!) : order.status,
     actor_id: auth.user.id,
-    note: payload.action === 'set_status' ? `Bulk ${role === 'super_admin' ? 'administrator override' : 'workflow action'}: ${payload.reason}` : payload.action === 'record_exception' ? `Bulk exception recorded: ${payload.reason}` : 'Bulk exception resolved'
+    note: payload.action === 'set_status' ? `Bulk ${role === 'super_admin' ? 'administrator override' : 'workflow action'}: ${payload.reason}` : payload.action === 'record_exception' ? `Bulk exception recorded: ${payload.reason}` : payload.action === 'resolve_exception' ? 'Bulk exception resolved' : `Bulk ${payload.action}: ${payload.reason || 'Administrator action'}`
   }));
   const { error: eventError } = await auth.client.from('order_events').insert(events);
   if (eventError) return NextResponse.json({ error: `Orders updated, but audit logging failed: ${eventError.message}` }, { status: 500 });

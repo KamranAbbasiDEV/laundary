@@ -45,8 +45,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     processor: ['Processing','Ready for pickup']
   };
   if (body.data.status && allowedByRole[actor.role] && !allowedByRole[actor.role].includes(body.data.status)) return NextResponse.json({ error: 'Your role cannot perform this transition.' }, { status: 403 });
-  if (body.data.status && !canTransition(currentDisplay, body.data.status)) return NextResponse.json({ error: `Invalid transition from ${currentDisplay} to ${body.data.status}` }, { status: 409 });
-  if (body.data.status === 'Capacity confirmed') {
+  // Super Admin may repair or reconcile any workflow state; every other role remains bound to the normal transition graph.
+  if (body.data.status && actor.role !== 'super_admin' && !canTransition(currentDisplay, body.data.status)) return NextResponse.json({ error: `Invalid transition from ${currentDisplay} to ${body.data.status}` }, { status: 409 });
+  if (body.data.status === 'Capacity confirmed' && actor.role !== 'super_admin') {
     const { data: acceptedOffer, error: offerError } = await supabase.from('processor_offers').select('id').eq('order_id', current.id).eq('status', 'accepted').maybeSingle();
     if (offerError) return NextResponse.json({ error: offerError.message }, { status: 500 });
     if (!acceptedOffer) return NextResponse.json({ error: 'A processor must accept this order before capacity can be confirmed.' }, { status: 409 });

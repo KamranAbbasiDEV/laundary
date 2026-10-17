@@ -14,6 +14,7 @@ export type Order = {
   processor: string;
   priority: 'Standard' | 'Priority' | 'Same day';
   exception?: string;
+  archived?: boolean;
   created: string;
   notes?: string;
   pickupWindow?: string;

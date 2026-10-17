@@ -7,6 +7,15 @@ import { logOperationalNotification } from '@/lib/notifications';
 const planSchema = z.object({ routeDate: z.string().date(), routeType: z.enum(['pickup','processor_pickup','delivery']), orderIds: z.array(z.string().uuid()).min(1), driverId: z.string().uuid() });
 const approveSchema = z.object({ planId: z.string().uuid() });
 
+export async function GET() {
+  const auth = await requireActiveUser();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) return NextResponse.json({ error: 'Dispatcher access required.' }, { status: 403 });
+  const { data, error } = await auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at').in('status', ['draft', 'approved', 'in_progress']).order('route_date', { ascending: true }).limit(20);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ plans: data ?? [] });
+}
+
 export async function POST(request: Request) {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });

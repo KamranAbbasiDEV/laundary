@@ -1,5 +1,5 @@
 export async function geocodeAddress(address: string) {
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const token = process.env.MAPBOX_ACCESS_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   if (!token) throw new Error('Mapbox is not configured');
   const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(address)}&limit=1&access_token=${token}`;
   // Mapbox v6 geocoding results are temporary by default and must not be cached.
@@ -14,7 +14,7 @@ export async function geocodeAddress(address: string) {
 }
 
 export async function calculateRoute(coordinates: [number, number][]) {
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const token = process.env.MAPBOX_ACCESS_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   if (!token) throw new Error('Mapbox is not configured');
   if (coordinates.length === 0) throw new Error('At least one valid address is required to calculate a route');
   if (coordinates.length === 1) return { coordinates, distanceMeters: 0, durationSeconds: 0, source: 'mapbox' };
