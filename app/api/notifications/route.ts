@@ -1,6 +1,24 @@
 import { NextResponse } from 'next/server';
 import { hasRole, requireActiveUser } from '@/lib/api-auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { z } from 'zod';
+
+const updateSchema = z.object({ action: z.enum(['mark_read', 'mark_all_read']), notificationId: z.string().uuid().optional() });
+
+async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireActiveUser>>, db: NonNullable<typeof supabaseAdmin>) {
+  if ('error' in auth) return [] as string[];
+  let orderIds: string[] | null = null;
+  if (auth.profile.role === 'driver') { const { data } = await db.from('orders').select('id').eq('assigned_driver_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
+  if (auth.profile.role === 'processor' && auth.profile.processor_id) {
+    const [{ data: assigned }, { data: offers }] = await Promise.all([db.from('orders').select('id').eq('processor_id', auth.profile.processor_id), db.from('processor_offers').select('order_id').eq('processor_id', auth.profile.processor_id)]);
+    orderIds = [...new Set([...(assigned ?? []).map(order => order.id), ...(offers ?? []).map(offer => offer.order_id)])];
+  }
+  if (auth.profile.role === 'customer') { const { data } = await db.from('orders').select('id').eq('customer_user_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
+  let query = db.from('notification_log').select('id').eq('channel', 'in_app');
+  if (orderIds) { if (!orderIds.length) return []; query = query.in('order_id', orderIds); }
+  const { data } = await query;
+  return (data ?? []).map(item => item.id);
+}
 
 export async function GET() {
   const auth = await requireActiveUser();
@@ -10,18 +28,29 @@ export async function GET() {
   if (preferences?.in_app_enabled === false) return NextResponse.json({ notifications: [] });
   let orderIds: string[] | null = null;
   if (auth.profile.role === 'driver') { const { data } = await db.from('orders').select('id').eq('assigned_driver_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
-  if (auth.profile.role === 'processor' && auth.profile.processor_id) {
-    const [{ data: assigned }, { data: offers }] = await Promise.all([
-      db.from('orders').select('id').eq('processor_id', auth.profile.processor_id),
-      db.from('processor_offers').select('order_id').eq('processor_id', auth.profile.processor_id)
-    ]);
-    orderIds = [...new Set([...(assigned ?? []).map(order => order.id), ...(offers ?? []).map(offer => offer.order_id)])];
-  }
+  if (auth.profile.role === 'processor' && auth.profile.processor_id) { const [{ data: assigned }, { data: offers }] = await Promise.all([db.from('orders').select('id').eq('processor_id', auth.profile.processor_id), db.from('processor_offers').select('order_id').eq('processor_id', auth.profile.processor_id)]); orderIds = [...new Set([...(assigned ?? []).map(order => order.id), ...(offers ?? []).map(offer => offer.order_id)])]; }
   if (auth.profile.role === 'customer') { const { data } = await db.from('orders').select('id').eq('customer_user_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
   if (orderIds && !orderIds.length) return NextResponse.json({ notifications: [] });
   let query = db.from('notification_log').select('id,order_id,channel,event,message,status,created_at,sent_at').eq('channel', 'in_app').order('created_at', { ascending: false }).limit(30);
   if (orderIds) query = query.in('order_id', orderIds);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ notifications: data ?? [] });
+  const { data: reads } = await db.from('notification_reads').select('notification_id').eq('user_id', auth.user.id).in('notification_id', (data ?? []).map(item => item.id));
+  const readIds = new Set((reads ?? []).map(item => item.notification_id));
+  return NextResponse.json({ notifications: (data ?? []).map(item => ({ ...item, read: readIds.has(item.id) })) });
+}
+
+export async function PATCH(request: Request) {
+  const auth = await requireActiveUser();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const parsed = updateSchema.safeParse(await request.json());
+  if (!parsed.success) return NextResponse.json({ error: 'A valid notification action is required.' }, { status: 400 });
+  const db = supabaseAdmin ?? auth.client;
+  const visibleIds = await visibleNotificationIds(auth, db);
+  const ids = parsed.data.action === 'mark_read' ? (parsed.data.notificationId && visibleIds.includes(parsed.data.notificationId) ? [parsed.data.notificationId] : []) : visibleIds;
+  if (ids.length) {
+    const { error } = await db.from('notification_reads').upsert(ids.map(notificationId => ({ user_id: auth.user.id, notification_id: notificationId })), { onConflict: 'user_id,notification_id', ignoreDuplicates: true });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ marked: ids.length });
 }
