@@ -6,6 +6,8 @@ export async function GET() {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const db = supabaseAdmin ?? auth.client;
+  const { data: preferences } = await auth.client.from('notification_preferences').select('in_app_enabled').eq('user_id', auth.user.id).maybeSingle();
+  if (preferences?.in_app_enabled === false) return NextResponse.json({ notifications: [] });
   let orderIds: string[] | null = null;
   if (auth.profile.role === 'driver') { const { data } = await db.from('orders').select('id').eq('assigned_driver_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
   if (auth.profile.role === 'processor' && auth.profile.processor_id) { const { data } = await db.from('orders').select('id').eq('processor_id', auth.profile.processor_id); orderIds = (data ?? []).map(order => order.id); }

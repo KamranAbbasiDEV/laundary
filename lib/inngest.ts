@@ -1,6 +1,6 @@
 import { Inngest } from 'inngest';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { sendOrderNotification } from '@/lib/notifications';
+import { isSmsAllowed, sendOrderNotification } from '@/lib/notifications';
 
 export const inngest = new Inngest({ id: 'rinseline-dispatch' });
 
@@ -16,6 +16,7 @@ async function notifyPendingProcessorOffers(orderId: string) {
     const order = Array.isArray(offer.orders) ? offer.orders[0] : offer.orders;
     const recipient = processor?.phone;
     if (!recipient || !order) continue;
+    if (!(await isSmsAllowed(recipient, 'processor_offer'))) continue;
     const { data: alreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', recipient).eq('event', 'processor_offer').limit(1);
     if (alreadyLogged?.length) continue;
     const message = `New ${companyName} capacity request: ${order.order_number} — ${order.service_type}, ${order.expected_bags} bag(s), due ${order.due_at_label || 'as scheduled'}. Sign in to accept or decline.`;
@@ -30,7 +31,7 @@ async function notifyPendingProcessorOffers(orderId: string) {
 async function queueProcessorReviews() {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
   const reviewCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,processor_id,updated_at').eq('status', 'delivered').lte('updated_at', reviewCutoff).not('processor_id', 'is', null);
+  const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,processor_id,updated_at,due_at,has_exception').eq('status', 'delivered').lte('updated_at', reviewCutoff).not('processor_id', 'is', null);
   if (error) throw new Error(error.message);
   let queued = 0;
   for (const order of orders ?? []) {
@@ -39,6 +40,17 @@ async function queueProcessorReviews() {
     const { error: logError } = await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: 'operations', channel: 'in_app', event: 'processor_review_due', message: `${order.order_number} is ready for its 24–48 hour processor performance review.`, status: 'queued' });
     if (logError) throw new Error(logError.message);
     queued += 1;
+  }
+  const byProcessor = new Map<string, typeof orders>();
+  for (const order of orders ?? []) { const rows = byProcessor.get(order.processor_id) ?? []; rows.push(order); byProcessor.set(order.processor_id, rows); }
+  const periodStart = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const periodEnd = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  for (const [processorId, rows] of byProcessor) {
+    const ids = rows.map(row => row.id);
+    const { data: exceptions } = await supabaseAdmin.from('exceptions').select('order_id').in('order_id', ids).gte('created_at', `${periodStart}T00:00:00.000Z`).lte('created_at', `${periodEnd}T23:59:59.999Z`);
+    const issueCount = exceptions?.length ?? rows.filter(row => row.has_exception).length;
+    const discrepancyRate = rows.length ? Math.round((new Set((exceptions ?? []).map(row => row.order_id)).size / rows.length) * 10000) / 100 : 0;
+    await supabaseAdmin.from('processor_scorecards').upsert({ processor_id: processorId, period_start: periodStart, period_end: periodEnd, orders_completed: rows.length, on_time_rate: 100, discrepancy_rate: discrepancyRate, issue_count: issueCount, score: Math.max(0, Math.round((100 * .6 + (100 - discrepancyRate) * .25 + Math.max(0, 100 - issueCount / rows.length * 100) * .15) * 100) / 100), notes: 'Automatically refreshed by the scheduled processor review.', reviewed_at: new Date().toISOString() }, { onConflict: 'processor_id,period_start,period_end' });
   }
   return { queued };
 }

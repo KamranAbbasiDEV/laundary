@@ -48,7 +48,7 @@ export default function DriverWorkflowPanel({ orders, notify, onStatusChange }: 
     setBusy(true);
     try {
       if (action.handoff) {
-        if (action.handoff !== 'processor_dropoff') {
+        {
           const arrival = await fetch('/api/route-stops', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: activeOrder.internalId }) });
           const arrivalBody = await arrival.json();
           if (!arrival.ok) return notify(arrivalBody.error || 'Unable to record arrival for this stop.');

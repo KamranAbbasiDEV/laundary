@@ -4,7 +4,7 @@ import { calculateRoute, geocodeAddress } from '@/lib/mapbox';
 import { hasRole, requireActiveUser } from '@/lib/api-auth';
 import { logOperationalNotification } from '@/lib/notifications';
 
-const planSchema = z.object({ routeDate: z.string().date(), routeType: z.enum(['pickup','processor_pickup','delivery']), orderIds: z.array(z.string().uuid()).min(1), driverId: z.string().uuid() });
+const planSchema = z.object({ routeDate: z.string().date(), routeType: z.enum(['pickup','processor_dropoff','processor_pickup','delivery']), orderIds: z.array(z.string().uuid()).min(1), driverId: z.string().uuid() });
 const approveSchema = z.object({ planId: z.string().uuid() });
 const reorderSchema = z.object({ action: z.literal('reorder'), planId: z.string().uuid(), stopIds: z.array(z.string().uuid()).min(1) });
 const cancelSchema = z.object({ action: z.literal('cancel'), planId: z.string().uuid(), reason: z.string().min(3).max(1000) });
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     if (driverError || !driver) return NextResponse.json({ error: 'Select an active Driver for this route.' }, { status: 400 });
     const { data: orders, error: orderError } = await auth.client.from('orders').select('id,order_number,pickup_address,customer_delivery_address,processor_id,status,phone').in('id', parsed.data.orderIds);
     if (orderError || !orders?.length || orders.length !== parsed.data.orderIds.length) return NextResponse.json({ error: 'One or more route orders could not be found.' }, { status: 404 });
-    const expectedStatus = parsed.data.routeType === 'pickup' ? 'capacity_confirmed' : parsed.data.routeType === 'processor_pickup' ? 'ready_for_pickup' : 'picked_up_from_processor';
+    const expectedStatus = parsed.data.routeType === 'pickup' ? 'capacity_confirmed' : parsed.data.routeType === 'processor_dropoff' ? 'picked_up' : parsed.data.routeType === 'processor_pickup' ? 'ready_for_pickup' : 'picked_up_from_processor';
     if (orders.some(order => order.status !== expectedStatus)) return NextResponse.json({ error: 'One or more orders are not eligible for this route type.' }, { status: 409 });
     const processorIds = [...new Set(orders.map(order => order.processor_id).filter((id): id is string => typeof id === 'string'))];
     const { data: processors, error: processorError } = processorIds.length ? await auth.client.from('processors').select('id,address').in('id', processorIds) : { data: [], error: null };
@@ -128,7 +128,7 @@ export async function PATCH(request: Request) {
   return NextResponse.json({ plan: data });
 }
 
-function routeAddress(order: { pickup_address: string; customer_delivery_address: string | null; processor_id: string | null }, routeType: 'pickup' | 'processor_pickup' | 'delivery', processorAddresses: Map<string, string | null>) {
-  if (routeType === 'processor_pickup') return order.processor_id ? processorAddresses.get(order.processor_id) ?? null : null;
+function routeAddress(order: { pickup_address: string; customer_delivery_address: string | null; processor_id: string | null }, routeType: 'pickup' | 'processor_dropoff' | 'processor_pickup' | 'delivery', processorAddresses: Map<string, string | null>) {
+  if (routeType === 'processor_pickup' || routeType === 'processor_dropoff') return order.processor_id ? processorAddresses.get(order.processor_id) ?? null : null;
   return routeType === 'delivery' ? order.customer_delivery_address ?? order.pickup_address : order.pickup_address;
 }
