@@ -16,12 +16,18 @@ async function notifyPendingProcessorOffers(orderId: string) {
     const order = Array.isArray(offer.orders) ? offer.orders[0] : offer.orders;
     const recipient = processor?.phone;
     if (!recipient || !order) continue;
+    const message = `New ${companyName} capacity request for ${order.order_number}.`;
+    const { data: inAppAlreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', `processor:${offer.processor_id}`).eq('event', 'processor_offer').limit(1);
+    if (!inAppAlreadyLogged?.length) {
+      const { error: inAppError } = await supabaseAdmin.from('notification_log').insert({ order_id: orderId, recipient: `processor:${offer.processor_id}`, channel: 'in_app', event: 'processor_offer', message, status: 'sent', sent_at: new Date().toISOString() });
+      if (inAppError) throw new Error(inAppError.message);
+    }
     if (!(await isSmsAllowed(recipient, 'processor_offer'))) continue;
     const { data: alreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', recipient).eq('event', 'processor_offer').limit(1);
     if (alreadyLogged?.length) continue;
-    const message = `New ${companyName} capacity request: ${order.order_number} — ${order.service_type}, ${order.expected_bags} bag(s), due ${order.due_at_label || 'as scheduled'}. Sign in to accept or decline.`;
-    const result = await sendOrderNotification({ to: recipient, message, channel: 'sms' });
-    const { error: logError } = await supabaseAdmin.from('notification_log').insert({ order_id: orderId, recipient, channel: 'sms', event: 'processor_offer', message, status: result.delivered ? 'sent' : 'queued', provider_id: result.delivered ? result.sid : null, error_message: result.delivered ? null : result.reason ?? null, sent_at: result.delivered ? new Date().toISOString() : null });
+    const smsMessage = `New ${companyName} capacity request: ${order.order_number} - ${order.service_type}, ${order.expected_bags} bag(s), due ${order.due_at_label || 'as scheduled'}. Sign in to accept or decline.`;
+    const result = await sendOrderNotification({ to: recipient, message: smsMessage, channel: 'sms' });
+    const { error: logError } = await supabaseAdmin.from('notification_log').insert({ order_id: orderId, recipient, channel: 'sms', event: 'processor_offer', message: smsMessage, status: result.delivered ? 'sent' : 'queued', provider_id: result.delivered ? result.sid : null, error_message: result.delivered ? null : result.reason ?? null, sent_at: result.delivered ? new Date().toISOString() : null });
     if (logError) throw new Error(logError.message);
     notified += 1;
   }

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import NotificationCenter from '@/components/notification-center';
 
 export const metadata: Metadata = {
   title: 'RinseLine Dispatch',
@@ -8,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}<NotificationCenter /></body></html>;
+  return <html lang="en"><body>{children}</body></html>;
 }
