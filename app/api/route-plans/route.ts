@@ -27,13 +27,17 @@ export async function POST(request: Request) {
     const addresses = orders.map(order => routeAddress(order, parsed.data.routeType, processorAddresses));
     if (addresses.some(address => !address)) return NextResponse.json({ error: 'Every selected order needs a valid destination address for this route type.' }, { status: 400 });
     const geocoded = await Promise.all((addresses as string[]).map(geocodeAddress));
-    const coordinates = geocoded.flatMap(item => item.coordinates ? [item.coordinates] : []) as [number, number][];
+    const coordinates = geocoded.map(item => item.coordinates);
     const route = await calculateRoute(coordinates);
     const { data: plan, error: planError } = await auth.client.from('route_plans').insert({ route_date: parsed.data.routeDate, route_type: parsed.data.routeType, driver_id: parsed.data.driverId, status: 'draft', mapbox_route: route, created_by: auth.user.id }).select('*').single();
     if (planError) return NextResponse.json({ error: planError.message }, { status: 500 });
     const stops = parsed.data.orderIds.map((orderId, index) => ({ route_id: plan.id, route_date: parsed.data.routeDate, route_type: parsed.data.routeType, order_id: orderId, sequence: index + 1 }));
     const { error: stopError } = await auth.client.from('route_stops').insert(stops);
-    if (stopError) return NextResponse.json({ error: stopError.message }, { status: 500 });
+    if (stopError) {
+      // Do not leave an unusable draft plan behind if its selected orders cannot be attached.
+      await auth.client.from('route_plans').delete().eq('id', plan.id);
+      return NextResponse.json({ error: stopError.message }, { status: 500 });
+    }
     return NextResponse.json({ plan, geocoded, route }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Route planning failed' }, { status: 502 }); }
 }

@@ -20,7 +20,7 @@ export default function RoutePlannerPanel({ orders, notify, onApproveRoute }: { 
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
   useEffect(() => { void fetch('/api/drivers').then(response => response.ok ? response.json() : { drivers: [] }).then(body => setDrivers(body.drivers ?? [])); }, []);
-  useEffect(() => { setSelectedOrderIds(stops.map(order => order.internalId).filter((value): value is string => Boolean(value))); setPlan(null); }, [routeType, orders]);
+  useEffect(() => { setSelectedOrderIds([]); setPlan(null); }, [routeType]);
 
   const selectedStops = stops.filter(order => order.internalId && selectedOrderIds.includes(order.internalId));
   const toggle = (id?: string) => { if (!id) return; setSelectedOrderIds(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]); setPlan(null); };
@@ -29,19 +29,31 @@ export default function RoutePlannerPanel({ orders, notify, onApproveRoute }: { 
     if (!orderIds.length) return notify('Select at least one eligible order to add to this route');
     if (!driverId) return notify('Select a driver before generating the route');
     setBusy(true);
-    const response = await fetch('/api/route-plans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ routeDate: date, routeType, orderIds, driverId }) });
-    const body = await response.json(); setBusy(false);
-    if (!response.ok) return notify(body.error || 'Mapbox route generation failed');
-    setPlan({ id: body.plan.id, ...body.route, stopCoordinates: (body.geocoded ?? []).flatMap((item: { coordinates?: [number, number] | null }) => item.coordinates ? [item.coordinates] : []) });
-    notify('Mapbox route generated and saved for dispatcher review');
+    try {
+      const response = await fetch('/api/route-plans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ routeDate: date, routeType, orderIds, driverId }) });
+      const body = await response.json();
+      if (!response.ok) return notify(body.error || 'Mapbox route generation failed');
+      setPlan({ id: body.plan.id, ...body.route, stopCoordinates: (body.geocoded ?? []).flatMap((item: { coordinates?: [number, number] | null }) => item.coordinates ? [item.coordinates] : []) });
+      notify('Mapbox route generated and saved for dispatcher review');
+    } catch {
+      notify('Unable to reach the route service. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   }
   async function approve() {
     if (!plan) return; setBusy(true);
-    const response = await fetch('/api/route-plans', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planId: plan.id }) });
-    const body = await response.json(); setBusy(false);
-    if (!response.ok) return notify(body.error || 'Unable to approve this route');
-    if (routeType === 'pickup') onApproveRoute(selectedStops.map(order => order.id));
-    else notify('Route approved and assigned to the selected driver');
+    try {
+      const response = await fetch('/api/route-plans', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planId: plan.id }) });
+      const body = await response.json();
+      if (!response.ok) return notify(body.error || 'Unable to approve this route');
+      if (routeType === 'pickup') onApproveRoute(selectedStops.map(order => order.id));
+      else notify('Route approved and assigned to the selected driver');
+    } catch {
+      notify('Unable to reach the route service. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   }
   const distance = plan?.distanceMeters == null ? 'Distance unavailable' : `${Math.round(plan.distanceMeters / 1000)} km`;
   const duration = plan?.durationSeconds == null ? 'Duration unavailable' : `${Math.round(plan.durationSeconds / 60)} min`;

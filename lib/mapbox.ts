@@ -2,11 +2,15 @@ export async function geocodeAddress(address: string) {
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   if (!token) throw new Error('Mapbox is not configured');
   const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(address)}&limit=1&access_token=${token}`;
-  const response = await fetch(url, { next: { revalidate: 300 } });
+  // Mapbox v6 geocoding results are temporary by default and must not be cached.
+  const response = await fetch(url, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Mapbox geocoding failed: ${response.status}`);
   const body = await response.json();
-  const coordinates = body.features?.[0]?.geometry?.coordinates ?? null;
-  return { address, coordinates, source: 'mapbox' };
+  const coordinates = body.features?.[0]?.geometry?.coordinates;
+  if (!Array.isArray(coordinates) || coordinates.length !== 2 || !coordinates.every((value: unknown) => typeof value === 'number' && Number.isFinite(value))) {
+    throw new Error(`Mapbox could not locate the address: ${address}`);
+  }
+  return { address, coordinates: coordinates as [number, number], source: 'mapbox' };
 }
 
 export async function calculateRoute(coordinates: [number, number][]) {
