@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { hasRole, requireActiveUser } from '@/lib/api-auth';
 import { inngest } from '@/lib/inngest';
 import { logOperationalNotification } from '@/lib/notifications';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const decisionSchema = z.object({ offerId: z.string().uuid(), decision: z.enum(['accepted', 'rejected']), reason: z.string().max(500).optional() });
 
@@ -32,7 +33,15 @@ export async function PATCH(request: Request) {
   let data;
   if (item.decision === 'accepted') {
     const { error: acceptError } = await auth.client.rpc('accept_processor_offer', { p_offer_id: item.offerId });
-    if (acceptError) return NextResponse.json({ error: acceptError.message.includes('no longer') ? acceptError.message : 'Unable to accept this offer. Refresh and try again.' }, { status: 409 });
+    if (acceptError && supabaseAdmin) {
+      const { data: claimedOrder, error: claimError } = await supabaseAdmin.from('orders').update({ processor_id: offer.processor_id, status: 'capacity_confirmed', updated_at: new Date().toISOString() }).eq('id', offer.order_id).eq('status', 'processor_ranked').select('id').maybeSingle();
+      if (claimError || !claimedOrder) return NextResponse.json({ error: claimError?.message ?? 'This offer is no longer available.' }, { status: 409 });
+      const { error: claimOfferError } = await supabaseAdmin.from('processor_offers').update({ status: 'accepted', rejection_reason: null, responded_by: auth.user.id, responded_at: new Date().toISOString() }).eq('id', offer.id).eq('status', 'pending');
+      if (claimOfferError) return NextResponse.json({ error: claimOfferError.message }, { status: 409 });
+      await supabaseAdmin.from('processor_offers').update({ status: 'withdrawn' }).eq('order_id', offer.order_id).neq('id', offer.id).in('status', ['pending', 'withdrawn']);
+    } else if (acceptError) {
+      return NextResponse.json({ error: acceptError.message }, { status: 409 });
+    }
     const { data: acceptedOffer, error: acceptedError } = await auth.client.from('processor_offers').select('*').eq('id', item.offerId).single();
     if (acceptedError || !acceptedOffer) return NextResponse.json({ error: acceptedError?.message ?? 'Offer acceptance could not be confirmed.' }, { status: 500 });
     data = acceptedOffer;
@@ -41,7 +50,14 @@ export async function PATCH(request: Request) {
   }
   if (item.decision === 'rejected') {
     const { error: rejectError } = await auth.client.rpc('reject_processor_offer', { p_offer_id: item.offerId, p_reason: item.reason ?? 'Processor declined' });
-    if (rejectError) return NextResponse.json({ error: rejectError.message.includes('no longer') ? rejectError.message : 'Unable to reject this offer. Refresh and try again.' }, { status: 409 });
+    if (rejectError && supabaseAdmin) {
+      const { error: directRejectError } = await supabaseAdmin.from('processor_offers').update({ status: 'rejected', rejection_reason: item.reason ?? 'Processor declined', responded_by: auth.user.id, responded_at: new Date().toISOString() }).eq('id', offer.id).eq('status', 'pending');
+      if (directRejectError) return NextResponse.json({ error: directRejectError.message }, { status: 409 });
+      const { data: nextOffer } = await supabaseAdmin.from('processor_offers').select('id').eq('order_id', offer.order_id).eq('status', 'withdrawn').gt('rank', offer.rank).order('rank').limit(1).maybeSingle();
+      if (nextOffer) await supabaseAdmin.from('processor_offers').update({ status: 'pending', offered_at: new Date().toISOString() }).eq('id', nextOffer.id);
+    } else if (rejectError) {
+      return NextResponse.json({ error: rejectError.message }, { status: 409 });
+    }
     const { data: rejectedOffer, error: rejectedError } = await auth.client.from('processor_offers').select('*').eq('id', item.offerId).single();
     if (rejectedError || !rejectedOffer) return NextResponse.json({ error: rejectedError?.message ?? 'Offer rejection could not be confirmed.' }, { status: 500 });
     data = rejectedOffer;
