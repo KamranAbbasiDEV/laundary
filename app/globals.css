@@ -183,7 +183,7 @@ textarea.form-control { min-height: 78px; resize: vertical; line-height: 1.45; }
 .timeline-event { padding-bottom: 16px; }.timeline-event strong { color: var(--navy); font-size: 12px; }.timeline-event span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.4; }
 .detail-sidebar { height: fit-content; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #f8fafc; }
 .detail-sidebar h3 { margin: 0 0 13px; color: var(--navy); font-size: 12px; }
-.detail-stat { padding: 10px 0; border-bottom: 1px solid #e7edf2; }.detail-stat:last-child { border-bottom: 0; }.detail-stat label { display: block; margin-bottom: 4px; color: var(--muted); font-size: 10px; }.detail-stat strong { color: var(--navy); font-size: 12px; }
+.detail-stat { padding: 10px 0; border-bottom: 1px solid #e7edf2; }.detail-stat:last-child { border-bottom: 0; }.detail-stat label { display: block; margin-bottom: 4px; color: var(--muted); font-size: 10px; }.detail-stat strong { color: var(--navy); font-size: 12px; }.drawer-section .detail-stat { display: grid; grid-template-columns: minmax(92px, auto) minmax(0, 1fr); align-items: baseline; column-gap: 16px; }.drawer-section .detail-stat strong, .drawer-section .detail-stat span { display: block; min-width: 0; }.drawer-section .detail-stat span { color: var(--muted); font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
 .toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; padding: 12px 15px; border: 1px solid #2e4968; border-radius: 8px; background: var(--navy); color: #fff; font-size: 12px; box-shadow: 0 12px 28px rgba(15, 31, 53, .2); }
 
 /* Notifications and live route map */
