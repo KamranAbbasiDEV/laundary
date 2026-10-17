@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
+import { logOperationalNotification } from '@/lib/notifications';
 
 const statusSchema = z.enum(['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed']);
 const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional() });
@@ -27,8 +28,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!actor || actor.status !== 'active' || !['super_admin','dispatcher','driver','processor'].includes(actor.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
 
   const currentQuery = isUuid
-    ? supabase.from('orders').select('id,status,assigned_driver_id,processor_id').eq('id', id).maybeSingle()
-    : supabase.from('orders').select('id,status,assigned_driver_id,processor_id').eq('order_number', id).maybeSingle();
+    ? supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id').eq('id', id).maybeSingle()
+    : supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id').eq('order_number', id).maybeSingle();
   const { data: current, error: readError } = await currentQuery;
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -64,5 +65,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { data, error } = await supabase.from('orders').update(update).eq('id', current.id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   await supabase.from('order_events').insert({ order_id: current.id, from_status: current.status, to_status: body.data.status ? dbStatus(body.data.status) : current.status, note: body.data.note ?? body.data.exception ?? (body.data.resolveException ? 'Exception resolved by dispatch' : null) });
+  const event = body.data.resolveException ? 'exception_resolved' : body.data.exception ? 'exception_recorded' : body.data.status ? `order_${dbStatus(body.data.status)}` : 'order_updated';
+  const message = body.data.resolveException ? `${current.order_number} exception resolved by dispatch.` : body.data.exception ? `${current.order_number} requires dispatcher review: ${body.data.exception}` : body.data.status ? `${current.order_number} is now ${body.data.status}.` : `${current.order_number} was updated.`;
+  await logOperationalNotification({ orderId: current.id, event, message, phone: current.phone });
   return NextResponse.json({ order: data, persistence: 'supabase' });
 }

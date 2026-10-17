@@ -1,3 +1,5 @@
+import { supabaseAdmin } from '@/lib/supabase-admin';
+
 export type NotificationChannel = 'sms' | 'email';
 
 export async function sendOrderNotification(input: { to: string; message: string; channel?: NotificationChannel }) {
@@ -10,4 +12,12 @@ export async function sendOrderNotification(input: { to: string; message: string
   const result = await response.json();
   if (!response.ok) return { delivered: false, reason: result.message || 'twilio-request-failed' };
   return { delivered: true, sid: result.sid as string, to: input.to };
+}
+
+export async function logOperationalNotification(input: { orderId?: string; event: string; message: string; phone?: string }) {
+  if (!supabaseAdmin) return;
+  await supabaseAdmin.from('notification_log').insert({ order_id: input.orderId ?? null, recipient: 'operations', channel: 'in_app', event: input.event, message: input.message, status: 'sent', sent_at: new Date().toISOString() });
+  if (!input.phone) return;
+  const sms = await sendOrderNotification({ to: input.phone, message: input.message, channel: 'sms' });
+  await supabaseAdmin.from('notification_log').insert({ order_id: input.orderId ?? null, recipient: input.phone, channel: 'sms', event: input.event, message: input.message, status: sms.delivered ? 'sent' : 'queued', provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? new Date().toISOString() : null });
 }

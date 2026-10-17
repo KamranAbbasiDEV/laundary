@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { hasRole, requireActiveUser } from '@/lib/api-auth';
 import { inngest } from '@/lib/inngest';
+import { logOperationalNotification } from '@/lib/notifications';
 
 const decisionSchema = z.object({ offerId: z.string().uuid(), decision: z.enum(['accepted', 'rejected']), reason: z.string().max(500).optional() });
 
@@ -37,11 +38,15 @@ export async function PATCH(request: Request) {
     if (acceptedError || !acceptedOffer) return NextResponse.json({ error: acceptedError?.message ?? 'This offer is no longer available.' }, { status: 409 });
     data = acceptedOffer;
     await auth.client.from('processor_offers').update({ status: 'withdrawn' }).eq('order_id', offer.order_id).neq('id', offer.id).in('status', ['pending', 'withdrawn']);
+    const { data: acceptedOrder } = await auth.client.from('orders').select('order_number,phone').eq('id', offer.order_id).maybeSingle();
+    await logOperationalNotification({ orderId: offer.order_id, event: 'processor_offer_accepted', message: `${acceptedOrder?.order_number ?? 'Order'} was accepted by its processor. Capacity is confirmed.`, phone: acceptedOrder?.phone ?? undefined });
   }
   if (item.decision === 'rejected') {
     const { data: rejectedOffer, error: rejectedError } = await auth.client.from('processor_offers').update({ status: 'rejected', rejection_reason: item.reason ?? 'Processor declined', responded_by: auth.user.id, responded_at: new Date().toISOString() }).eq('id', item.offerId).eq('status', 'pending').select('*').single();
     if (rejectedError || !rejectedOffer) return NextResponse.json({ error: rejectedError?.message ?? 'This offer is no longer available.' }, { status: 409 });
     data = rejectedOffer;
+    const { data: rejectedOrder } = await auth.client.from('orders').select('order_number,phone').eq('id', offer.order_id).maybeSingle();
+    await logOperationalNotification({ orderId: offer.order_id, event: 'processor_offer_rejected', message: `${rejectedOrder?.order_number ?? 'Order'} was declined by a processor and is being reassigned.`, phone: rejectedOrder?.phone ?? undefined });
     const { data: nextOffer } = await auth.client.from('processor_offers').select('id').eq('order_id', offer.order_id).eq('status', 'withdrawn').gt('rank', offer.rank).order('rank').limit(1).maybeSingle();
     if (nextOffer) {
       const { error: nextError } = await auth.client.from('processor_offers').update({ status: 'pending', offered_at: new Date().toISOString() }).eq('id', nextOffer.id);
