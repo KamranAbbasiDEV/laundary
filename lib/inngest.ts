@@ -45,16 +45,31 @@ async function queueProcessorReviews() {
 
 async function retryQueuedNotifications() {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
-  const { data: queued, error } = await supabaseAdmin.from('notification_log').select('id,recipient,message').eq('channel', 'sms').eq('status', 'queued').order('created_at').limit(50);
+  const { data: queued, error } = await supabaseAdmin.from('notification_log').select('id,recipient,message,attempt_count,max_attempts').eq('channel', 'sms').eq('status', 'queued').lt('attempt_count', 5).order('created_at').limit(50);
   if (error) throw new Error(error.message);
   let sent = 0;
   for (const item of queued ?? []) {
     const result = await sendOrderNotification({ to: item.recipient, message: item.message, channel: 'sms' });
-    const { error: updateError } = await supabaseAdmin.from('notification_log').update({ status: result.delivered ? 'sent' : 'failed', provider_id: result.delivered ? result.sid : null, error_message: result.delivered ? null : result.reason ?? 'retry-failed', sent_at: result.delivered ? new Date().toISOString() : null }).eq('id', item.id);
+    const attemptCount = (item.attempt_count ?? 0) + 1;
+    const attemptedAt = new Date().toISOString();
+    const exhausted = attemptCount >= (item.max_attempts ?? 5);
+    const { error: updateError } = await supabaseAdmin.from('notification_log').update({ status: result.delivered ? 'sent' : exhausted ? 'failed' : 'queued', attempt_count: attemptCount, last_attempt_at: attemptedAt, provider_id: result.delivered ? result.sid : null, error_message: result.delivered ? null : result.reason ?? 'retry-failed', sent_at: result.delivered ? attemptedAt : null }).eq('id', item.id);
     if (updateError) throw new Error(updateError.message);
     if (result.delivered) sent += 1;
   }
   return { attempted: queued?.length ?? 0, sent };
+}
+
+async function advanceExpiredProcessorOffers() {
+  if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
+  const { data, error } = await supabaseAdmin.rpc('advance_expired_processor_offers');
+  if (error) throw new Error(error.message);
+  let activated = 0;
+  for (const row of data ?? []) {
+    await notifyPendingProcessorOffers(row.order_id);
+    activated += 1;
+  }
+  return { activated };
 }
 
 export const orderValidated = inngest.createFunction(
@@ -70,4 +85,9 @@ export const processorReviewReminder = inngest.createFunction(
 export const notificationRetry = inngest.createFunction(
   { id: 'notification-retry', triggers: [{ cron: '*/15 * * * *' }] },
   async ({ step }) => step.run('retry-queued-sms-notifications', retryQueuedNotifications)
+);
+
+export const processorOfferExpiry = inngest.createFunction(
+  { id: 'processor-offer-expiry', triggers: [{ cron: '*/15 * * * *' }] },
+  async ({ step }) => step.run('advance-expired-processor-offers', advanceExpiredProcessorOffers)
 );

@@ -59,12 +59,14 @@ export async function POST(request: Request) {
   const configuredServices = Array.isArray(workspace?.services) ? workspace.services.map(service => typeof service === 'object' && service ? String((service as Record<string, unknown>).name ?? '').trim().toLowerCase() : '').filter(Boolean) : [];
   if (configuredServices.length && !configuredServices.includes(parsed.data.service.trim().toLowerCase())) return NextResponse.json({ error: 'Choose a service from the active workspace service catalog.' }, { status: 400 });
 
+  const needsManualReview = profile.role === 'customer';
   const { data, error } = await supabase.from('orders').insert({
     customer_name: parsed.data.customer, phone: parsed.data.phone, pickup_address: parsed.data.address,
     service_type: parsed.data.service, expected_bags: parsed.data.bags, due_at_label: parsed.data.due,
-    notes: parsed.data.notes ?? null, item_description: parsed.data.items ?? null, textile_types: parsed.data.textileTypes ?? [], special_handling: parsed.data.specialHandling ?? [], customer_specifications: parsed.data.customerSpecifications ?? null, priority: parsed.data.priority ?? 'standard', validation_state: 'validated', validated_at: new Date().toISOString(), validated_by: user.id, status: 'validated', customer_user_id: profile?.role === 'customer' ? user.id : null
+    notes: parsed.data.notes ?? null, item_description: parsed.data.items ?? null, textile_types: parsed.data.textileTypes ?? [], special_handling: parsed.data.specialHandling ?? [], customer_specifications: parsed.data.customerSpecifications ?? null, priority: parsed.data.priority ?? 'standard', validation_state: needsManualReview ? 'manual_review' : 'validated', validated_at: needsManualReview ? null : new Date().toISOString(), validated_by: needsManualReview ? null : user.id, status: needsManualReview ? 'created' : 'validated', customer_user_id: profile?.role === 'customer' ? user.id : null
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (needsManualReview) return NextResponse.json({ order: data, persistence: 'supabase', reviewRequired: true }, { status: 201 });
   const defaultWeights = { capability: 30, capacity: 20, turnaround: 15, pricing: 10, performance: 5 };
   const configuredWeights = workspace?.matching_rules && typeof workspace.matching_rules === 'object' && !Array.isArray(workspace.matching_rules) ? workspace.matching_rules as Record<string, unknown> : {};
   const weights = { ...defaultWeights, ...Object.fromEntries(Object.entries(configuredWeights).filter(([, value]) => typeof value === 'number' && value >= 0)) } as Record<string, number>;

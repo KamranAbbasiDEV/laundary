@@ -2,9 +2,11 @@
 
 import { ArrowRight, ClipboardCheck, Map, ShieldAlert, Truck } from 'lucide-react';
 import { Button } from './ui/button';
+import ValidationQueue from './validation-queue';
+import ExceptionQueue from './exception-queue';
 import type { Order } from '@/lib/types';
 
-export default function DispatchWorkspace({ orders, onNavigate, onSelect }: { orders: Order[]; onNavigate?: (section: string) => void; onSelect: (order: Order) => void }) {
+export default function DispatchWorkspace({ orders, onNavigate, onSelect, notify, onRefresh }: { orders: Order[]; onNavigate?: (section: string) => void; onSelect: (order: Order) => void; notify: (message: string) => void; onRefresh: () => Promise<void> }) {
   const awaitingProcessor = orders.filter(order => order.status === 'Processor ranked');
   const readyForPickup = orders.filter(order => order.status === 'Capacity confirmed');
   const exceptions = orders.filter(order => Boolean(order.exception));
@@ -24,6 +26,8 @@ export default function DispatchWorkspace({ orders, onNavigate, onSelect }: { or
       <section className="panel"><div className="panel-heading"><div><h2>Ready to plan pickup</h2><p>These orders have processor capacity confirmed. Select them in Routes to build one pickup route.</p></div><Button variant="outline" size="sm" onClick={() => navigate('Routes')}>Open route planner<ArrowRight size={14} /></Button></div><div className="ops-queue">{readyForPickup.length ? readyForPickup.map(renderOrder) : <div className="empty">No orders are ready to add to a pickup route.</div>}</div></section>
       <section className="panel"><div className="panel-heading"><div><h2>Processor response</h2><p>Offers are waiting on the processor—not another Dispatcher status click.</p></div></div><div className="ops-queue">{awaitingProcessor.length ? awaitingProcessor.map(renderOrder) : <div className="empty">No processor offers are awaiting a response.</div>}</div></section>
     </div>
+    <ValidationQueue notify={notify} onRefresh={onRefresh}/>
+    <ExceptionQueue notify={notify}/>
     <section className="panel orders-panel"><div className="panel-heading"><div><h2>Exceptions</h2><p>Open an order to review the issue and record its resolution.</p></div></div><div className="ops-queue">{exceptions.length ? exceptions.map(renderOrder) : <div className="empty">No unresolved exceptions.</div>}</div></section>
   </>;
 }

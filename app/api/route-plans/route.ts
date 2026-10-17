@@ -8,13 +8,14 @@ const planSchema = z.object({ routeDate: z.string().date(), routeType: z.enum(['
 const approveSchema = z.object({ planId: z.string().uuid() });
 const reorderSchema = z.object({ action: z.literal('reorder'), planId: z.string().uuid(), stopIds: z.array(z.string().uuid()).min(1) });
 const cancelSchema = z.object({ action: z.literal('cancel'), planId: z.string().uuid(), reason: z.string().min(3).max(1000) });
+const recoverSchema = z.object({ action: z.literal('recover'), planId: z.string().uuid() });
 
 export async function GET() {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) return NextResponse.json({ error: 'Dispatcher access required.' }, { status: 403 });
   const today = new Date().toISOString().slice(0, 10);
-  const { data, error } = await auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason)').in('status', ['approved', 'in_progress', 'failed']).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
+  const { data, error } = await auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason)').in('status', ['draft', 'approved', 'in_progress', 'failed']).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const routeIds = (data ?? []).map((plan) => plan.id);
   const { data: locations, error: locationError } = routeIds.length ? await auth.client.from('driver_location_events').select('route_id,driver_id,latitude,longitude,accuracy_meters,recorded_at').in('route_id', routeIds).order('recorded_at', { ascending: false }).limit(100) : { data: [], error: null };
@@ -66,6 +67,7 @@ export async function PATCH(request: Request) {
   const input = await request.json();
   const reorder = reorderSchema.safeParse(input);
   const cancel = cancelSchema.safeParse(input);
+  const recover = recoverSchema.safeParse(input);
   if (reorder.success) {
     const { data: plan, error: planError } = await auth.client.from('route_plans').select('id,status').eq('id', reorder.data.planId).maybeSingle();
     if (planError || !plan) return NextResponse.json({ error: 'Route plan not found.' }, { status: 404 });
@@ -88,6 +90,18 @@ export async function PATCH(request: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ cancelled: true, reason: cancel.data.reason });
   }
+  if (recover.success) {
+    const { data: plan, error: planError } = await auth.client.from('route_plans').select('id,status,mapbox_route').eq('id', recover.data.planId).maybeSingle();
+    if (planError || !plan) return NextResponse.json({ error: 'Route plan not found.' }, { status: 404 });
+    if (plan.status !== 'failed') return NextResponse.json({ error: 'Only failed routes can be reopened.' }, { status: 409 });
+    const { error: stopError } = await auth.client.from('route_stops').update({ status: 'planned', failure_reason: null, checked_in_at: null }).eq('route_id', plan.id).eq('status', 'failed');
+    if (stopError) return NextResponse.json({ error: stopError.message }, { status: 500 });
+    const { data, error } = await auth.client.from('route_plans').update({ status: 'draft', approved_at: null, approved_by: null }).eq('id', plan.id).eq('status', 'failed').select('id,route_date,route_type,status,driver_id,mapbox_route').single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('id,order_id,sequence,status').eq('route_id', plan.id).order('sequence');
+    if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
+    return NextResponse.json({ plan: data, stops: stops ?? [] });
+  }
   const parsed = approveSchema.safeParse(input);
   if (!parsed.success) return NextResponse.json({ error: 'A valid route plan is required.' }, { status: 400 });
   const { data: plan, error: readError } = await auth.client.from('route_plans').select('id,status,route_type,driver_id').eq('id', parsed.data.planId).maybeSingle();
@@ -96,9 +110,10 @@ export async function PATCH(request: Request) {
   if (plan.status !== 'draft') return NextResponse.json({ error: 'Only draft routes can be approved.' }, { status: 409 });
   const { data, error } = await auth.client.from('route_plans').update({ status: 'approved', approved_by: auth.user.id, approved_at: new Date().toISOString() }).eq('id', plan.id).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('order_id,orders(order_number,phone)').eq('route_id', plan.id);
+  const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('order_id,status,orders(order_number,phone)').eq('route_id', plan.id);
   if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
-  const orderIds = (stops ?? []).map(stop => stop.order_id);
+  const pendingStops = (stops ?? []).filter(stop => stop.status !== 'completed');
+  const orderIds = pendingStops.map(stop => stop.order_id);
   if (orderIds.length && plan.driver_id) {
     const { error: stopUpdateError } = await auth.client.from('route_stops').update({ driver_id: plan.driver_id }).eq('route_id', plan.id);
     if (stopUpdateError) return NextResponse.json({ error: stopUpdateError.message }, { status: 500 });
@@ -109,7 +124,7 @@ export async function PATCH(request: Request) {
     if (orderUpdateError) return NextResponse.json({ error: orderUpdateError.message }, { status: 500 });
     if (updatedOrders?.length !== orderIds.length) return NextResponse.json({ error: 'One or more orders changed before this route could be approved. Refresh the queue and create a new route.' }, { status: 409 });
   }
-  await Promise.all((stops ?? []).map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${plan.route_type.replace('_', ' ')} route.`, phone: order?.phone ?? undefined }); }));
+  await Promise.all(pendingStops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${plan.route_type.replace('_', ' ')} route.`, phone: order?.phone ?? undefined }); }));
   return NextResponse.json({ plan: data });
 }
 

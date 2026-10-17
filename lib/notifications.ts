@@ -18,6 +18,13 @@ export async function logOperationalNotification(input: { orderId?: string; even
   if (!supabaseAdmin) return;
   await supabaseAdmin.from('notification_log').insert({ order_id: input.orderId ?? null, recipient: 'operations', channel: 'in_app', event: input.event, message: input.message, status: 'sent', sent_at: new Date().toISOString() });
   if (!input.phone) return;
+  const { data: recipient } = await supabaseAdmin.from('profiles').select('id').eq('phone', input.phone).maybeSingle();
+  if (recipient?.id) {
+    const { data: preferences } = await supabaseAdmin.from('notification_preferences').select('sms_enabled,processor_offer_sms,route_update_sms').eq('user_id', recipient.id).maybeSingle();
+    const eventPreference = input.event.includes('processor_offer') || input.event === 'processor_offer' ? preferences?.processor_offer_sms : input.event.includes('route') ? preferences?.route_update_sms : preferences?.sms_enabled;
+    if (preferences && eventPreference === false) return;
+  }
   const sms = await sendOrderNotification({ to: input.phone, message: input.message, channel: 'sms' });
-  await supabaseAdmin.from('notification_log').insert({ order_id: input.orderId ?? null, recipient: input.phone, channel: 'sms', event: input.event, message: input.message, status: sms.delivered ? 'sent' : 'queued', provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? new Date().toISOString() : null });
+  const attemptedAt = new Date().toISOString();
+  await supabaseAdmin.from('notification_log').insert({ order_id: input.orderId ?? null, recipient: input.phone, channel: 'sms', event: input.event, message: input.message, status: sms.delivered ? 'sent' : 'queued', attempt_count: 1, last_attempt_at: attemptedAt, provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? attemptedAt : null });
 }

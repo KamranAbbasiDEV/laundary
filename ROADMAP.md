@@ -11,6 +11,10 @@
 
 ## Integration completion
 
+> P0 implemented in code: manual validation review, atomic processor acceptance, four-hour offer-expiry fallback, and failed-route recovery. Apply migrations through `20261021_p0_atomic_offers_and_route_recovery.sql` before enabling these flows.
+
+> P1 and P2 implemented in code: exception queues, processor issue intake, evidence review, filtered and paginated order operations, notification preferences, and bounded SMS retry tracking. Apply `20261020_p2_notification_reliability.sql` and `20261022_p2_notification_attempts.sql` before enabling the notification controls.
+
 1. Configure Inngest functions for matching, capacity reminders, ready notifications, and 24–48 hour reviews.
 2. Configure Twilio sender identities, opt-in preferences, and notification templates.
 3. Configure Mapbox token and validate geocoding/directions quotas.

@@ -31,11 +31,10 @@ export async function PATCH(request: Request) {
   if (offer.status !== 'pending') return NextResponse.json({ error: 'This offer has already been decided.' }, { status: 409 });
   let data;
   if (item.decision === 'accepted') {
-    const { data: order, error: orderError } = await auth.client.from('orders').update({ processor_id: offer.processor_id, status: 'capacity_confirmed', updated_at: new Date().toISOString() }).eq('id', offer.order_id).eq('status', 'processor_ranked').select('id').maybeSingle();
-    if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
-    if (!order) return NextResponse.json({ error: 'This order is no longer available for acceptance.' }, { status: 409 });
-    const { data: acceptedOffer, error: acceptedError } = await auth.client.from('processor_offers').update({ status: 'accepted', rejection_reason: null, responded_by: auth.user.id, responded_at: new Date().toISOString() }).eq('id', item.offerId).eq('status', 'pending').select('*').single();
-    if (acceptedError || !acceptedOffer) return NextResponse.json({ error: acceptedError?.message ?? 'This offer is no longer available.' }, { status: 409 });
+    const { error: acceptError } = await auth.client.rpc('accept_processor_offer', { p_offer_id: item.offerId });
+    if (acceptError) return NextResponse.json({ error: acceptError.message.includes('no longer') ? acceptError.message : 'Unable to accept this offer. Refresh and try again.' }, { status: 409 });
+    const { data: acceptedOffer, error: acceptedError } = await auth.client.from('processor_offers').select('*').eq('id', item.offerId).single();
+    if (acceptedError || !acceptedOffer) return NextResponse.json({ error: acceptedError?.message ?? 'Offer acceptance could not be confirmed.' }, { status: 500 });
     data = acceptedOffer;
     await auth.client.from('processor_offers').update({ status: 'withdrawn' }).eq('order_id', offer.order_id).neq('id', offer.id).in('status', ['pending', 'withdrawn']);
     const { data: acceptedOrder } = await auth.client.from('orders').select('order_number,phone').eq('id', offer.order_id).maybeSingle();

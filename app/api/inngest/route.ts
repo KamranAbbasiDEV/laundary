@@ -1,10 +1,10 @@
 import { serve } from 'inngest/next';
 import { NextRequest, NextResponse } from 'next/server';
-import { inngest, notificationRetry, orderValidated, processorReviewReminder } from '@/lib/inngest';
+import { inngest, notificationRetry, orderValidated, processorOfferExpiry, processorReviewReminder } from '@/lib/inngest';
 
 const inngestHandler = serve({
   client: inngest,
-  functions: [orderValidated, processorReviewReminder, notificationRetry]
+  functions: [orderValidated, processorReviewReminder, notificationRetry, processorOfferExpiry]
 });
 
 export async function GET(request: NextRequest) {
