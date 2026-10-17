@@ -9,7 +9,7 @@ import type { Order } from '@/lib/types';
 type RouteType = 'pickup' | 'processor_pickup' | 'delivery';
 type RoutePreview = { id: string; durationSeconds?: number | null; distanceMeters?: number | null; coordinates?: [number, number][]; stopCoordinates?: [number, number][] };
 
-export default function RoutePlannerPanel({ orders, notify, onApproveRoute }: { orders: Order[]; notify: (message: string) => void; onApproveRoute: (orderIds?: string[]) => void }) {
+export default function RoutePlannerPanel({ orders, notify }: { orders: Order[]; notify: (message: string) => void }) {
   const [routeType, setRouteType] = useState<RouteType>('pickup');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [busy, setBusy] = useState(false);
@@ -47,8 +47,7 @@ export default function RoutePlannerPanel({ orders, notify, onApproveRoute }: { 
       const response = await fetch('/api/route-plans', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planId: plan.id }) });
       const body = await response.json();
       if (!response.ok) return notify(body.error || 'Unable to approve this route');
-      if (routeType === 'pickup') onApproveRoute(selectedStops.map(order => order.id));
-      else notify('Route approved and assigned to the selected driver');
+      notify(routeType === 'pickup' ? 'Pickup route approved, scheduled, and assigned to the selected driver.' : 'Route approved and assigned to the selected driver.');
     } catch {
       notify('Unable to reach the route service. Please try again.');
     } finally {

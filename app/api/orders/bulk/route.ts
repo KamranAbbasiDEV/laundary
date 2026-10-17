@@ -1,0 +1,57 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { requireActiveUser } from '@/lib/api-auth';
+import { canTransition } from '@/lib/workflow';
+import type { OrderStatus } from '@/lib/types';
+
+const statuses = ['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed'] as const;
+const toDatabaseStatus = (value: OrderStatus) => ({ Created: 'created', Validated: 'validated', 'Processor ranked': 'processor_ranked', 'Capacity confirmed': 'capacity_confirmed', 'Pickup scheduled': 'pickup_scheduled', 'Picked up': 'picked_up', 'At processor': 'at_processor', Processing: 'processing', 'Ready for pickup': 'ready_for_pickup', 'Picked up from processor': 'picked_up_from_processor', 'QC / Reconciliation': 'qc_reconciliation', 'Out for delivery': 'out_for_delivery', Delivered: 'delivered', 'Processor reviewed': 'processor_reviewed' } as Record<OrderStatus, string>)[value];
+const toDisplayStatus = (value: string) => ({ created: 'Created', validated: 'Validated', processor_ranked: 'Processor ranked', capacity_confirmed: 'Capacity confirmed', pickup_scheduled: 'Pickup scheduled', picked_up: 'Picked up', at_processor: 'At processor', processing: 'Processing', ready_for_pickup: 'Ready for pickup', picked_up_from_processor: 'Picked up from processor', qc_reconciliation: 'QC / Reconciliation', out_for_delivery: 'Out for delivery', delivered: 'Delivered', processor_reviewed: 'Processor reviewed' } as Record<string, OrderStatus>)[value];
+
+const payloadSchema = z.object({
+  orderIds: z.array(z.string().uuid()).min(1).max(100),
+  action: z.enum(['set_status', 'record_exception', 'resolve_exception']),
+  status: z.enum(statuses).optional(),
+  reason: z.string().trim().min(3).max(1000).optional()
+}).superRefine((value, context) => {
+  if (value.action === 'set_status' && !value.status) context.addIssue({ code: 'custom', message: 'Choose a status.' });
+  if ((value.action === 'set_status' || value.action === 'record_exception') && !value.reason) context.addIssue({ code: 'custom', message: 'A reason is required.' });
+});
+
+export async function PATCH(request: Request) {
+  const auth = await requireActiveUser();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const parsed = payloadSchema.safeParse(await request.json());
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid bulk update.', details: parsed.error.flatten() }, { status: 400 });
+  const payload = parsed.data;
+  const { data: orders, error: readError } = await auth.client.from('orders').select('id,order_number,status,processor_id,assigned_driver_id').in('id', payload.orderIds);
+  if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
+  if (!orders || orders.length !== payload.orderIds.length) return NextResponse.json({ error: 'One or more orders no longer exist.' }, { status: 404 });
+
+  const role = auth.profile.role;
+  if (role === 'customer') return NextResponse.json({ error: 'Customers cannot bulk-manage operational orders.' }, { status: 403 });
+  if (role === 'driver') return NextResponse.json({ error: 'Driver handoffs must be completed one stop at a time with required evidence.' }, { status: 403 });
+  if (role === 'processor' && orders.some(order => order.processor_id !== auth.profile.processor_id)) return NextResponse.json({ error: 'You can only update your facility\'s orders.' }, { status: 403 });
+  if (role === 'processor' && (payload.action !== 'set_status' || !payload.status || !['Processing', 'Ready for pickup'].includes(payload.status))) return NextResponse.json({ error: 'Processors can bulk-start work or mark work ready only.' }, { status: 403 });
+  if (role === 'dispatcher' && payload.action === 'set_status') return NextResponse.json({ error: 'Dispatch changes status through routing and exception actions, not a bulk override.' }, { status: 403 });
+
+  if (payload.action === 'set_status' && role !== 'super_admin' && orders.some(order => !canTransition(toDisplayStatus(order.status), payload.status!))) {
+    return NextResponse.json({ error: 'Every selected order must be eligible for that next action.' }, { status: 409 });
+  }
+
+  const now = new Date().toISOString();
+  const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : { has_exception: false, updated_at: now };
+  const { error: updateError } = await auth.client.from('orders').update(update).in('id', payload.orderIds);
+  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+
+  const events = orders.map(order => ({
+    order_id: order.id,
+    from_status: order.status,
+    to_status: payload.action === 'set_status' ? toDatabaseStatus(payload.status!) : order.status,
+    actor_id: auth.user.id,
+    note: payload.action === 'set_status' ? `Bulk ${role === 'super_admin' ? 'administrator override' : 'workflow action'}: ${payload.reason}` : payload.action === 'record_exception' ? `Bulk exception recorded: ${payload.reason}` : 'Bulk exception resolved'
+  }));
+  const { error: eventError } = await auth.client.from('order_events').insert(events);
+  if (eventError) return NextResponse.json({ error: `Orders updated, but audit logging failed: ${eventError.message}` }, { status: 500 });
+  return NextResponse.json({ updated: orders.length });
+}

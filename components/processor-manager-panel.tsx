@@ -1,8 +1,49 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Save } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Pencil, Plus, Search, ShieldOff, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/button';
 import type { Processor } from '@/lib/types';
 
-export default function ProcessorManagerPanel({processors,notify,onRefresh}:{processors:Processor[];notify:(message:string)=>void;onRefresh:()=>Promise<void>}){const [open,setOpen]=useState(false);const [form,setForm]=useState({name:'',address:'',serviceArea:'',capabilities:'Wash & Fold',pricing:'',capacityLimit:'0',operatingHours:'',turnaroundHours:'0',phone:''});const [busy,setBusy]=useState(false);function set(key:string,value:string){setForm(current=>({...current,[key]:value}));}async function save(){if(!form.name.trim()||!form.address.trim()){notify('Processor name and address are required');return}setBusy(true);const response=await fetch('/api/processors',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...form,capabilities:form.capabilities.split(',').map(item=>item.trim()).filter(Boolean),capacityLimit:Number(form.capacityLimit),turnaroundHours:Number(form.turnaroundHours)})});const body=await response.json();setBusy(false);if(!response.ok){notify(body.error||'Unable to save processor');return}setOpen(false);setForm({name:'',address:'',serviceArea:'',capabilities:'Wash & Fold',pricing:'',capacityLimit:'0',operatingHours:'',turnaroundHours:'0',phone:''});await onRefresh();notify('Processor added');}return <><div className="page-heading"><div><div className="eyebrow">Network partners</div><h1>Processors</h1><p>Manage capabilities, addresses, pricing, capacity, hours, and scorecards.</p></div><Button onClick={()=>setOpen(value=>!value)}><Plus size={14}/> Add processor</Button></div>{open&&<section className="panel" style={{marginBottom:18}}><div className="panel-heading"><div><h2>Processor details</h2><p>These values are used by processor matching and route planning.</p></div></div><div className="panel-body form-grid">{[['name','Business name'],['address','Address'],['serviceArea','Service area'],['capabilities','Capabilities, comma separated'],['pricing','Pricing'],['capacityLimit','Capacity limit'],['operatingHours','Operating hours'],['turnaroundHours','Turnaround hours'],['phone','Phone']].map(([key,label])=><div className="form-field" key={key}><label>{label}</label><input className="form-control" type={key==='capacityLimit'||key==='turnaroundHours'?'number':'text'} min="0" value={form[key as keyof typeof form]} onChange={e=>set(key,e.target.value)}/></div>)}<div className="form-field full" style={{display:'flex',justifyContent:'flex-end'}}><Button onClick={()=>void save()} disabled={busy}><Save size={14}/>{busy?'Saving…':'Save processor'}</Button></div></div></section>}<section className="panel"><div className="table-wrap"><table><thead><tr><th>Processor</th><th>Address / hours</th><th>Capabilities</th><th>Pricing</th><th>Capacity</th><th>Turnaround</th><th>Score</th></tr></thead><tbody>{processors.map(processor=><tr key={processor.id}><td><div className="customer-name">{processor.name}</div><div className="customer-location">{processor.phone}</div></td><td>{processor.address}<div className="customer-location">{processor.operatingHours}</div></td><td>{processor.capabilities.join(' · ')}</td><td>{processor.pricing||'—'}</td><td>{processor.capacityUsed}/{processor.capacityLimit}</td><td>{processor.turnaround||'—'}</td><td>{processor.score||'—'}</td></tr>)}</tbody></table>{!processors.length&&<div className="empty">No processors configured.</div>}</div></section></>}
+type Form = { name: string; address: string; serviceArea: string; capabilities: string; pricing: string; capacityLimit: string; operatingHours: string; turnaroundHours: string; phone: string };
+const empty: Form = { name: '', address: '', serviceArea: '', capabilities: 'Wash & Fold', pricing: '', capacityLimit: '0', operatingHours: '', turnaroundHours: '0', phone: '' };
+const toForm = (processor: Processor): Form => ({ name: processor.name, address: processor.address, serviceArea: processor.location, capabilities: processor.capabilities.join(', '), pricing: processor.pricing, capacityLimit: String(processor.capacityLimit), operatingHours: processor.operatingHours, turnaroundHours: String(Number.parseFloat(processor.turnaround) || 0), phone: processor.phone });
+
+export default function ProcessorManagerPanel({ processors, notify, onRefresh }: { processors: Processor[]; notify: (message: string) => void; onRefresh: () => Promise<void> }) {
+  const [query, setQuery] = useState(''); const [editing, setEditing] = useState<string | null>(null); const [form, setForm] = useState<Form>(empty); const [busy, setBusy] = useState(false);
+  const visible = useMemo(() => processors.filter(processor => `${processor.name} ${processor.address} ${processor.location} ${processor.capabilities.join(' ')}`.toLowerCase().includes(query.toLowerCase())), [processors, query]);
+  const set = (key: keyof Form, value: string) => setForm(current => ({ ...current, [key]: value }));
+  const close = () => { setEditing(null); setForm(empty); };
+  const openNew = () => { setEditing('new'); setForm(empty); };
+  const openEdit = (processor: Processor) => { setEditing(processor.id); setForm(toForm(processor)); };
+
+  async function save() {
+    if (!form.name.trim() || !form.address.trim()) return notify('Processor name and full address are required.');
+    setBusy(true);
+    const payload = { ...form, capabilities: form.capabilities.split(',').map(item => item.trim()).filter(Boolean), capacityLimit: Number(form.capacityLimit), turnaroundHours: Number(form.turnaroundHours) };
+    try {
+      const response = await fetch('/api/processors', { method: editing === 'new' ? 'POST' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editing === 'new' ? payload : { id: editing, ...payload }) });
+      const body = await response.json();
+      if (!response.ok) return notify(body.error || 'Unable to save processor.');
+      close(); await onRefresh(); notify(editing === 'new' ? 'Processor added to the network.' : 'Processor details updated.');
+    } catch { notify('Unable to reach the processor service.'); }
+    finally { setBusy(false); }
+  }
+
+  async function toggle(processor: Processor) {
+    setBusy(true);
+    try {
+      const response = await fetch('/api/processors', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: processor.id, active: !processor.active }) });
+      const body = await response.json();
+      if (!response.ok) return notify(body.error || 'Unable to update processor access.');
+      await onRefresh(); notify(processor.active ? 'Processor deactivated. It will not receive new offers.' : 'Processor reactivated.');
+    } catch { notify('Unable to reach the processor service.'); }
+    finally { setBusy(false); }
+  }
+
+  return <>
+    <div className="page-heading"><div><div className="eyebrow">Network management</div><h1>Processors</h1><p>Manage facilities, capabilities, capacity, and whether they can receive new work.</p></div><Button onClick={openNew}><Plus size={15} />Add processor</Button></div>
+    {editing && <section className="panel processor-editor"><div className="panel-heading"><div><h2>{editing === 'new' ? 'Add processor' : 'Edit processor'}</h2><p>These details drive matching and route destinations.</p></div><Button variant="outline" size="sm" onClick={close}>Cancel</Button></div><div className="panel-body form-grid">{([['name', 'Business name'], ['address', 'Full address'], ['serviceArea', 'Service area'], ['capabilities', 'Capabilities (comma separated)'], ['pricing', 'Pricing'], ['capacityLimit', 'Capacity limit'], ['operatingHours', 'Operating hours'], ['turnaroundHours', 'Turnaround hours'], ['phone', 'Phone']] as Array<[keyof Form, string]>).map(([key, label]) => <div className="form-field" key={key}><label>{label}</label><input className="form-control" type={key === 'capacityLimit' || key === 'turnaroundHours' ? 'number' : 'text'} min="0" value={form[key]} onChange={event => set(key, event.target.value)} /></div>)}<div className="form-field full"><Button onClick={() => void save()} disabled={busy}>{busy ? 'Saving…' : editing === 'new' ? 'Add processor' : 'Save changes'}</Button></div></div></section>}
+    <section className="panel"><div className="processors-toolbar"><label className="orders-search"><Search size={16} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search processors, location, capability…" /></label><span>{visible.length} facilities</span></div><div className="table-wrap"><table><thead><tr><th>Processor</th><th>Capabilities</th><th>Capacity</th><th>Turnaround</th><th>Status</th><th></th></tr></thead><tbody>{visible.map(processor => <tr key={processor.id}><td><strong>{processor.name}</strong><div className="customer-location">{processor.address}</div></td><td>{processor.capabilities.join(' · ') || 'Not configured'}</td><td>{processor.capacityUsed}/{processor.capacityLimit || '—'}</td><td>{processor.turnaround || 'Not configured'}</td><td><span className={`status ${processor.active ? 'status-green' : 'status-red'}`}>{processor.active ? 'Active' : 'Inactive'}</span></td><td><div className="row-actions"><Button size="sm" variant="outline" onClick={() => openEdit(processor)}><Pencil size={13} />Edit</Button><Button size="sm" variant={processor.active ? 'destructive' : 'outline'} onClick={() => void toggle(processor)} disabled={busy}>{processor.active ? <><ShieldOff size={13} />Deactivate</> : <><ShieldCheck size={13} />Activate</>}</Button></div></td></tr>)}</tbody></table>{!visible.length && <div className="empty">No processors match this search.</div>}</div></section>
+  </>;
+}

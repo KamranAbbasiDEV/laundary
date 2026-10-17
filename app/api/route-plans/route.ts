@@ -60,8 +60,12 @@ export async function PATCH(request: Request) {
   if (orderIds.length && plan.driver_id) {
     const { error: stopUpdateError } = await auth.client.from('route_stops').update({ driver_id: plan.driver_id }).eq('route_id', plan.id);
     if (stopUpdateError) return NextResponse.json({ error: stopUpdateError.message }, { status: 500 });
-    const { error: orderUpdateError } = await auth.client.from('orders').update({ assigned_driver_id: plan.driver_id, updated_at: new Date().toISOString() }).in('id', orderIds);
+    const nextOrderState = plan.route_type === 'pickup' ? 'pickup_scheduled' : undefined;
+    let orderUpdate = auth.client.from('orders').update({ assigned_driver_id: plan.driver_id, ...(nextOrderState ? { status: nextOrderState } : {}), updated_at: new Date().toISOString() }).in('id', orderIds);
+    if (nextOrderState) orderUpdate = orderUpdate.eq('status', 'capacity_confirmed');
+    const { data: updatedOrders, error: orderUpdateError } = await orderUpdate.select('id');
     if (orderUpdateError) return NextResponse.json({ error: orderUpdateError.message }, { status: 500 });
+    if (updatedOrders?.length !== orderIds.length) return NextResponse.json({ error: 'One or more orders changed before this route could be approved. Refresh the queue and create a new route.' }, { status: 409 });
   }
   await Promise.all((stops ?? []).map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${plan.route_type.replace('_', ' ')} route.`, phone: order?.phone ?? undefined }); }));
   return NextResponse.json({ plan: data });
