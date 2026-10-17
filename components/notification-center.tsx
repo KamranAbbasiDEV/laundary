@@ -7,7 +7,16 @@ type Notice = { id: string; event: string; message: string; status: string; crea
 export default function NotificationCenter() {
   const [open, setOpen] = useState(false); const [items, setItems] = useState<Notice[]>([]); const [seen, setSeen] = useState<string[]>([]); const [enabled, setEnabled] = useState(false); const root = useRef<HTMLDivElement>(null);
   const load = async () => { const response = await fetch('/api/notifications', { cache: 'no-store' }); if (response.ok) { const body = await response.json(); setItems(body.notifications ?? []); } };
-  useEffect(() => { const authPage = ['/login', '/signup', '/invite', '/forgot-password', '/reset-password', '/onboarding', '/apply/processor'].includes(window.location.pathname); setEnabled(!authPage); if (authPage) return; void load(); const id = window.setInterval(() => void load(), 30000); return () => window.clearInterval(id); }, []);
+  useEffect(() => {
+    const authPage = ['/login', '/signup', '/invite', '/forgot-password', '/reset-password', '/onboarding', '/apply/processor'].includes(window.location.pathname);
+    if (authPage) return;
+    const syncWorkspaceState = () => setEnabled(Boolean(document.querySelector('.app-shell')));
+    syncWorkspaceState();
+    const observer = new MutationObserver(syncWorkspaceState);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => { if (!enabled) { setOpen(false); return; } void load(); const id = window.setInterval(() => void load(), 30000); return () => window.clearInterval(id); }, [enabled]);
   useEffect(() => { const close = (event: MouseEvent) => { if (root.current && !root.current.contains(event.target as Node)) setOpen(false); }; document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close); }, []);
   const unread = items.filter(item => !seen.includes(item.id)).length;
   if (!enabled) return null;
