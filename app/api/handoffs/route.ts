@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { requireActiveUser } from '@/lib/api-auth';
 
 const handoffSchema = z.object({ orderId: z.string().uuid(), stage: z.enum(['customer_pickup','processor_dropoff','processor_pickup','customer_delivery']), actualBags: z.number().int().nonnegative(), discrepancy: z.string().max(1000).optional(), notes: z.string().max(1000).optional() });
+const photoKindByStage = { customer_pickup: 'customer-pickup', processor_dropoff: 'processor-dropoff', processor_pickup: 'processor-pickup', customer_delivery: 'customer-delivery' } as const;
+const exceptionTypeByStage = { customer_pickup: 'pickup_discrepancy', processor_dropoff: 'processor_discrepancy', processor_pickup: 'processor_discrepancy', customer_delivery: 'quality_issue' } as const;
+const routeTypeByStage = { customer_pickup: 'pickup', processor_dropoff: null, processor_pickup: 'processor_pickup', customer_delivery: 'delivery' } as const;
 
 export async function GET(request: Request) {
   const auth = await requireActiveUser();
@@ -39,11 +42,41 @@ export async function POST(request: Request) {
   const { data: order, error: orderError } = await auth.client.from('orders').select('id,expected_bags,assigned_driver_id,has_exception').eq('id', item.orderId).single();
   if (orderError || !order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (auth.profile.role === 'driver' && order.assigned_driver_id !== auth.user.id) return NextResponse.json({ error: 'You can only record handoffs for orders assigned to you.' }, { status: 403 });
+  // Every physical transfer needs evidence. This is enforced here, not only in the UI.
+  const { count: photoCount, error: photoError } = await auth.client.from('order_photos').select('id', { count: 'exact', head: true }).eq('order_id', item.orderId).eq('kind', photoKindByStage[item.stage]);
+  if (photoError) return NextResponse.json({ error: photoError.message }, { status: 500 });
+  if (!photoCount) return NextResponse.json({ error: 'Attach a photo for this handoff before confirming it.' }, { status: 409 });
   const { data, error } = await auth.client.from('order_handoffs').upsert({ order_id: item.orderId, stage: item.stage, expected_bags: order.expected_bags, actual_bags: item.actualBags, discrepancy: item.discrepancy ?? null, notes: item.notes ?? null, confirmed_by: auth.user.id, confirmed_at: new Date().toISOString() }, { onConflict: 'order_id,stage' }).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const column = item.stage === 'customer_pickup' ? 'actual_bags' : item.stage === 'processor_dropoff' ? 'processor_bags' : item.stage === 'processor_pickup' ? 'completed_bags' : 'delivered_bags';
   // A later clean handoff must not erase an earlier discrepancy awaiting review.
   const { error: updateError } = await auth.client.from('orders').update({ [column]: item.actualBags, has_exception: order.has_exception || Boolean(item.discrepancy), updated_at: new Date().toISOString() }).eq('id', item.orderId);
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
-  return NextResponse.json({ handoff: data }, { status: 201 });
+  let exception = null;
+  if (item.discrepancy) {
+    const { data: existingException, error: readExceptionError } = await auth.client.from('exceptions').select('*').eq('source_handoff_id', data.id).maybeSingle();
+    if (readExceptionError) return NextResponse.json({ error: readExceptionError.message }, { status: 500 });
+    const { data: insertedException, error: exceptionError } = existingException
+      ? await auth.client.from('exceptions').update({ description: item.discrepancy, status: 'open', resolution_notes: null, resolved_at: null, resolved_by: null }).eq('id', existingException.id).select('*').single()
+      : await auth.client.from('exceptions').insert({
+          order_id: item.orderId, type: exceptionTypeByStage[item.stage], stage: item.stage, issue_code: 'quantity_mismatch', description: item.discrepancy,
+          severity: 'medium', evidence_required: true, opened_by: auth.user.id, source_handoff_id: data.id, status: 'open'
+        }).select('*').single();
+    if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });
+    exception = insertedException;
+  }
+  const routeType = routeTypeByStage[item.stage];
+  let stop: { id: string; route_id: string | null } | null = null;
+  if (routeType) {
+    const { data: assignedStop } = await auth.client.from('route_stops').select('id,route_id').eq('order_id', item.orderId).eq('driver_id', auth.user.id).eq('route_type', routeType).order('route_date', { ascending: false }).limit(1).maybeSingle();
+    stop = assignedStop;
+  }
+  if (stop) {
+    await auth.client.from('route_stops').update({ status: 'completed', completed_at: new Date().toISOString(), completed_by: auth.user.id }).eq('id', stop.id);
+    if (stop.route_id) {
+      const { count } = await auth.client.from('route_stops').select('id', { count: 'exact', head: true }).eq('route_id', stop.route_id).neq('status', 'completed');
+      if (!count) await auth.client.from('route_plans').update({ status: 'complete' }).eq('id', stop.route_id);
+    }
+  }
+  return NextResponse.json({ handoff: data, exception }, { status: 201 });
 }

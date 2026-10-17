@@ -43,6 +43,20 @@ async function queueProcessorReviews() {
   return { queued };
 }
 
+async function retryQueuedNotifications() {
+  if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
+  const { data: queued, error } = await supabaseAdmin.from('notification_log').select('id,recipient,message').eq('channel', 'sms').eq('status', 'queued').order('created_at').limit(50);
+  if (error) throw new Error(error.message);
+  let sent = 0;
+  for (const item of queued ?? []) {
+    const result = await sendOrderNotification({ to: item.recipient, message: item.message, channel: 'sms' });
+    const { error: updateError } = await supabaseAdmin.from('notification_log').update({ status: result.delivered ? 'sent' : 'failed', provider_id: result.delivered ? result.sid : null, error_message: result.delivered ? null : result.reason ?? 'retry-failed', sent_at: result.delivered ? new Date().toISOString() : null }).eq('id', item.id);
+    if (updateError) throw new Error(updateError.message);
+    if (result.delivered) sent += 1;
+  }
+  return { attempted: queued?.length ?? 0, sent };
+}
+
 export const orderValidated = inngest.createFunction(
   { id: 'processor-offer-notification', triggers: [{ event: 'rinseline/order.validated' }, { event: 'rinseline/order.processor_offer_activated' }] },
   async ({ event, step }) => step.run('notify-pending-processors', () => notifyPendingProcessorOffers(event.data.orderId as string))
@@ -51,4 +65,9 @@ export const orderValidated = inngest.createFunction(
 export const processorReviewReminder = inngest.createFunction(
   { id: 'processor-review-reminder', triggers: [{ cron: 'TZ=America/Chicago 0 9 * * *' }] },
   async ({ step }) => step.run('queue-24-hour-processor-reviews', queueProcessorReviews)
+);
+
+export const notificationRetry = inngest.createFunction(
+  { id: 'notification-retry', triggers: [{ cron: '*/15 * * * *' }] },
+  async ({ step }) => step.run('retry-queued-sms-notifications', retryQueuedNotifications)
 );

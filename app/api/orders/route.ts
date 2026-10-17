@@ -6,7 +6,8 @@ import { inngest } from '@/lib/inngest';
 
 const orderInput = z.object({
   customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
-  service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), notes: z.string().optional()
+  service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), notes: z.string().optional(),
+  items: z.string().max(2000).optional(), textileTypes: z.array(z.string().min(1).max(80)).max(12).optional(), specialHandling: z.array(z.string().min(1).max(120)).max(12).optional(), customerSpecifications: z.string().max(4000).optional(), priority: z.enum(['standard', 'priority', 'same_day']).optional()
 });
 
 function mapOrder(row:Record<string,unknown>, processorName?: string) {
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase.from('orders').insert({
     customer_name: parsed.data.customer, phone: parsed.data.phone, pickup_address: parsed.data.address,
     service_type: parsed.data.service, expected_bags: parsed.data.bags, due_at_label: parsed.data.due,
-    notes: parsed.data.notes ?? null, status: 'validated', customer_user_id: profile?.role === 'customer' ? user.id : null
+    notes: parsed.data.notes ?? null, item_description: parsed.data.items ?? null, textile_types: parsed.data.textileTypes ?? [], special_handling: parsed.data.specialHandling ?? [], customer_specifications: parsed.data.customerSpecifications ?? null, priority: parsed.data.priority ?? 'standard', validation_state: 'validated', validated_at: new Date().toISOString(), validated_by: user.id, status: 'validated', customer_user_id: profile?.role === 'customer' ? user.id : null
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const defaultWeights = { capability: 30, capacity: 20, turnaround: 15, pricing: 10, performance: 5 };
@@ -78,9 +79,10 @@ export async function POST(request: Request) {
       const turnaroundScore = turnaroundHours > 0 ? Math.max(0, weights.turnaround * (1 - Math.min(turnaroundHours, 96) / 96)) : 0;
       const pricingScore = candidate.pricing ? weights.pricing : 0;
       const performanceScore = Math.max(0, Math.min(100, Number(candidate.performance_score ?? 0))) / 100 * weights.performance;
-      return { id: candidate.id, score: capabilityScore + capacityScore + turnaroundScore + pricingScore + performanceScore, turnaround: turnaroundHours || 999 };
+      const scoreBreakdown = { capability: capabilityScore, capacity: capacityScore, turnaround: turnaroundScore, pricing: pricingScore, performance: performanceScore };
+      return { id: candidate.id, score: capabilityScore + capacityScore + turnaroundScore + pricingScore + performanceScore, turnaround: turnaroundHours || 999, scoreBreakdown };
     }).sort((a, b) => b.score - a.score || a.turnaround - b.turnaround);
-    const { error: offerError } = await matchingClient.from('processor_offers').insert(ranked.map((candidate, index) => ({ order_id: data.id, processor_id: candidate.id, rank: index + 1, score: candidate.score, status: index === 0 ? 'pending' : 'withdrawn' })));
+    const { error: offerError } = await matchingClient.from('processor_offers').insert(ranked.map((candidate, index) => ({ order_id: data.id, processor_id: candidate.id, rank: index + 1, score: candidate.score, score_breakdown: candidate.scoreBreakdown, expires_at: new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString(), status: index === 0 ? 'pending' : 'withdrawn' })));
     if (offerError) return NextResponse.json({ order: data, persistence: 'supabase', warning: `Order was created but processor matching needs dispatcher attention: ${offerError.message}` }, { status: 201 });
     const { error: statusError } = await matchingClient.from('orders').update({ status: 'processor_ranked', updated_at: new Date().toISOString() }).eq('id', data.id);
     if (statusError) return NextResponse.json({ order: data, persistence: 'supabase', warning: `Order was created but could not enter matching: ${statusError.message}` }, { status: 201 });

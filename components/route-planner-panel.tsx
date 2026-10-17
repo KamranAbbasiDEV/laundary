@@ -1,66 +1,24 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Map, Route, Square, CheckSquare } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Map, Route, Square, CheckSquare, X } from 'lucide-react';
 import { Button } from './ui/button';
 import RouteMap from './route-map';
 import type { Order } from '@/lib/types';
 
 type RouteType = 'pickup' | 'processor_pickup' | 'delivery';
-type RoutePreview = { id: string; durationSeconds?: number | null; distanceMeters?: number | null; coordinates?: [number, number][]; stopCoordinates?: [number, number][] };
+type Draft = { id: string; durationSeconds?: number | null; distanceMeters?: number | null; coordinates?: [number, number][]; stopCoordinates?: [number, number][]; stops: Array<{ id: string; order_id: string; sequence: number }> };
 
 export default function RoutePlannerPanel({ orders, notify }: { orders: Order[]; notify: (message: string) => void }) {
-  const [routeType, setRouteType] = useState<RouteType>('pickup');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [busy, setBusy] = useState(false);
-  const [plan, setPlan] = useState<RoutePreview | null>(null);
-  const [driverId, setDriverId] = useState('');
-  const [drivers, setDrivers] = useState<Array<{ id: string; name: string }>>([]);
-  const stops = useMemo(() => orders.filter(order => routeType === 'pickup' ? order.status === 'Capacity confirmed' : routeType === 'processor_pickup' ? order.status === 'Ready for pickup' : order.status === 'Picked up from processor'), [orders, routeType]);
-  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-
+  const [routeType, setRouteType] = useState<RouteType>('pickup'); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [driverId, setDriverId] = useState(''); const [drivers, setDrivers] = useState<Array<{ id: string; name: string }>>([]); const [selected, setSelected] = useState<string[]>([]); const [draft, setDraft] = useState<Draft | null>(null); const [busy, setBusy] = useState(false);
+  const eligible = useMemo(() => orders.filter(order => routeType === 'pickup' ? order.status === 'Capacity confirmed' : routeType === 'processor_pickup' ? order.status === 'Ready for pickup' : order.status === 'Picked up from processor'), [orders, routeType]);
+  const selectedOrders = eligible.filter(order => order.internalId && selected.includes(order.internalId));
   useEffect(() => { void fetch('/api/drivers').then(response => response.ok ? response.json() : { drivers: [] }).then(body => setDrivers(body.drivers ?? [])); }, []);
-  useEffect(() => { setSelectedOrderIds([]); setPlan(null); }, [routeType]);
-
-  const selectedStops = stops.filter(order => order.internalId && selectedOrderIds.includes(order.internalId));
-  const toggle = (id?: string) => { if (!id) return; setSelectedOrderIds(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]); setPlan(null); };
-  async function generate() {
-    const orderIds = selectedStops.map(order => order.internalId).filter((value): value is string => Boolean(value));
-    if (!orderIds.length) return notify('Select at least one eligible order to add to this route');
-    if (!driverId) return notify('Select a driver before generating the route');
-    setBusy(true);
-    try {
-      const response = await fetch('/api/route-plans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ routeDate: date, routeType, orderIds, driverId }) });
-      const body = await response.json();
-      if (!response.ok) return notify(body.error || 'Mapbox route generation failed');
-      setPlan({ id: body.plan.id, ...body.route, stopCoordinates: (body.geocoded ?? []).flatMap((item: { coordinates?: [number, number] | null }) => item.coordinates ? [item.coordinates] : []) });
-      notify('Mapbox route generated and saved for dispatcher review');
-    } catch {
-      notify('Unable to reach the route service. Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function approve() {
-    if (!plan) return; setBusy(true);
-    try {
-      const response = await fetch('/api/route-plans', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planId: plan.id }) });
-      const body = await response.json();
-      if (!response.ok) return notify(body.error || 'Unable to approve this route');
-      notify(routeType === 'pickup' ? 'Pickup route approved, scheduled, and assigned to the selected driver.' : 'Route approved and assigned to the selected driver.');
-    } catch {
-      notify('Unable to reach the route service. Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  }
-  const distance = plan?.distanceMeters == null ? 'Distance unavailable' : `${Math.round(plan.distanceMeters / 1000)} km`;
-  const duration = plan?.durationSeconds == null ? 'Duration unavailable' : `${Math.round(plan.durationSeconds / 60)} min`;
-
-  return <>
-    <div className="page-heading"><div><div className="eyebrow">Mapbox route operations</div><h1>Route planner</h1><p>Select eligible orders, inspect the generated route, then approve driver assignment.</p></div><Button onClick={() => void approve()} disabled={!plan || busy}><Check size={14}/>{busy ? 'Approving…' : 'Approve route'}</Button></div>
-    <section className="panel" style={{ marginBottom: 18 }}><div className="panel-heading"><div><h2>Generate route</h2><p>Draft routes do not assign work until dispatcher approval.</p></div><Map size={17} color="var(--teal)"/></div><div className="panel-body form-grid"><div className="form-field"><label>Route date</label><input className="form-control" type="date" value={date} onChange={event => { setDate(event.target.value); setPlan(null); }}/></div><div className="form-field"><label>Route type</label><select className="form-control" value={routeType} onChange={event => setRouteType(event.target.value as RouteType)}><option value="pickup">Customer pickup</option><option value="processor_pickup">Processor pickup</option><option value="delivery">Customer delivery</option></select></div><div className="form-field"><label>Assigned driver</label><select className="form-control" value={driverId} onChange={event => { setDriverId(event.target.value); setPlan(null); }}><option value="">Select driver</option>{drivers.map(driver => <option key={driver.id} value={driver.id}>{driver.name}</option>)}</select></div><div className="form-field" style={{ alignSelf: 'end' }}><Button onClick={() => void generate()} disabled={busy || !driverId || !selectedStops.length} title={!stops.length ? 'No orders are eligible for this route type.' : undefined}><Route size={14}/>{busy ? 'Calculating…' : 'Generate Mapbox route'}</Button></div></div></section>
-    {plan && <section className="panel route-preview-panel" style={{ marginBottom: 18 }}><div className="route-map-wrap"><RouteMap routeCoordinates={plan.coordinates ?? []} stopCoordinates={plan.stopCoordinates ?? []}/></div><div className="route-preview-details"><span className="status status-teal">Draft route</span><strong>{distance} <span>·</span> {duration}</strong><p>Review stop markers and route geometry before approval. A one-stop route intentionally has no travel distance.</p></div></section>}
-    <section className="panel"><div className="panel-heading"><div><h2>Add orders to route</h2><p>{selectedStops.length} of {stops.length} eligible orders selected</p></div>{stops.length > 0 && <div style={{ display: 'flex', gap: 8 }}><button className="button button-quiet" onClick={() => { setSelectedOrderIds(stops.map(order => order.internalId).filter((value): value is string => Boolean(value))); setPlan(null); }}>Select all</button><button className="button button-quiet" onClick={() => { setSelectedOrderIds([]); setPlan(null); }}>Clear</button></div>}</div><div className="table-wrap"><table><thead><tr><th>Add</th><th>Sequence</th><th>Order</th><th>Customer</th><th>Route destination</th><th>Status</th></tr></thead><tbody>{stops.map((order, index) => { const selected = Boolean(order.internalId && selectedOrderIds.includes(order.internalId)); return <tr key={order.id}><td><button className="route-select-button" aria-label={`${selected ? 'Remove' : 'Add'} ${order.id} from route`} onClick={() => toggle(order.internalId)}>{selected ? <CheckSquare size={18}/> : <Square size={18}/>}</button></td><td>{index + 1}</td><td>{order.id}</td><td>{order.customer}</td><td>{routeType === 'processor_pickup' ? `${order.processor} facility` : order.address}</td><td>{order.status}</td></tr>; })}</tbody></table>{!stops.length && <div className="empty">No orders are eligible for this route type. Customer pickup needs Capacity confirmed, processor pickup needs Ready for pickup, and customer delivery needs Picked up from processor.</div>}</div></section>
-  </>;
+  useEffect(() => { setSelected([]); setDraft(null); }, [routeType]);
+  const toggle = (id?: string) => { if (id) { setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]); setDraft(null); } };
+  async function generate() { const orderIds = selectedOrders.map(order => order.internalId).filter((id): id is string => Boolean(id)); if (!orderIds.length || !driverId) return notify('Select eligible orders and a driver first.'); setBusy(true); try { const response = await fetch('/api/route-plans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ routeDate: date, routeType, driverId, orderIds }) }); const body = await response.json(); if (!response.ok) return notify(body.error || 'Unable to generate route.'); setDraft({ id: body.plan.id, ...body.route, stops: body.stops ?? [], stopCoordinates: (body.geocoded ?? []).flatMap((item: { coordinates?: [number, number] | null }) => item.coordinates ? [item.coordinates] : []) }); notify('Draft route generated. Review or reorder stops before approval.'); } catch { notify('Unable to generate route.'); } finally { setBusy(false); } }
+  async function reorder(index: number, delta: -1 | 1) { if (!draft) return; const target = index + delta; if (target < 0 || target >= draft.stops.length) return; const next = [...draft.stops]; [next[index], next[target]] = [next[target], next[index]]; setBusy(true); try { const response = await fetch('/api/route-plans', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reorder', planId: draft.id, stopIds: next.map(stop => stop.id) }) }); const body = await response.json(); if (!response.ok) return notify(body.error || 'Unable to reorder draft.'); setDraft({ ...draft, stops: next.map((stop, sequence) => ({ ...stop, sequence: sequence + 1 })) }); } finally { setBusy(false); } }
+  async function approve() { if (!draft) return; setBusy(true); try { const response = await fetch('/api/route-plans', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planId: draft.id }) }); const body = await response.json(); if (!response.ok) return notify(body.error || 'Unable to approve route.'); notify('Route approved and assigned.'); setDraft(null); } finally { setBusy(false); } }
+  async function cancel() { if (!draft) return; setBusy(true); try { const response = await fetch('/api/route-plans', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cancel', planId: draft.id, reason: 'Dispatcher cancelled draft route' }) }); const body = await response.json(); if (!response.ok) return notify(body.error || 'Unable to cancel draft.'); setDraft(null); notify('Draft route cancelled.'); } finally { setBusy(false); } }
+  return <><div className="page-heading"><div><div className="eyebrow">Mapbox route operations</div><h1>Route planner</h1><p>Generate, reorder, and approve the smallest practical route workflow.</p></div><Button onClick={() => void approve()} disabled={!draft || busy}><Check size={14}/>Approve route</Button></div><section className="panel" style={{ marginBottom: 18 }}><div className="panel-body form-grid"><div className="form-field"><label>Route date</label><input className="form-control" type="date" value={date} onChange={event => setDate(event.target.value)}/></div><div className="form-field"><label>Route type</label><select className="form-control" value={routeType} onChange={event => setRouteType(event.target.value as RouteType)}><option value="pickup">Customer pickup</option><option value="processor_pickup">Processor pickup</option><option value="delivery">Customer delivery</option></select></div><div className="form-field"><label>Driver</label><select className="form-control" value={driverId} onChange={event => setDriverId(event.target.value)}><option value="">Select driver</option>{drivers.map(driver => <option key={driver.id} value={driver.id}>{driver.name}</option>)}</select></div><div className="form-field" style={{ alignSelf: 'end' }}><Button onClick={() => void generate()} disabled={busy || !driverId || !selectedOrders.length}><Route size={14}/>Generate route</Button></div></div></section>{draft && <section className="panel route-preview-panel" style={{ marginBottom: 18 }}><div className="route-map-wrap"><RouteMap routeCoordinates={draft.coordinates ?? []} stopCoordinates={draft.stopCoordinates ?? []}/></div><div className="route-preview-details"><span className="status status-teal">Draft route</span><strong>{draft.distanceMeters ? `${Math.round(draft.distanceMeters / 1000)} km` : 'Distance unavailable'} · {draft.durationSeconds ? `${Math.round(draft.durationSeconds / 60)} min` : 'Duration unavailable'}</strong><div className="route-list">{draft.stops.map((stop, index) => <div className="route-row" key={stop.id}><span className="route-index">{index + 1}</span><span>{orders.find(order => order.internalId === stop.order_id)?.id || 'Order'}</span><span style={{ marginLeft: 'auto' }}><button className="icon-button" disabled={busy || index === 0} onClick={() => void reorder(index, -1)}><ChevronUp size={15}/></button><button className="icon-button" disabled={busy || index === draft.stops.length - 1} onClick={() => void reorder(index, 1)}><ChevronDown size={15}/></button></span></div>)}</div><Button variant="outline" size="sm" onClick={() => void cancel()} disabled={busy}><X size={14}/>Cancel draft</Button></div></section>}<section className="panel"><div className="panel-heading"><div><h2>Eligible orders</h2><p>{selectedOrders.length} selected</p></div><button className="button button-quiet" onClick={() => setSelected(eligible.map(order => order.internalId).filter((id): id is string => Boolean(id)))}>Select all</button></div><div className="table-wrap"><table><thead><tr><th>Add</th><th>Order</th><th>Customer</th><th>Destination</th></tr></thead><tbody>{eligible.map(order => <tr key={order.id}><td><button className="route-select-button" onClick={() => toggle(order.internalId)}>{order.internalId && selected.includes(order.internalId) ? <CheckSquare size={18}/> : <Square size={18}/>}</button></td><td>{order.id}</td><td>{order.customer}</td><td>{routeType === 'processor_pickup' ? `${order.processor} facility` : order.address}</td></tr>)}</tbody></table>{!eligible.length && <div className="empty">No orders are eligible for this route type.</div>}</div></section></>;
 }
