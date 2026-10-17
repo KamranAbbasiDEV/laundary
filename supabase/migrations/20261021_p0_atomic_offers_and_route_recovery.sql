@@ -1,24 +1,24 @@
 -- P0: make capacity acceptance atomic and automatically advance expired offers.
 
-drop policy if exists "operations read processor offers" on public.processor_offers;
-drop policy if exists "operations manage processor offers" on public.processor_offers;
-drop policy if exists "processors respond to offers" on public.processor_offers;
-drop policy if exists "dispatch manages processor offers" on public.processor_offers;
-drop policy if exists "processors read their own offers" on public.processor_offers;
-
-create policy "dispatch manages processor offers" on public.processor_offers
-for all to authenticated
-using (public.current_user_role() in ('super_admin', 'dispatcher'))
-with check (public.current_user_role() in ('super_admin', 'dispatcher'));
-
-create policy "processors read their own offers" on public.processor_offers
-for select to authenticated
-using (exists (
-  select 1 from public.profiles profile
-  where profile.id = auth.uid()
-    and profile.processor_id = public.processor_offers.processor_id
-    and profile.status = 'active'
-));
+-- Keep policy changes non-destructive. These policies are created by the core
+-- schema migration; alter them in place instead of dropping/recreating them.
+do $$
+begin
+  if exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'processor_offers' and policyname = 'operations read processor offers') then
+    alter policy "operations read processor offers" on public.processor_offers
+      using (public.current_user_role() in ('super_admin', 'dispatcher') or exists (select 1 from public.profiles profile where profile.id = auth.uid() and profile.processor_id = public.processor_offers.processor_id and profile.status = 'active'));
+  end if;
+  if exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'processor_offers' and policyname = 'operations manage processor offers') then
+    alter policy "operations manage processor offers" on public.processor_offers
+      using (public.current_user_role() in ('super_admin', 'dispatcher'))
+      with check (public.current_user_role() in ('super_admin', 'dispatcher'));
+  end if;
+  if exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'processor_offers' and policyname = 'processors respond to offers') then
+    alter policy "processors respond to offers" on public.processor_offers
+      using (false) with check (false);
+  end if;
+end;
+$$;
 
 create or replace function public.accept_processor_offer(p_offer_id uuid)
 returns table (offer_id uuid, order_id uuid)
