@@ -21,11 +21,15 @@ export async function GET() {
   const { data:{ user } } = await client.auth.getUser();
   if (!user) return NextResponse.json({ error:'Authentication required' }, { status:401 });
   const { data:profile } = await client.from('profiles').select('role,processor_id,driver_id').eq('id',user.id).single();
+  if (!profile) return NextResponse.json({ error: 'Workspace profile not found.' }, { status: 403 });
   let query = client.from('orders').select('*').order('created_at', { ascending:false });
-  if (profile?.role === 'customer') query = query.eq('customer_user_id', user.id);
-  if (profile?.role === 'processor' && profile.processor_id) query = query.eq('processor_id', profile.processor_id);
-  if (profile?.role === 'driver') query = query.eq('assigned_driver_id', user.id);
-  if (profile?.role !== 'super_admin') query = query.is('archived_at', null);
+  if (profile.role === 'customer') query = query.eq('customer_user_id', user.id);
+  if (profile.role === 'processor') {
+    if (!profile.processor_id) return NextResponse.json({ orders: [] });
+    query = query.eq('processor_id', profile.processor_id);
+  }
+  if (profile.role === 'driver') query = query.eq('assigned_driver_id', user.id);
+  if (profile.role !== 'super_admin') query = query.is('archived_at', null);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error:error.message }, { status:500 });
   const rows = data ?? [];
