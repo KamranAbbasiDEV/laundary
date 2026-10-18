@@ -4,6 +4,7 @@ import { Archive, ChevronRight, Plus, RefreshCw, RotateCcw, Save, X } from 'luci
 import { useEffect, useMemo, useState } from 'react';
 import type { Order, OrderStatus, UserRole } from '@/lib/types';
 import { statusGroups } from '@/lib/order-statuses';
+import { DateField } from './ui/date-field';
 
 type Props = { orders: Order[]; role: UserRole; onRefresh: () => Promise<void>; onCreate: () => void };
 type BulkAction = 'set_status' | 'record_exception' | 'archive' | 'restore';
@@ -116,7 +117,7 @@ function DeadlineEditor({ order, busy, onSaved }: { order: Order; busy: boolean;
       onSaved();
     } finally { setSaving(false); }
   }
-  return <section className="panel" style={{ marginBottom: 18 }}><div className="panel-body" style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap' }}><div className="form-field"><label>Service deadline for {order.id}</label><input className="form-control" type="datetime-local" value={value} disabled={busy || saving} onChange={event => setValue(event.target.value)} /></div><button className="button primary" type="button" disabled={busy || saving || !value} onClick={() => void save()}><Save size={14} />{saving ? 'Saving…' : 'Save deadline'}</button></div></section>;
+  return <section className="panel" style={{ marginBottom: 18 }}><div className="panel-body" style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap' }}><div className="form-field"><label>Service deadline for {order.id}</label><DateField type="datetime-local" value={value} disabled={busy || saving} onChange={event => setValue(event.target.value)} aria-label={`Service deadline for ${order.id}`} /></div><button className="button primary" type="button" disabled={busy || saving || !value} onClick={() => void save()}><Save size={14} />{saving ? 'Saving…' : 'Save deadline'}</button></div></section>;
 }
 
 function Drawer({ order, role, busy, statuses, note, setNote, onClose, onUpdate, onLifecycle }: { order: Order; role: UserRole; busy: boolean; statuses: OrderStatus[]; note: string; setNote: (value: string) => void; onClose: () => void; onUpdate: (patch: Record<string, unknown>, message: string) => Promise<void>; onLifecycle: (action: 'archive' | 'restore' | 'delete', confirmation?: string, reason?: string) => Promise<void> }) {
