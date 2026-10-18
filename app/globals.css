@@ -249,6 +249,16 @@ select:not([multiple]) optgroup{background:#f5f9fa;color:var(--navy);font:inheri
 select[multiple]{min-height:42px;border:1px solid #cbd7e2;border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-size:13px;box-shadow:0 1px 2px rgba(15,31,53,.03)}
 select[multiple] option{padding:8px 10px;background:#fff;color:var(--ink)}
 select[multiple] option:checked{background:var(--teal);color:#fff;font-weight:700}
+/* Legacy button class names share the same visual language as the current button component. */
+.button.primary{border-color:var(--navy);background:var(--navy);color:#fff;box-shadow:0 1px 2px rgba(15,31,53,.12)}
+.button.primary:hover:not(:disabled){background:var(--navy-2);box-shadow:0 3px 8px rgba(15,31,53,.14)}
+.button.secondary{border-color:var(--line-strong);background:#fff;color:var(--ink);box-shadow:var(--shadow-xs)}
+.button.secondary:hover:not(:disabled){border-color:#9db0c2;background:#f7fbfc;box-shadow:var(--shadow-sm)}
+.button.danger{border-color:#d96158!important;background:var(--red)!important;color:#fff!important;box-shadow:0 1px 2px rgba(184,61,53,.18)}
+.button.danger:hover:not(:disabled){background:#9f3029;box-shadow:0 3px 8px rgba(184,61,53,.18)}
+.button.quiet{border-color:transparent;background:transparent;color:var(--muted)}
+.button.quiet:hover:not(:disabled){background:#f3f6f9;color:var(--ink)}
+.button.primary:focus-visible,.button.secondary:focus-visible,.button.danger:focus-visible,.button.quiet:focus-visible{outline:3px solid rgba(13,124,120,.22);outline-offset:2px}
 .filter-select,.orders-controls select,.bulk-actions select,.order-filters select,.drawer-section select{min-height:36px;padding-top:0;padding-bottom:0;font-size:12px}
 .bulk-actions select{border-color:var(--line-strong);border-radius:7px;padding-left:10px}
 
