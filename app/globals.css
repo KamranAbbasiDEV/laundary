@@ -236,6 +236,14 @@ textarea.form-control { min-height: 78px; resize: vertical; line-height: 1.45; }
 /* Keep refresh/action icons visibly rotating in every button context. */
 .spin{display:inline-block;transform-origin:center;animation:spin .75s linear infinite}
 
+/* Shared themed dropdown treatment for every role and workspace surface. */
+select:not([multiple]){appearance:none;min-height:42px;padding:0 40px 0 12px;border:1px solid #cbd7e2;border-radius:8px;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7f93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:14px;color:var(--ink);font:inherit;font-size:13px;line-height:1.35;box-shadow:0 1px 2px rgba(15,31,53,.03);cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease}
+select:not([multiple]):hover{border-color:#aebdcd}
+select:not([multiple]):focus{border-color:var(--teal);outline:0;box-shadow:0 0 0 3px rgba(13,124,120,.12)}
+select:not([multiple]):disabled{background-color:#f4f7f8;color:var(--subtle);cursor:not-allowed;opacity:.75}
+.filter-select,.orders-controls select,.bulk-actions select,.order-filters select,.drawer-section select{min-height:36px;padding-top:0;padding-bottom:0;font-size:12px}
+.bulk-actions select{border-color:var(--line-strong);border-radius:7px;padding-left:10px}
+
 /* Popovers must escape card clipping and sit above the form sections below them. */
 .panel:has(.date-field){overflow:visible;position:relative;z-index:4}
 .date-field{z-index:60}
