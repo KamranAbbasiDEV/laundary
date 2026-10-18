@@ -13,7 +13,8 @@ export async function GET() {
   if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) return NextResponse.json({ error: 'Dispatcher access required.' }, { status: 403 });
   const { data, error } = await auth.client.from('orders').select('id,order_number,customer_name,phone,pickup_address,service_type,expected_bags,due_at_label,due_at,notes,created_at,validation_reason').eq('validation_state', 'manual_review').is('archived_at', null).order('created_at');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ orders: data ?? [] });
+  const orders = (data ?? []).map(order => ({ ...order, due_at_label: [order.due_at_label ?? '', order.due_at ? `deadline ${new Date(order.due_at).toLocaleString()}` : ''].filter(Boolean).join(' · ') }));
+  return NextResponse.json({ orders });
 }
 
 export async function PATCH(request: Request) {
