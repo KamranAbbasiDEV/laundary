@@ -1,26 +1,25 @@
 'use client';
 
-import { CalendarDays, Clock3, X } from 'lucide-react';
-import { useRef } from 'react';
-import type { ChangeEvent } from 'react';
+import { ChevronLeft, ChevronRight, CalendarDays, Clock3, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 
 type Props = { value: string; onChange: (event: ChangeEvent<HTMLInputElement>) => void; type?: 'date' | 'datetime-local'; min?: string; max?: string; disabled?: boolean; 'aria-label'?: string };
-
-function displayValue(value: string, type: Props['type']) {
-  if (!value) return type === 'datetime-local' ? 'Choose date and time' : 'Choose a date';
-  const date = new Date(type === 'date' ? value + 'T00:00:00' : value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat(undefined, type === 'datetime-local' ? { dateStyle: 'medium', timeStyle: 'short' } : { dateStyle: 'medium' }).format(date);
-}
+const pad = (value: number) => String(value).padStart(2, '0');
+const dateKey = (date: Date) => date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+const parseDate = (value: string) => { const date = new Date(value.length === 10 ? value + 'T00:00:00' : value); return Number.isNaN(date.getTime()) ? new Date() : date; };
+const monthLabel = (date: Date) => new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(date);
+const displayValue = (value: string, type: Props['type']) => { if (!value) return type === 'datetime-local' ? 'Choose date and time' : 'Choose a date'; const date = parseDate(value); return new Intl.DateTimeFormat(undefined, type === 'datetime-local' ? { dateStyle: 'medium', timeStyle: 'short' } : { dateStyle: 'medium' }).format(date); };
 
 export function DateField({ value, onChange, type = 'date', min, max, disabled, 'aria-label': ariaLabel }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const openPicker = () => {
-    if (disabled) return;
-    const input = inputRef.current;
-    if (!input) return;
-    if (typeof input.showPicker === 'function') input.showPicker();
-    else input.click();
-  };
-  return <div className="date-field"><button type="button" className="date-field-trigger" onClick={openPicker} disabled={disabled} aria-label={ariaLabel || displayValue(value, type)}><span className="date-field-icon">{type === 'datetime-local' ? <Clock3 size={15} /> : <CalendarDays size={15} />}</span><span>{displayValue(value, type)}</span>{value && <span className="date-field-clear" role="button" aria-label="Clear date" onClick={event => { event.stopPropagation(); if (inputRef.current) { const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set; setter?.call(inputRef.current, ''); inputRef.current.dispatchEvent(new Event('input', { bubbles: true })); } }}><X size={14} /></span>}</button><input ref={inputRef} className="date-field-native" type={type} value={value} min={min} max={max} disabled={disabled} onChange={onChange} aria-hidden="true" tabIndex={-1} /></div>;
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => { const date = parseDate(value); return new Date(date.getFullYear(), date.getMonth(), 1); });
+  useEffect(() => { if (value) { const date = parseDate(value); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); } }, [value]);
+  const days = useMemo(() => { const first = new Date(month.getFullYear(), month.getMonth(), 1); const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate(); const leading = (first.getDay() + 6) % 7; return [...Array(leading).fill(null), ...Array.from({ length: count }, (_, index) => new Date(month.getFullYear(), month.getMonth(), index + 1))]; }, [month]);
+  const setNativeValue = (next: string) => { const input = inputRef.current; if (!input) return; const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set; setter?.call(input, next); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); };
+  const selectDate = (date: Date) => { const current = value && value.length > 10 ? value.slice(11) : '09:00'; setNativeValue(type === 'datetime-local' ? dateKey(date) + 'T' + current : dateKey(date)); if (type === 'date') setOpen(false); };
+  const selectToday = () => selectDate(new Date());
+  const date = value ? parseDate(value) : null;
+  const minKey = min?.slice(0, 10); const maxKey = max?.slice(0, 10);
+  return <div className="date-field"><button type="button" className="date-field-trigger" onClick={() => !disabled && setOpen(current => !current)} disabled={disabled} aria-label={ariaLabel || displayValue(value, type)}><span className="date-field-icon">{type === 'datetime-local' ? <Clock3 size={15} /> : <CalendarDays size={15} />}</span><span>{displayValue(value, type)}</span>{value && <span className="date-field-clear" role="button" aria-label="Clear date" onClick={event => { event.stopPropagation(); setNativeValue(''); }}><X size={14} /></span>}</button>{open && <div className="date-popover"><div className="date-popover-header"><button type="button" className="icon-button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} aria-label="Previous month"><ChevronLeft size={15} /></button><strong>{monthLabel(month)}</strong><button type="button" className="icon-button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} aria-label="Next month"><ChevronRight size={15} /></button></div><div className="date-weekdays">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => <span key={day}>{day}</span>)}</div><div className="date-grid">{days.map((item, index) => item ? <button type="button" className={'date-day ' + (date && dateKey(date) === dateKey(item) ? 'selected ' : '') + (dateKey(item) === dateKey(new Date()) ? 'today' : '')} key={dateKey(item)} disabled={Boolean((minKey && dateKey(item) < minKey) || (maxKey && dateKey(item) > maxKey))} onClick={() => selectDate(item)}>{item.getDate()}</button> : <span key={'empty-' + index} />)}</div>{type === 'datetime-local' && <label className="date-time-field"><Clock3 size={14} /><span>Time</span><input type="time" value={value.slice(11) || '09:00'} onChange={event => setNativeValue(value.slice(0, 10) + 'T' + event.target.value)} /></label>}<div className="date-popover-footer"><button type="button" className="button button-quiet" onClick={selectToday}>Today</button>{value && <button type="button" className="button button-quiet" onClick={() => { setNativeValue(''); setOpen(false); }}>Clear</button>}</div></div>}<input ref={inputRef} className="date-field-native" type={type} value={value} min={min} max={max} disabled={disabled} onChange={onChange} aria-hidden="true" tabIndex={-1} readOnly /></div>;
 }
