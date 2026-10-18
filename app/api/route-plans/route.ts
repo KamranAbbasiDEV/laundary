@@ -110,7 +110,7 @@ export async function PATCH(request: Request) {
   if (plan.status !== 'draft') return NextResponse.json({ error: 'Only draft routes can be approved.' }, { status: 409 });
   const { data, error } = await auth.client.from('route_plans').update({ status: 'approved', approved_by: auth.user.id, approved_at: new Date().toISOString() }).eq('id', plan.id).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('order_id,status,orders(order_number,phone)').eq('route_id', plan.id);
+    const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('order_id,status,orders(order_number,phone,due_at)').eq('route_id', plan.id);
   if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
   const pendingStops = (stops ?? []).filter(stop => stop.status !== 'completed');
   const orderIds = pendingStops.map(stop => stop.order_id);
@@ -124,7 +124,7 @@ export async function PATCH(request: Request) {
     if (orderUpdateError) return NextResponse.json({ error: orderUpdateError.message }, { status: 500 });
     if (updatedOrders?.length !== orderIds.length) return NextResponse.json({ error: 'One or more orders changed before this route could be approved. Refresh the queue and create a new route.' }, { status: 409 });
   }
-  await Promise.all(pendingStops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${plan.route_type.replace('_', ' ')} route.`, phone: order?.phone ?? undefined }); }));
+  await Promise.all(pendingStops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; const deadline = order?.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${plan.route_type.replace('_', ' ')} route.${deadline}`, phone: order?.phone ?? undefined }); }));
   return NextResponse.json({ plan: data });
 }
 

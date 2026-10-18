@@ -6,7 +6,7 @@ import type { OrderStatus } from '@/lib/types';
 import { logOperationalNotification } from '@/lib/notifications';
 
 const statusSchema = z.enum(['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed']);
-const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional(), customer: z.string().trim().min(2).max(160).optional(), phone: z.string().trim().min(7).max(40).optional(), address: z.string().trim().min(5).max(500).optional(), service: z.string().trim().min(1).max(120).optional(), bags: z.number().int().positive().optional(), due: z.string().trim().max(160).optional(), notes: z.string().trim().max(2000).nullable().optional() });
+const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional(), customer: z.string().trim().min(2).max(160).optional(), phone: z.string().trim().min(7).max(40).optional(), address: z.string().trim().min(5).max(500).optional(), service: z.string().trim().min(1).max(120).optional(), bags: z.number().int().positive().optional(), due: z.string().trim().max(160).optional(), dueAt: z.string().datetime({ offset: true }).nullable().optional(), notes: z.string().trim().max(2000).nullable().optional() });
 const displayStatus = (value: string): OrderStatus => ({
   created:'Created',validated:'Validated',processor_ranked:'Processor ranked',capacity_confirmed:'Capacity confirmed',pickup_scheduled:'Pickup scheduled',picked_up:'Picked up',at_processor:'At processor',processing:'Processing',ready_for_pickup:'Ready for pickup',picked_up_from_processor:'Picked up from processor',qc_reconciliation:'QC / Reconciliation',out_for_delivery:'Out for delivery',delivered:'Delivered',processor_reviewed:'Processor reviewed'
 } as Record<string, OrderStatus>)[value] ?? value as OrderStatus;
@@ -28,15 +28,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!actor || actor.status !== 'active' || !['super_admin','dispatcher','driver','processor'].includes(actor.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
 
   const currentQuery = isUuid
-    ? supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id').eq('id', id).maybeSingle()
-    : supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id').eq('order_number', id).maybeSingle();
+    ? supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at').eq('id', id).maybeSingle()
+    : supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at').eq('order_number', id).maybeSingle();
   const { data: current, error: readError } = await currentQuery;
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   if (actor.role === 'driver' && current.assigned_driver_id !== user.id) return NextResponse.json({ error: 'You can only update orders assigned to you.' }, { status: 403 });
   if (actor.role === 'processor' && current.processor_id !== actor.processor_id) return NextResponse.json({ error: 'You can only update orders assigned to your processor.' }, { status: 403 });
   if (body.data.resolveException && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can resolve an exception.' }, { status: 403 });
-  const isOrderEdit = body.data.customer !== undefined || body.data.phone !== undefined || body.data.address !== undefined || body.data.service !== undefined || body.data.bags !== undefined || body.data.due !== undefined || body.data.notes !== undefined;
+  const isOrderEdit = body.data.customer !== undefined || body.data.phone !== undefined || body.data.address !== undefined || body.data.service !== undefined || body.data.bags !== undefined || body.data.due !== undefined || body.data.dueAt !== undefined || body.data.notes !== undefined;
   if (isOrderEdit && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can edit order details.' }, { status: 403 });
   if (isOrderEdit && ['delivered', 'processor_reviewed'].includes(current.status)) return NextResponse.json({ error: 'Completed orders are historical records and cannot be edited.' }, { status: 409 });
   const currentDisplay = displayStatus(current.status);
@@ -72,12 +72,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (body.data.service !== undefined) update.service_type = body.data.service;
   if (body.data.bags !== undefined) update.expected_bags = body.data.bags;
   if (body.data.due !== undefined) update.due_at_label = body.data.due || null;
+  if (body.data.dueAt !== undefined) update.due_at = body.data.dueAt;
   if (body.data.notes !== undefined) update.notes = body.data.notes;
   const { data, error } = await supabase.from('orders').update(update).eq('id', current.id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   await supabase.from('order_events').insert({ order_id: current.id, from_status: current.status, to_status: body.data.status ? dbStatus(body.data.status) : current.status, note: body.data.note ?? body.data.exception ?? (body.data.resolveException ? 'Exception resolved by dispatch' : null) });
   const event = body.data.resolveException ? 'exception_resolved' : body.data.exception ? 'exception_recorded' : body.data.status ? `order_${dbStatus(body.data.status)}` : 'order_updated';
-  const message = body.data.resolveException ? `${current.order_number} exception resolved by dispatch.` : body.data.exception ? `${current.order_number} requires dispatcher review: ${body.data.exception}` : body.data.status ? `${current.order_number} is now ${body.data.status}.` : `${current.order_number} was updated.`;
+  const deadline = body.data.dueAt !== undefined ? body.data.dueAt : current.due_at;
+  const deadlineText = deadline ? ` Deadline: ${new Date(deadline).toLocaleString()}.` : '';
+  const message = body.data.resolveException ? `${current.order_number} exception resolved by dispatch.${deadlineText}` : body.data.exception ? `${current.order_number} requires dispatcher review: ${body.data.exception}.${deadlineText}` : body.data.status ? `${current.order_number} is now ${body.data.status}.${deadlineText}` : `${current.order_number} was updated.${deadlineText}`;
   await logOperationalNotification({ orderId: current.id, event, message, phone: current.phone });
   return NextResponse.json({ order: data, persistence: 'supabase' });
 }

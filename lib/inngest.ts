@@ -8,7 +8,7 @@ async function notifyPendingProcessorOffers(orderId: string) {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
   const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('company_name').eq('id', 'default').maybeSingle();
   const companyName = workspace?.company_name?.trim() || 'RinseLine';
-  const { data: offers, error } = await supabaseAdmin.from('processor_offers').select('id,processor_id,orders(order_number,service_type,expected_bags,due_at_label),processors(name,phone)').eq('order_id', orderId).eq('status', 'pending');
+  const { data: offers, error } = await supabaseAdmin.from('processor_offers').select('id,processor_id,orders(order_number,service_type,expected_bags,due_at_label,due_at),processors(name,phone)').eq('order_id', orderId).eq('status', 'pending');
   if (error) throw new Error(error.message);
   let notified = 0;
   for (const offer of offers ?? []) {
@@ -25,7 +25,8 @@ async function notifyPendingProcessorOffers(orderId: string) {
     if (!(await isSmsAllowed(recipient, 'processor_offer'))) continue;
     const { data: alreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', recipient).eq('event', 'processor_offer').limit(1);
     if (alreadyLogged?.length) continue;
-    const smsMessage = `New ${companyName} capacity request: ${order.order_number} - ${order.service_type}, ${order.expected_bags} bag(s), due ${order.due_at_label || 'as scheduled'}. Sign in to accept or decline.`;
+    const deadline = order.due_at ? `, deadline ${new Date(order.due_at).toLocaleString()}` : '';
+    const smsMessage = `New ${companyName} capacity request: ${order.order_number} - ${order.service_type}, ${order.expected_bags} bag(s), due ${order.due_at_label || 'as scheduled'}${deadline}. Sign in to accept or decline.`;
     const result = await sendOrderNotification({ to: recipient, message: smsMessage, channel: 'sms' });
     const { error: logError } = await supabaseAdmin.from('notification_log').insert({ order_id: orderId, recipient, channel: 'sms', event: 'processor_offer', message: smsMessage, status: result.delivered ? 'sent' : 'queued', provider_id: result.delivered ? result.sid : null, error_message: result.delivered ? null : result.reason ?? null, sent_at: result.delivered ? new Date().toISOString() : null });
     if (logError) throw new Error(logError.message);
@@ -58,11 +59,12 @@ async function queueProcessorReviews() {
     for (const event of deliveredEvents ?? []) if (!deliveredAt.has(event.order_id)) deliveredAt.set(event.order_id, event.created_at);
     const measurable = rows.filter(row => row.due_at && deliveredAt.has(row.id));
     const onTime = measurable.filter(row => new Date(deliveredAt.get(row.id) as string).getTime() <= new Date(row.due_at as string).getTime()).length;
-    const onTimeRate = measurable.length ? Math.round((onTime / measurable.length) * 10000) / 100 : 100;
+    const onTimeRate = measurable.length ? Math.round((onTime / measurable.length) * 10000) / 100 : 0;
     const { data: exceptions } = await supabaseAdmin.from('exceptions').select('order_id').in('order_id', ids).gte('created_at', `${periodStart}T00:00:00.000Z`).lte('created_at', `${periodEnd}T23:59:59.999Z`);
     const issueCount = exceptions?.length ?? rows.filter(row => row.has_exception).length;
     const discrepancyRate = rows.length ? Math.round((new Set((exceptions ?? []).map(row => row.order_id)).size / rows.length) * 10000) / 100 : 0;
-    await supabaseAdmin.from('processor_scorecards').upsert({ processor_id: processorId, period_start: periodStart, period_end: periodEnd, orders_completed: rows.length, on_time_rate: onTimeRate, discrepancy_rate: discrepancyRate, issue_count: issueCount, score: Math.max(0, Math.round((onTimeRate * .6 + (100 - discrepancyRate) * .25 + Math.max(0, 100 - issueCount / rows.length * 100) * .15) * 100) / 100), notes: 'Automatically refreshed by the scheduled processor review.', reviewed_at: new Date().toISOString() }, { onConflict: 'processor_id,period_start,period_end' });
+    const score = Math.max(0, Math.round(((measurable.length ? onTimeRate * .6 : 0) + (100 - discrepancyRate) * (measurable.length ? .4 : 1)) * 100) / 100);
+    await supabaseAdmin.from('processor_scorecards').upsert({ processor_id: processorId, period_start: periodStart, period_end: periodEnd, orders_completed: rows.length, on_time_rate: onTimeRate, discrepancy_rate: discrepancyRate, issue_count: issueCount, score, notes: `Automatically refreshed by the scheduled processor review.${measurable.length ? '' : ' Turnaround is neutral: no completed order in this period had an exact due timestamp.'}`, reviewed_at: new Date().toISOString() }, { onConflict: 'processor_id,period_start,period_end' });
   }
   return { queued };
 }

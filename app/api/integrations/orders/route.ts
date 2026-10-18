@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const payloadSchema = z.object({
   externalId: z.string().min(1).max(160), customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
-  service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), notes: z.string().max(4000).optional(), source: z.string().min(2).max(60).default('crm')
+  service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), dueAt: z.string().datetime({ offset: true }), notes: z.string().max(4000).optional(), source: z.string().min(2).max(60).default('crm')
 });
 
 export async function POST(request: Request) {
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const { data: existing, error: lookupError } = await supabaseAdmin.from('orders').select('id,order_number,status').eq('intake_source', item.source).eq('external_id', item.externalId).maybeSingle();
   if (lookupError) return NextResponse.json({ error: lookupError.message }, { status: 500 });
   if (existing) return NextResponse.json({ order: existing, idempotent: true });
-  const { data: order, error } = await supabaseAdmin.from('orders').insert({ customer_name: item.customer, phone: item.phone, pickup_address: item.address, service_type: item.service, expected_bags: item.bags, due_at_label: item.due, notes: item.notes ?? null, status: 'validated', intake_source: item.source, external_id: item.externalId }).select('id,order_number,status').single();
+  const { data: order, error } = await supabaseAdmin.from('orders').insert({ customer_name: item.customer, phone: item.phone, pickup_address: item.address, service_type: item.service, expected_bags: item.bags, due_at_label: item.due, due_at: item.dueAt, notes: item.notes ?? null, status: 'validated', intake_source: item.source, external_id: item.externalId }).select('id,order_number,status').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const { data: processors } = await supabaseAdmin.from('processors').select('id,capabilities,capacity_limit,capacity_percent,turnaround_hours,pricing,performance_score').eq('active', true);
   const defaults = { capability: 30, location: 20, capacity: 20, turnaround: 15, pricing: 10, performance: 5 };

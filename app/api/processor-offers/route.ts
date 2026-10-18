@@ -45,8 +45,9 @@ export async function PATCH(request: Request) {
     const { data: acceptedOffer, error: acceptedError } = await auth.client.from('processor_offers').select('*').eq('id', item.offerId).single();
     if (acceptedError || !acceptedOffer) return NextResponse.json({ error: acceptedError?.message ?? 'Offer acceptance could not be confirmed.' }, { status: 500 });
     data = acceptedOffer;
-    const { data: acceptedOrder } = await auth.client.from('orders').select('order_number,phone').eq('id', offer.order_id).maybeSingle();
-    await logOperationalNotification({ orderId: offer.order_id, event: 'processor_offer_accepted', message: `${acceptedOrder?.order_number ?? 'Order'} was accepted by its processor. Capacity is confirmed.`, phone: acceptedOrder?.phone ?? undefined });
+    const { data: acceptedOrder } = await auth.client.from('orders').select('order_number,phone,due_at').eq('id', offer.order_id).maybeSingle();
+    const acceptedDeadline = acceptedOrder?.due_at ? ` Deadline: ${new Date(acceptedOrder.due_at).toLocaleString()}.` : '';
+    await logOperationalNotification({ orderId: offer.order_id, event: 'processor_offer_accepted', message: `${acceptedOrder?.order_number ?? 'Order'} was accepted by its processor. Capacity is confirmed.${acceptedDeadline}`, phone: acceptedOrder?.phone ?? undefined });
   }
   if (item.decision === 'rejected') {
     const { error: rejectError } = await auth.client.rpc('reject_processor_offer', { p_offer_id: item.offerId, p_reason: item.reason ?? 'Processor declined' });
@@ -61,8 +62,9 @@ export async function PATCH(request: Request) {
     const { data: rejectedOffer, error: rejectedError } = await auth.client.from('processor_offers').select('*').eq('id', item.offerId).single();
     if (rejectedError || !rejectedOffer) return NextResponse.json({ error: rejectedError?.message ?? 'Offer rejection could not be confirmed.' }, { status: 500 });
     data = rejectedOffer;
-    const { data: rejectedOrder } = await auth.client.from('orders').select('order_number,phone').eq('id', offer.order_id).maybeSingle();
-    await logOperationalNotification({ orderId: offer.order_id, event: 'processor_offer_rejected', message: `${rejectedOrder?.order_number ?? 'Order'} was declined by a processor and is being reassigned.`, phone: rejectedOrder?.phone ?? undefined });
+    const { data: rejectedOrder } = await auth.client.from('orders').select('order_number,phone,due_at').eq('id', offer.order_id).maybeSingle();
+    const rejectedDeadline = rejectedOrder?.due_at ? ` Deadline: ${new Date(rejectedOrder.due_at).toLocaleString()}.` : '';
+    await logOperationalNotification({ orderId: offer.order_id, event: 'processor_offer_rejected', message: `${rejectedOrder?.order_number ?? 'Order'} was declined by a processor and is being reassigned.${rejectedDeadline}`, phone: rejectedOrder?.phone ?? undefined });
     if (process.env.INNGEST_EVENT_KEY) {
       try { await inngest.send({ name: 'rinseline/order.processor_offer_activated', data: { orderId: offer.order_id } }); }
       catch (eventError) { console.error('Unable to queue the next processor notification', eventError); }
