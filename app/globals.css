@@ -241,6 +241,14 @@ select:not([multiple]){appearance:none;min-height:42px;padding:0 40px 0 12px;bor
 select:not([multiple]):hover{border-color:#aebdcd}
 select:not([multiple]):focus{border-color:var(--teal);outline:0;box-shadow:0 0 0 3px rgba(13,124,120,.12)}
 select:not([multiple]):disabled{background-color:#f4f7f8;color:var(--subtle);cursor:not-allowed;opacity:.75}
+/* Keep the native option menu readable and aligned with the application palette. */
+select:not([multiple]) option{padding:9px 12px;background:#fff;color:var(--ink);font:inherit;font-size:13px;line-height:1.4}
+select:not([multiple]) option:checked{background:var(--teal);color:#fff;font-weight:700}
+select:not([multiple]) option:hover{background:var(--teal-soft);color:var(--navy)}
+select:not([multiple]) optgroup{background:#f5f9fa;color:var(--navy);font:inherit;font-weight:750}
+select[multiple]{min-height:42px;border:1px solid #cbd7e2;border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-size:13px;box-shadow:0 1px 2px rgba(15,31,53,.03)}
+select[multiple] option{padding:8px 10px;background:#fff;color:var(--ink)}
+select[multiple] option:checked{background:var(--teal);color:#fff;font-weight:700}
 .filter-select,.orders-controls select,.bulk-actions select,.order-filters select,.drawer-section select{min-height:36px;padding-top:0;padding-bottom:0;font-size:12px}
 .bulk-actions select{border-color:var(--line-strong);border-radius:7px;padding-left:10px}
 
