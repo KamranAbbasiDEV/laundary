@@ -12,7 +12,7 @@ export default function OverviewMap() {
   const element = useRef<HTMLDivElement>(null); const map = useRef<mapboxgl.Map | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [mapReady, setMapReady] = useState(false);
   const load = useCallback(async () => { try { const response = await fetch('/api/route-plans', { cache: 'no-store' }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to load active routes.'); setPlans((body.plans ?? []).filter((plan: Plan) => Array.isArray(plan.mapbox_route?.coordinates) && plan.mapbox_route.coordinates.length)); setError(null); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to load active routes.'); } finally { setLoading(false); } }, []);
-  useEffect(() => { void load(); const id = window.setInterval(() => void load(), 30000); return () => window.clearInterval(id); }, [load]);
+  useEffect(() => { void load(); const id = window.setInterval(() => void load(), 15000); const refresh = () => void load(); window.addEventListener('rinseline:data-changed', refresh); return () => { window.clearInterval(id); window.removeEventListener('rinseline:data-changed', refresh); }; }, [load]);
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
     if (!element.current || !token || map.current) return;

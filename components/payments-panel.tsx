@@ -5,6 +5,7 @@ import { CreditCard, Save } from 'lucide-react';
 import { Button } from './ui/button';
 import type { Order } from '@/lib/types';
 import { humanize } from '@/lib/presentation';
+import { notifyDataChanged } from '@/lib/live-updates';
 
 type Payment = { id: string; order_id: string; amount_due: number; amount_paid: number; status: string; method?: string; reference?: string; notes?: string };
 const paymentStatuses = ['unpaid', 'pending', 'partially_paid', 'paid', 'refunded', 'disputed', 'waived'];
@@ -19,7 +20,7 @@ export default function PaymentsPanel({ orders, notify }: { orders: Order[]; not
   const [method, setMethod] = useState('cash');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { void fetch('/api/payments').then(response => response.json()).then(body => setPayments(body.payments ?? [])); }, []);
+  useEffect(() => { const load = () => void fetch('/api/payments', { cache: 'no-store' }).then(response => response.json()).then(body => setPayments(body.payments ?? [])); load(); window.addEventListener('rinseline:data-changed', load); return () => window.removeEventListener('rinseline:data-changed', load); }, []);
 
   async function save() {
     if (!orderId) { notify('Choose an order first.'); return; }
@@ -29,6 +30,7 @@ export default function PaymentsPanel({ orders, notify }: { orders: Order[]; not
     setBusy(false);
     if (!response.ok) { notify(body.error || 'Unable to save payment.'); return; }
     setPayments(current => [body.payment, ...current.filter(item => item.order_id !== body.payment.order_id)]);
+    notifyDataChanged();
     notify('Payment record saved.');
   }
 

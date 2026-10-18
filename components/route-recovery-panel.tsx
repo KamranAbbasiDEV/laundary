@@ -10,7 +10,7 @@ type Plan = { id: string; route_date: string; route_type: string; status: string
 export default function RouteRecoveryPanel({ notify }: { notify: (message: string) => void }) {
   const [plans, setPlans] = useState<Plan[]>([]); const [reopened, setReopened] = useState(''); const [busy, setBusy] = useState('');
   const load = useCallback(async () => { const response = await fetch('/api/route-plans'); const body = await response.json(); if (response.ok) setPlans((body.plans ?? []).filter((plan: Plan) => plan.status === 'failed' || plan.id === reopened)); }, [reopened]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(); const refresh = () => void load(); window.addEventListener('rinseline:data-changed', refresh); return () => window.removeEventListener('rinseline:data-changed', refresh); }, [load]);
   async function action(plan: Plan, recover: boolean) {
     setBusy(plan.id);
     try {

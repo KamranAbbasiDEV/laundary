@@ -30,7 +30,7 @@ export default function TeamAccessPanel({ processors, notify }: { processors: Pr
     setApplications(bodies[2].applications ?? []);
   }, [notify]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(); const refresh = () => void load(); window.addEventListener('rinseline:data-changed', refresh); return () => window.removeEventListener('rinseline:data-changed', refresh); }, [load]);
   const pendingByUser = useMemo(() => new Map(invitations.filter(item => item.status === 'pending' && item.auth_user_id).map(item => [item.auth_user_id as string, item])), [invitations]);
 
   async function sendInvite() {

@@ -9,7 +9,7 @@ type PendingOrder = { id: string; order_number: string; customer_name: string; s
 export default function ValidationQueue({ notify, onRefresh }: { notify: (message: string) => void; onRefresh: () => Promise<void> }) {
   const [orders, setOrders] = useState<PendingOrder[]>([]); const [busy, setBusy] = useState(''); const [reason, setReason] = useState<Record<string, string>>({});
   const load = useCallback(async () => { const response = await fetch('/api/orders/validation'); const body = await response.json(); if (response.ok) setOrders(body.orders ?? []); }, []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(); const refresh = () => void load(); window.addEventListener('rinseline:data-changed', refresh); return () => window.removeEventListener('rinseline:data-changed', refresh); }, [load]);
   async function decide(order: PendingOrder, action: 'approve' | 'request_changes') {
     if (action === 'request_changes' && !reason[order.id]?.trim()) return notify('Describe what must be corrected first.');
     setBusy(order.id);
