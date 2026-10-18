@@ -7,7 +7,7 @@ import { logOperationalNotification } from '@/lib/notifications';
 
 const orderInput = z.object({
   customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
-  service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), notes: z.string().optional(),
+  service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), dueAt: z.string().datetime({ offset: true }), notes: z.string().optional(),
   items: z.string().max(2000).optional(), textileTypes: z.array(z.string().min(1).max(80)).max(12).optional(), specialHandling: z.array(z.string().min(1).max(120)).max(12).optional(), customerSpecifications: z.string().max(4000).optional(), priority: z.enum(['standard', 'priority', 'same_day']).optional()
 });
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   const needsManualReview = profile.role === 'customer';
   const { data, error } = await supabase.from('orders').insert({
     customer_name: parsed.data.customer, phone: parsed.data.phone, pickup_address: parsed.data.address,
-    service_type: parsed.data.service, expected_bags: parsed.data.bags, due_at_label: parsed.data.due,
+    service_type: parsed.data.service, expected_bags: parsed.data.bags, due_at_label: parsed.data.due, due_at: parsed.data.dueAt,
     notes: parsed.data.notes ?? null, item_description: parsed.data.items ?? null, textile_types: parsed.data.textileTypes ?? [], special_handling: parsed.data.specialHandling ?? [], customer_specifications: parsed.data.customerSpecifications ?? null, priority: parsed.data.priority ?? 'standard', validation_state: needsManualReview ? 'manual_review' : 'validated', validated_at: needsManualReview ? null : new Date().toISOString(), validated_by: needsManualReview ? null : user.id, status: needsManualReview ? 'created' : 'validated', customer_user_id: profile?.role === 'customer' ? user.id : null
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

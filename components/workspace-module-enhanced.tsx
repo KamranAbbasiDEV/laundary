@@ -16,7 +16,7 @@ import OrdersWorkspace from './orders-workspace';
 import CustomerWorkspace from './customer-workspace';
 import type { Order, OrderStatus, Processor, UserRole } from '@/lib/types';
 
-type Props={active:string;orders:Order[];processors:Processor[];role:UserRole;onSelect:(order:Order)=>void;notify:(message:string)=>void;onStatusChange:(id:string,status:OrderStatus,note?:string)=>Promise<void>;onApproveRoute:(orderIds?:string[])=>void;onCreateOrder:(data:{customer:string;phone:string;address:string;service:string;bags:number;due:string;notes?:string})=>Promise<void>;onCreate:()=>void;onProcessorCreated:()=>Promise<void>;onNavigate?:(section:string)=>void};
+type Props={active:string;orders:Order[];processors:Processor[];role:UserRole;onSelect:(order:Order)=>void;notify:(message:string)=>void;onStatusChange:(id:string,status:OrderStatus,note?:string)=>Promise<void>;onApproveRoute:(orderIds?:string[])=>void;onCreateOrder:(data:{customer:string;phone:string;address:string;service:string;bags:number;due:string;deadline:string;notes?:string})=>Promise<void>;onCreate:()=>void;onProcessorCreated:()=>Promise<void>;onNavigate?:(section:string)=>void};
 export default function EnhancedWorkspaceModule(props:Props){
   if(props.active==='Orders') return <OrdersWorkspace orders={props.orders} role={props.role} onRefresh={props.onProcessorCreated} onCreate={props.onCreate}/>;
   if(props.active==='Dispatch' && ['super_admin','dispatcher'].includes(props.role)) return <DispatchWorkspace orders={props.orders} onNavigate={props.onNavigate} onSelect={props.onSelect} notify={props.notify} onRefresh={props.onProcessorCreated}/>;
