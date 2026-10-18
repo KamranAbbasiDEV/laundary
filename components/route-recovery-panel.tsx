@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Check, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
+import { humanize } from '@/lib/presentation';
 
 type Plan = { id: string; route_date: string; route_type: string; status: string; route_stops: Array<{ id: string; order_id: string; sequence: number; status: string; failure_reason?: string | null }> };
 
@@ -22,5 +23,5 @@ export default function RouteRecoveryPanel({ notify }: { notify: (message: strin
   }
   const visible = plans.filter(plan => plan.status === 'failed' || plan.id === reopened);
   if (!visible.length) return null;
-  return <section className="panel" style={{ marginBottom: 18 }}><div className="panel-heading"><div><h2>Route recovery</h2><p>Completed stops remain complete. Reopen only failed stops, review the remaining sequence, then approve.</p></div></div><div className="ops-queue">{visible.map(plan => <div className="ops-queue-row" key={plan.id}><span><strong>{plan.route_type.replace('_', ' ')} · {plan.route_date}</strong><small>{plan.route_stops.map(stop => `Stop ${stop.sequence}: ${stop.status}${stop.failure_reason ? ` (${stop.failure_reason})` : ''}`).join(' · ')}</small></span>{plan.status === 'failed' ? <Button size="sm" onClick={() => void action(plan, true)} disabled={busy === plan.id}><RotateCcw size={13}/>Reopen failed stops</Button> : <Button size="sm" onClick={() => void action(plan, false)} disabled={busy === plan.id}><Check size={13}/>Approve recovery</Button>}</div>)}</div></section>;
+  return <section className="panel" style={{ marginBottom: 18 }}><div className="panel-heading"><div><h2>Route recovery</h2><p>Completed stops remain complete. Reopen only failed stops, review the sequence, then approve.</p></div></div><div className="ops-queue">{visible.map(plan => <div className="ops-queue-row" key={plan.id}><span><strong>{humanize(plan.route_type)} · {plan.route_date}</strong><small>{plan.route_stops.map(stop => `Stop ${stop.sequence}: ${humanize(stop.status)}${stop.failure_reason ? ` (${stop.failure_reason})` : ''}`).join(' · ')}</small></span>{plan.status === 'failed' ? <Button size="sm" onClick={() => void action(plan, true)} disabled={busy === plan.id}><RotateCcw size={13}/>Reopen failed stops</Button> : <Button size="sm" onClick={() => void action(plan, false)} disabled={busy === plan.id}><Check size={13}/>Approve recovery</Button>}</div>)}</div></section>;
 }

@@ -4,13 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, Mail, RefreshCw, UserPlus, X } from 'lucide-react';
 import { Button } from './ui/button';
 import type { Processor, UserRole } from '@/lib/types';
+import { humanize } from '@/lib/presentation';
 
 type TeamUser = { id: string; full_name: string; role: UserRole; status: string; onboarding_complete?: boolean; processor_id?: string | null };
 type Invitation = { id: string; email: string; full_name: string; role: UserRole; status: string; auth_user_id?: string | null };
 type Application = { id: string; business_name: string; contact_name: string; email: string; address: string; capabilities: string[]; status: string };
 type InviteForm = { fullName: string; email: string; role: 'dispatcher' | 'driver' | 'processor'; phone: string; processorId: string };
 
-const badge = (value: string) => <span className={`status ${value === 'active' || value === 'accepted' || value === 'complete' ? 'status-green' : value === 'suspended' || value === 'rejected' ? 'status-red' : 'status-amber'}`}>{value.replaceAll('_', ' ')}</span>;
+const badge = (value: string) => <span className={`status ${value === 'active' || value === 'accepted' || value === 'complete' ? 'status-green' : value === 'suspended' || value === 'rejected' ? 'status-red' : 'status-amber'}`}>{humanize(value)}</span>;
 
 export default function TeamAccessPanel({ processors, notify }: { processors: Processor[]; notify: (message: string) => void }) {
   const [users, setUsers] = useState<TeamUser[]>([]);
