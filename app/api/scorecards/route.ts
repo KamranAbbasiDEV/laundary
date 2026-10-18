@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   const measurable = completed.filter(order => Boolean(order.due_at));
   const onTime = measurable.filter(order => new Date(deliveredAt.get(order.id) as string).getTime() <= new Date(order.due_at as string).getTime());
   // Do not mark a processor late when the order did not carry an exact deadline.
-  const onTimeRate = measurable.length ? Math.round((onTime.length / measurable.length) * 10000) / 100 : 100;
+  const onTimeRate = measurable.length ? Math.round((onTime.length / measurable.length) * 10000) / 100 : 0;
 
   const completedIds = completed.map(order => order.id);
   const { data: exceptionRows, error: exceptionsError } = completedIds.length
@@ -57,9 +57,9 @@ export async function POST(request: Request) {
   const exceptionOrderIds = new Set((exceptionRows ?? []).map(exception => exception.order_id));
   const flaggedOrderIds = new Set(completed.filter(order => order.has_exception).map(order => order.id));
   const discrepancyOrders = new Set([...exceptionOrderIds, ...flaggedOrderIds]);
-  const issueCount = (exceptionRows ?? []).length || flaggedOrderIds.size;
+  const issueCount = discrepancyOrders.size;
   const discrepancyRate = completed.length ? Math.round((discrepancyOrders.size / completed.length) * 10000) / 100 : 0;
-  const score = completed.length ? Math.max(0, Math.round((onTimeRate * .6 + (100 - discrepancyRate) * .25 + Math.max(0, 100 - issueCount / completed.length * 100) * .15) * 100) / 100) : 0;
+  const score = completed.length ? Math.max(0, Math.round(((measurable.length ? onTimeRate * .6 : 0) + (100 - discrepancyRate) * (measurable.length ? .4 : 1)) * 100) / 100) : 0;
   const reviewNote = [item.notes?.trim(), measurable.length ? undefined : 'Turnaround is neutral: no completed order in this period had an exact due timestamp.'].filter(Boolean).join('\n') || null;
 
   const { data, error } = await auth.client.from('processor_scorecards').upsert({ processor_id: item.processorId, period_start: item.periodStart, period_end: item.periodEnd, orders_completed: completed.length, on_time_rate: onTimeRate, discrepancy_rate: discrepancyRate, issue_count: issueCount, score, notes: reviewNote, reviewed_by: auth.user.id, reviewed_at: new Date().toISOString() }, { onConflict: 'processor_id,period_start,period_end' }).select('*').single();
