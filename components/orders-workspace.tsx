@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Order, OrderStatus, UserRole } from '@/lib/types';
 import { statusGroups } from '@/lib/order-statuses';
 import { DateField } from './ui/date-field';
+import { Button } from './ui/button';
 
 type Props = { orders: Order[]; role: UserRole; onRefresh: () => Promise<void>; onCreate: () => void };
 type BulkAction = 'set_status' | 'record_exception' | 'archive' | 'restore';
@@ -40,7 +41,7 @@ export default function OrdersWorkspace({ orders, role, onRefresh, onCreate }: P
   const allSelectedArchived = selectedOrders.length > 0 && selectedOrders.every(order => order.archived);
 
   useEffect(() => { setPage(1); }, [query, stage, exact, records, sort]);
-  const refresh = async (message: string) => { await onRefresh(); setNotice(message); };
+  const refresh = async (message: string) => { setBusy(true); try { await onRefresh(); setNotice(message); } finally { setBusy(false); } };
   const toggle = (id: string) => setPicked(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
   const openSelected = () => { if (picked.length === 1) setOpenId(picked[0]); };
 
@@ -81,7 +82,7 @@ export default function OrdersWorkspace({ orders, role, onRefresh, onCreate }: P
   const canCreateOrders = role === 'super_admin' || role === 'dispatcher';
 
   return <section className="orders-workspace">
-    <header className="workspace-header"><div><span className="eyebrow">Order operations</span><h1>Orders</h1><p>Search, filter, sort, and inspect the complete order record.</p></div><div className="workspace-actions"><button className="button secondary" type="button" disabled={busy} onClick={() => void refresh('Order list refreshed.')}><RefreshCw className={busy ? 'spin' : ''} size={15} />Refresh</button>{canCreateOrders && <button className="button primary" type="button" disabled={busy} onClick={onCreate}><Plus size={16} />New order</button>}</div></header>
+    <header className="workspace-header"><div><span className="eyebrow">Order operations</span><h1>Orders</h1><p>Search, filter, sort, and inspect the complete order record.</p></div><div className="workspace-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => void refresh('Order list refreshed.')}><RefreshCw className={busy ? 'spin' : ''} size={15} />Refresh</Button>{canCreateOrders && <Button type="button" disabled={busy} onClick={onCreate}><Plus size={16} />New order</Button>}</div></header>
     {notice && <div className="inline-notice" role="status">{notice}</div>}
     {opened && (role === 'dispatcher' || role === 'super_admin') && <DeadlineEditor order={opened} busy={busy} onSaved={() => void refresh('Service deadline updated.')} />}
     <div className="order-filters"><label><span>Search</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Order, customer, address…" /></label><label><span>Stage</span><select value={stage} onChange={event => setStage(event.target.value)}><option value="all">All stages</option>{statusGroups.map(group => <option key={group.id} value={group.id}>{group.label}</option>)}</select></label><label><span>Sort</span><select value={sort} onChange={event => setSort(event.target.value as typeof sort)}><option value="created">Newest first</option><option value="due">Due window</option><option value="status">Status</option></select></label>{admin(role) && <><label><span>Exact status</span><select value={exact} onChange={event => setExact(event.target.value)}><option value="all">All statuses</option>{statuses.map(value => <option key={value} value={value}>{value}</option>)}</select></label><label><span>Records</span><select value={records} onChange={event => setRecords(event.target.value as typeof records)}><option value="active">Active only</option><option value="archived">Archived only</option><option value="all">All records</option></select></label></>}</div>
