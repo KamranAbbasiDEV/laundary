@@ -54,17 +54,19 @@ async function queueProcessorReviews() {
   const periodEnd = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   for (const [processorId, rows] of byProcessor) {
     const ids = rows.map(row => row.id);
-    const { data: deliveredEvents } = await supabaseAdmin.from('order_events').select('order_id,created_at').in('order_id', ids).eq('to_status', 'delivered').order('created_at', { ascending: true });
+    const { data: deliveredEvents } = await supabaseAdmin.from('order_events').select('order_id,created_at').in('order_id', ids).eq('to_status', 'delivered').gte('created_at', `${periodStart}T00:00:00.000Z`).lte('created_at', `${periodEnd}T23:59:59.999Z`).order('created_at', { ascending: true });
     const deliveredAt = new Map<string, string>();
     for (const event of deliveredEvents ?? []) if (!deliveredAt.has(event.order_id)) deliveredAt.set(event.order_id, event.created_at);
-    const measurable = rows.filter(row => row.due_at && deliveredAt.has(row.id));
+    const completed = rows.filter(row => deliveredAt.has(row.id));
+    const measurable = completed.filter(row => row.due_at);
     const onTime = measurable.filter(row => new Date(deliveredAt.get(row.id) as string).getTime() <= new Date(row.due_at as string).getTime()).length;
     const onTimeRate = measurable.length ? Math.round((onTime / measurable.length) * 10000) / 100 : 0;
-    const { data: exceptions } = await supabaseAdmin.from('exceptions').select('order_id').in('order_id', ids).gte('created_at', `${periodStart}T00:00:00.000Z`).lte('created_at', `${periodEnd}T23:59:59.999Z`);
-    const issueCount = exceptions?.length ?? rows.filter(row => row.has_exception).length;
-    const discrepancyRate = rows.length ? Math.round((new Set((exceptions ?? []).map(row => row.order_id)).size / rows.length) * 10000) / 100 : 0;
+    const completedIds = completed.map(row => row.id);
+    const { data: exceptions } = completedIds.length ? await supabaseAdmin.from('exceptions').select('order_id').in('order_id', completedIds).gte('created_at', `${periodStart}T00:00:00.000Z`).lte('created_at', `${periodEnd}T23:59:59.999Z`) : { data: [] };
+    const issueCount = new Set((exceptions ?? []).map(row => row.order_id)).size;
+    const discrepancyRate = completed.length ? Math.round((issueCount / completed.length) * 10000) / 100 : 0;
     const score = Math.max(0, Math.round(((measurable.length ? onTimeRate * .6 : 0) + (100 - discrepancyRate) * (measurable.length ? .4 : 1)) * 100) / 100);
-    await supabaseAdmin.from('processor_scorecards').upsert({ processor_id: processorId, period_start: periodStart, period_end: periodEnd, orders_completed: rows.length, on_time_rate: onTimeRate, discrepancy_rate: discrepancyRate, issue_count: issueCount, score, notes: `Automatically refreshed by the scheduled processor review.${measurable.length ? '' : ' Turnaround is neutral: no completed order in this period had an exact due timestamp.'}`, reviewed_at: new Date().toISOString() }, { onConflict: 'processor_id,period_start,period_end' });
+    await supabaseAdmin.from('processor_scorecards').upsert({ processor_id: processorId, period_start: periodStart, period_end: periodEnd, orders_completed: completed.length, on_time_rate: onTimeRate, discrepancy_rate: discrepancyRate, issue_count: issueCount, score, notes: `Automatically refreshed by the scheduled processor review.${measurable.length ? '' : ' Turnaround is neutral: no completed order in this period had an exact due timestamp.'}`, reviewed_at: new Date().toISOString() }, { onConflict: 'processor_id,period_start,period_end' });
   }
   return { queued };
 }

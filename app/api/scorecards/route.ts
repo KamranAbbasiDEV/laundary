@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   if (processorError) return NextResponse.json({ error: processorError.message }, { status: 500 });
   if (!processor) return NextResponse.json({ error: 'Processor not found.' }, { status: 404 });
 
-  const { data: processorOrders, error: ordersError } = await auth.client.from('orders').select('id,due_at,has_exception').eq('processor_id', item.processorId);
+  const { data: processorOrders, error: ordersError } = await auth.client.from('orders').select('id,due_at').eq('processor_id', item.processorId);
   if (ordersError) return NextResponse.json({ error: ordersError.message }, { status: 500 });
   const orderIds = (processorOrders ?? []).map(order => order.id);
   const { data: deliveryEvents, error: eventsError } = orderIds.length
@@ -55,10 +55,8 @@ export async function POST(request: Request) {
     : { data: [], error: null };
   if (exceptionsError) return NextResponse.json({ error: exceptionsError.message }, { status: 500 });
   const exceptionOrderIds = new Set((exceptionRows ?? []).map(exception => exception.order_id));
-  const flaggedOrderIds = new Set(completed.filter(order => order.has_exception).map(order => order.id));
-  const discrepancyOrders = new Set([...exceptionOrderIds, ...flaggedOrderIds]);
-  const issueCount = discrepancyOrders.size;
-  const discrepancyRate = completed.length ? Math.round((discrepancyOrders.size / completed.length) * 10000) / 100 : 0;
+  const issueCount = exceptionOrderIds.size;
+  const discrepancyRate = completed.length ? Math.round((issueCount / completed.length) * 10000) / 100 : 0;
   const score = completed.length ? Math.max(0, Math.round(((measurable.length ? onTimeRate * .6 : 0) + (100 - discrepancyRate) * (measurable.length ? .4 : 1)) * 100) / 100) : 0;
   const reviewNote = [item.notes?.trim(), measurable.length ? undefined : 'Turnaround is neutral: no completed order in this period had an exact due timestamp.'].filter(Boolean).join('\n') || null;
 
