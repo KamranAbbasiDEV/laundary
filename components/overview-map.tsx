@@ -3,6 +3,7 @@
 import mapboxgl from 'mapbox-gl';
 import { Map, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { humanize } from '@/lib/presentation';
 
 type Coordinates = [number, number];
 type Plan = { id: string; route_date: string; route_type: string; status: string; mapbox_route?: { coordinates?: Coordinates[] } | null; driver_location?: { longitude: number; latitude: number; recorded_at: string } | null };
@@ -43,5 +44,5 @@ export default function OverviewMap() {
     if (instance.loaded()) render(); else instance.once('load', render);
   }, [plans, mapReady]);
   if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) return <section className="panel overview-map-panel"><div className="overview-map-empty"><Map size={20}/><strong>Mapbox overview needs a public browser token.</strong><span>Add <code>NEXT_PUBLIC_MAPBOX_TOKEN</code> to render the live map.</span></div></section>;
-  return <section className="panel overview-map-panel"><div className="panel-heading"><div><h2>Live route map</h2><p>Active draft, approved, and in-progress routes. Refreshes every 30 seconds.</p></div><button className="button button-quiet" type="button" disabled={loading} onClick={() => void load()}><RefreshCw className={loading ? 'spin' : ''} size={14}/>Refresh</button></div>{error ? <div className="overview-map-empty"><strong>Map data unavailable</strong><span>{error}</span></div> : <><div ref={element} className="overview-map"/>{!loading && !plans.length && <div className="overview-map-empty overlay"><Map size={20}/><strong>No active routes yet</strong><span>Generated routes will appear here automatically.</span></div>}<div className="overview-map-legend">{plans.slice(0, 4).map((plan, index) => <span key={plan.id}><i style={{ background: tones[index % tones.length] }}/>{plan.route_type.replace('_', ' ')} · {plan.status}</span>)}</div></>}</section>;
+  return <section className="panel overview-map-panel"><div className="panel-heading"><div><h2>Live route map</h2><p>Active draft, approved, and in-progress routes. Refreshes every 30 seconds.</p></div><button className="button button-quiet" type="button" disabled={loading} onClick={() => void load()}><RefreshCw className={loading ? 'spin' : ''} size={14}/>Refresh</button></div>{error ? <div className="overview-map-empty"><strong>Map data unavailable</strong><span>{error}</span></div> : <><div ref={element} className="overview-map"/>{!loading && !plans.length && <div className="overview-map-empty overlay"><Map size={20}/><strong>No active routes yet</strong><span>Generated routes will appear here automatically.</span></div>}<div className="overview-map-legend">{plans.slice(0, 4).map((plan, index) => <span key={plan.id}><i style={{ background: tones[index % tones.length] }}/>{humanize(plan.route_type)} · {humanize(plan.status)}</span>)}</div></>}</section>;
 }
