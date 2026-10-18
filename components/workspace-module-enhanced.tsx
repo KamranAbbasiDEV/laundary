@@ -24,8 +24,8 @@ export default function EnhancedWorkspaceModule(props:Props){
   if(props.active==='Team' && props.role==='super_admin') return <TeamAccessPanel processors={props.processors} notify={props.notify}/>;
   if(props.active==='Payments' && ['super_admin','dispatcher'].includes(props.role)) return <PaymentsPanel orders={props.orders} notify={props.notify}/>;
   if(props.active==='Routes' && ['super_admin','dispatcher'].includes(props.role)) return <><RouteRecoveryPanel notify={props.notify}/><RoutePlannerPanel orders={props.orders} notify={props.notify}/></>;
-  if(props.active==='Driver app' && props.role==='driver') return <DriverWorkflowPanel orders={props.orders} notify={props.notify} onStatusChange={props.onStatusChange}/>;
-  if(props.active==='Customer portal' && props.role==='customer') return <CustomerWorkspace orders={props.orders} notify={props.notify} onCreateOrder={props.onCreateOrder}/>;
+  if(props.active==='Driver app' && props.role==='driver') return <DriverWorkflowPanel orders={props.orders} notify={props.notify} onStatusChange={props.onStatusChange} onRefresh={props.onProcessorCreated}/>;
+  if(props.active==='Customer portal' && props.role==='customer') return <CustomerWorkspace orders={props.orders} notify={props.notify} onCreateOrder={props.onCreateOrder} onRefresh={props.onProcessorCreated}/>;
   if(props.active==='Processors' && ['super_admin','dispatcher'].includes(props.role)) return <ProcessorManagerPanel processors={props.processors} notify={props.notify} onRefresh={props.onProcessorCreated}/>;
   if(props.active==='Reports' && ['super_admin','dispatcher'].includes(props.role)) return <ScorecardsPanel orders={props.orders} processors={props.processors} notify={props.notify}/>;
   if(props.active==='Processor portal' && props.role==='processor') return <ProcessorWorkspace orders={props.orders} notify={props.notify} onStatusChange={props.onStatusChange} onRefresh={props.onProcessorCreated}/>;
