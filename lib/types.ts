@@ -10,6 +10,7 @@ export type Order = {
   items: string;
   bags: number;
   due: string;
+  deadline?: string;
   status: OrderStatus;
   processor: string;
   priority: 'Standard' | 'Priority' | 'Same day';

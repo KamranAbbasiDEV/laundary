@@ -11,7 +11,7 @@ export async function GET() {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) return NextResponse.json({ error: 'Dispatcher access required.' }, { status: 403 });
-  const { data, error } = await auth.client.from('orders').select('id,order_number,customer_name,phone,pickup_address,service_type,expected_bags,due_at_label,notes,created_at,validation_reason').eq('validation_state', 'manual_review').is('archived_at', null).order('created_at');
+  const { data, error } = await auth.client.from('orders').select('id,order_number,customer_name,phone,pickup_address,service_type,expected_bags,due_at_label,due_at,notes,created_at,validation_reason').eq('validation_state', 'manual_review').is('archived_at', null).order('created_at');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ orders: data ?? [] });
 }
