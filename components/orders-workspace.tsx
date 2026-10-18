@@ -90,10 +90,17 @@ export default function OrdersWorkspace({ orders, role, onRefresh, onCreate }: P
 }
 
 function Evidence({ orderId }: { orderId?: string }) {
-  const [data, setData] = useState<any>(null);
-  useEffect(() => { if (orderId) void fetch(`/api/orders/${orderId}/detail`).then(response => response.ok ? response.json() : null).then(setData); }, [orderId]);
+  const [data, setData] = useState<any>(null); const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true;
+    setData(null); setError('');
+    if (!orderId) return () => { active = false; };
+    void fetch(`/api/orders/${orderId}/detail`, { cache: 'no-store' }).then(async response => { const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to load order evidence.'); return body; }).then(body => { if (active) setData(body); }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Unable to load order evidence.'); });
+    return () => { active = false; };
+  }, [orderId]);
+  if (error) return <section className="drawer-section"><h3>Operational evidence</h3><p>{error}</p></section>;
   if (!data) return <section className="drawer-section"><h3>Operational evidence</h3><p>Loading timeline and handoffs…</p></section>;
-  return <section className="drawer-section"><h3>Operational evidence</h3><div className="detail-stat"><strong>Timeline</strong><span>{data.events?.length ?? 0} events · latest {data.events?.[0]?.to_status ?? 'none'} ({date(data.events?.[0]?.created_at)})</span></div><div className="detail-stat"><strong>Handoffs</strong><span>{data.handoffs?.length ? data.handoffs.map((item: any) => `${item.stage}: ${item.actual_bags} bags`).join(' · ') : 'None recorded'}</span></div><div className="detail-stat"><strong>Evidence</strong><span>{data.photos?.length ?? 0} photos · {data.routeStops?.length ?? 0} route stops</span></div><div className="detail-stat"><strong>Exceptions</strong><span>{data.exceptions?.length ? data.exceptions.map((item: any) => `${item.type} (${item.status})`).join(' · ') : 'None recorded'}</span></div><div className="detail-stat"><strong>Processor offers</strong><span>{data.offers?.length ? data.offers.map((item: any) => `#${item.rank} ${item.status}`).join(' · ') : 'None recorded'}</span></div></section>;
+  return <section className="drawer-section"><h3>Operational evidence</h3><div className="detail-stat"><strong>Timeline</strong><span>{data.events?.length ?? 0} events · latest {data.events?.[0]?.to_status ?? 'none'} ({date(data.events?.[0]?.created_at)})</span></div><div className="detail-stat"><strong>Handoffs</strong><span>{data.handoffs?.length ? data.handoffs.map((item: any) => `${item.stage}: ${item.actual_bags} bags`).join(' · ') : 'None recorded'}</span></div><div className="detail-stat"><strong>Evidence</strong><span>{data.photos?.length ?? 0} photos · {data.routeStops?.length ?? 0} route stops</span></div>{data.photos?.length > 0 && <div className="evidence-photos">{data.photos.map((photo: any) => photo.url ? <a href={photo.url} target="_blank" rel="noreferrer" key={photo.id}><img src={photo.url} alt={`${photo.kind} evidence`} /><span>{photo.kind}</span></a> : <span key={photo.id}>{photo.kind}</span>)}</div>}<div className="detail-stat"><strong>Exceptions</strong><span>{data.exceptions?.length ? data.exceptions.map((item: any) => `${item.type} (${item.status})`).join(' · ') : 'None recorded'}</span></div><div className="detail-stat"><strong>Processor offers</strong><span>{data.offers?.length ? data.offers.map((item: any) => `#${item.rank} ${item.status}`).join(' · ') : 'None recorded'}</span></div></section>;
 }
 
 function DeadlineEditor({ order, busy, onSaved }: { order: Order; busy: boolean; onSaved: () => void }) {

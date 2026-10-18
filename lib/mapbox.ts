@@ -24,5 +24,6 @@ export async function calculateRoute(coordinates: [number, number][]) {
   if (!response.ok) throw new Error(`Mapbox directions failed: ${response.status}`);
   const body = await response.json();
   const route = body.routes?.[0];
-  return { coordinates: route?.geometry?.coordinates ?? coordinates, distanceMeters: route?.distance ?? null, durationSeconds: route?.duration ?? null, source: 'mapbox' };
+  if (!route || !Number.isFinite(route.distance) || !Number.isFinite(route.duration)) throw new Error('Mapbox did not return route distance and duration');
+  return { coordinates: route.geometry?.coordinates ?? coordinates, distanceMeters: route.distance, durationSeconds: route.duration, source: 'mapbox' };
 }

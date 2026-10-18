@@ -3,7 +3,7 @@ import { hasRole, requireActiveUser } from '@/lib/api-auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { z } from 'zod';
 
-const updateSchema = z.object({ action: z.enum(['mark_read', 'mark_all_read']), notificationId: z.string().uuid().optional() });
+const updateSchema = z.object({ action: z.enum(['mark_read', 'mark_all_read', 'clear_all']), notificationId: z.string().uuid().optional() });
 
 async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireActiveUser>>, db: NonNullable<typeof supabaseAdmin>) {
   if ('error' in auth) return [] as string[];
@@ -35,9 +35,14 @@ export async function GET() {
   if (orderIds) query = query.in('order_id', orderIds);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const { data: reads } = await db.from('notification_reads').select('notification_id').eq('user_id', auth.user.id).in('notification_id', (data ?? []).map(item => item.id));
+  const notificationIds = (data ?? []).map(item => item.id);
+  const [{ data: reads }, { data: dismissed }] = await Promise.all([
+    notificationIds.length ? db.from('notification_reads').select('notification_id').eq('user_id', auth.user.id).in('notification_id', notificationIds) : Promise.resolve({ data: [] }),
+    notificationIds.length ? db.from('notification_dismissals').select('notification_id').eq('user_id', auth.user.id).in('notification_id', notificationIds) : Promise.resolve({ data: [] }),
+  ]);
   const readIds = new Set((reads ?? []).map(item => item.notification_id));
-  return NextResponse.json({ notifications: (data ?? []).map(item => ({ ...item, read: readIds.has(item.id) })) });
+  const dismissedIds = new Set((dismissed ?? []).map(item => item.notification_id));
+  return NextResponse.json({ notifications: (data ?? []).filter(item => !dismissedIds.has(item.id)).map(item => ({ ...item, read: readIds.has(item.id) })) });
 }
 
 export async function PATCH(request: Request) {
@@ -49,7 +54,8 @@ export async function PATCH(request: Request) {
   const visibleIds = await visibleNotificationIds(auth, db);
   const ids = parsed.data.action === 'mark_read' ? (parsed.data.notificationId && visibleIds.includes(parsed.data.notificationId) ? [parsed.data.notificationId] : []) : visibleIds;
   if (ids.length) {
-    const { error } = await db.from('notification_reads').upsert(ids.map(notificationId => ({ user_id: auth.user.id, notification_id: notificationId })), { onConflict: 'user_id,notification_id', ignoreDuplicates: true });
+    const table = parsed.data.action === 'clear_all' ? 'notification_dismissals' : 'notification_reads';
+    const { error } = await db.from(table).upsert(ids.map(notificationId => ({ user_id: auth.user.id, notification_id: notificationId })), { onConflict: 'user_id,notification_id', ignoreDuplicates: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
   return NextResponse.json({ marked: ids.length });
