@@ -28,7 +28,7 @@ export default function EnhancedWorkspaceModule(props:Props){
   if(props.active==='Customer portal' && props.role==='customer') return <CustomerWorkspace orders={props.orders} notify={props.notify} onCreateOrder={props.onCreateOrder}/>;
   if(props.active==='Processors' && ['super_admin','dispatcher'].includes(props.role)) return <ProcessorManagerPanel processors={props.processors} notify={props.notify} onRefresh={props.onProcessorCreated}/>;
   if(props.active==='Reports' && ['super_admin','dispatcher'].includes(props.role)) return <ScorecardsPanel orders={props.orders} processors={props.processors} notify={props.notify}/>;
-  if(props.active==='Processor portal' && props.role==='processor') return <ProcessorWorkspace orders={props.orders} notify={props.notify} onStatusChange={props.onStatusChange}/>;
+  if(props.active==='Processor portal' && props.role==='processor') return <ProcessorWorkspace orders={props.orders} notify={props.notify} onStatusChange={props.onStatusChange} onRefresh={props.onProcessorCreated}/>;
   const { onNavigate: _onNavigate, ...workspaceProps } = props;
   return <WorkspaceModule {...workspaceProps}/>;
 }
