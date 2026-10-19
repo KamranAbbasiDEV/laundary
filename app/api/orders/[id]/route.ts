@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
 import { logOperationalNotification } from '@/lib/notifications';
+import { blockActiveRouteStatusChange, syncDraftRoutesAfterStatusChange } from '@/lib/route-consistency';
 
 const statusSchema = z.enum(['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed']);
 const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional(), customer: z.string().trim().min(2).max(160).optional(), phone: z.string().trim().min(7).max(40).optional(), address: z.string().trim().min(5).max(500).optional(), service: z.string().trim().min(1).max(120).optional(), bags: z.number().int().positive().optional(), due: z.string().trim().max(160).optional(), dueAt: z.string().datetime({ offset: true }).nullable().optional(), notes: z.string().trim().max(2000).nullable().optional() });
@@ -61,6 +62,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       if (!handoff) return NextResponse.json({ error: 'Record the required handoff count before advancing this order.' }, { status: 409 });
     }
   }
+  if (body.data.status) {
+    const routeBlock = await blockActiveRouteStatusChange(supabase, [current.id], actor.role);
+    if (routeBlock) return NextResponse.json({ error: routeBlock.error }, { status: routeBlock.status });
+  }
 
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.data.status) update.status = dbStatus(body.data.status);
@@ -82,5 +87,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const deadlineText = deadline ? ` Deadline: ${new Date(deadline).toLocaleString()}.` : '';
   const message = body.data.resolveException ? `${current.order_number} exception resolved by dispatch.${deadlineText}` : body.data.exception ? `${current.order_number} requires dispatcher review: ${body.data.exception}.${deadlineText}` : body.data.status ? `${current.order_number} is now ${body.data.status}.${deadlineText}` : `${current.order_number} was updated.${deadlineText}`;
   await logOperationalNotification({ orderId: current.id, event, message, phone: current.phone });
-  return NextResponse.json({ order: data, persistence: 'supabase' });
+  const routeSync = body.data.status ? await syncDraftRoutesAfterStatusChange(supabase, new Map([[current.id, dbStatus(body.data.status)]])) : { invalidated: 0, warning: null };
+  return NextResponse.json({ order: data, persistence: 'supabase', routeSync: { invalidated: routeSync.invalidated }, ...(routeSync.warning ? { warning: routeSync.warning } : {}) });
 }

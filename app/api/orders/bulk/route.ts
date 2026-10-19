@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireActiveUser } from '@/lib/api-auth';
 import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
+import { blockActiveRouteStatusChange, syncDraftRoutesAfterStatusChange } from '@/lib/route-consistency';
 
 const statuses = ['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed'] as const;
 const toDatabaseStatus = (value: OrderStatus) => ({ Created: 'created', Validated: 'validated', 'Processor ranked': 'processor_ranked', 'Capacity confirmed': 'capacity_confirmed', 'Pickup scheduled': 'pickup_scheduled', 'Picked up': 'picked_up', 'At processor': 'at_processor', Processing: 'processing', 'Ready for pickup': 'ready_for_pickup', 'Picked up from processor': 'picked_up_from_processor', 'QC / Reconciliation': 'qc_reconciliation', 'Out for delivery': 'out_for_delivery', Delivered: 'delivered', 'Processor reviewed': 'processor_reviewed' } as Record<OrderStatus, string>)[value];
@@ -34,10 +35,12 @@ export async function PATCH(request: Request) {
   if (['archive', 'restore'].includes(payload.action) && role !== 'super_admin') return NextResponse.json({ error: 'Only Super Admin can archive or restore orders.' }, { status: 403 });
   if (role === 'processor' && orders.some(order => order.processor_id !== auth.profile.processor_id)) return NextResponse.json({ error: 'You can only update your facility\'s orders.' }, { status: 403 });
   if (role === 'processor' && (payload.action !== 'set_status' || !payload.status || !['Processing', 'Ready for pickup'].includes(payload.status))) return NextResponse.json({ error: 'Processors can bulk-start work or mark work ready only.' }, { status: 403 });
-  if (role === 'dispatcher' && payload.action === 'set_status') return NextResponse.json({ error: 'Dispatch changes status through routing and exception actions, not a bulk override.' }, { status: 403 });
-
   if (payload.action === 'set_status' && role !== 'super_admin' && orders.some(order => !canTransition(toDisplayStatus(order.status), payload.status!))) {
     return NextResponse.json({ error: 'Every selected order must be eligible for that next action.' }, { status: 409 });
+  }
+  if (payload.action === 'set_status') {
+    const routeBlock = await blockActiveRouteStatusChange(auth.client, payload.orderIds, role);
+    if (routeBlock) return NextResponse.json({ error: routeBlock.error }, { status: routeBlock.status });
   }
 
   const now = new Date().toISOString();
@@ -54,5 +57,8 @@ export async function PATCH(request: Request) {
   }));
   const { error: eventError } = await auth.client.from('order_events').insert(events);
   if (eventError) return NextResponse.json({ error: `Orders updated, but audit logging failed: ${eventError.message}` }, { status: 500 });
-  return NextResponse.json({ updated: orders.length });
+  const routeSync = payload.action === 'set_status'
+    ? await syncDraftRoutesAfterStatusChange(auth.client, new Map(payload.orderIds.map(id => [id, toDatabaseStatus(payload.status!)])))
+    : { invalidated: 0, warning: null };
+  return NextResponse.json({ updated: orders.length, routeSync: { invalidated: routeSync.invalidated }, ...(routeSync.warning ? { warning: routeSync.warning } : {}) });
 }

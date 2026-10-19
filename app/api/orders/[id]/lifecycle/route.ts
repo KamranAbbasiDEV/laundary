@@ -11,10 +11,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { id } = await context.params;
   const parsed = schema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid lifecycle request.', details: parsed.error.flatten() }, { status: 400 });
-  const { data: order, error: readError } = await auth.client.from('orders').select('id,order_number').eq('id', id).maybeSingle();
+  const { data: order, error: readError } = await auth.client.from('orders').select('id,order_number,archived_at').eq('id', id).maybeSingle();
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   const value = parsed.data;
+  if (value.action === 'delete' && !order.archived_at) return NextResponse.json({ error: 'Archive the order before permanently deleting it.' }, { status: 409 });
   if (value.action === 'delete' && value.confirmation !== order.order_number) return NextResponse.json({ error: `Type ${order.order_number} to permanently delete this order.` }, { status: 400 });
   if (value.action === 'delete') {
     const { error } = await auth.client.from('orders').delete().eq('id', order.id);
