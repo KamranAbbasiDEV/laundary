@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getUserSafely } from '@/lib/supabase-auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const inviteSchema = z.object({
@@ -16,7 +17,7 @@ const inviteSchema = z.object({
 async function getAdmin() {
   const client = await createSupabaseServerClient();
   if (!client) return { error: 'The workspace is not configured.', status: 503 as const };
-  const { data: { user } } = await client.auth.getUser();
+  const { data: { user } } = await getUserSafely(client);
   if (!user) return { error: 'Authentication required.', status: 401 as const };
   const { data: profile } = await client.from('profiles').select('role,status').eq('id', user.id).single();
   if (profile?.role !== 'super_admin' || profile.status !== 'active') return { error: 'Super Admin access required.', status: 403 as const };

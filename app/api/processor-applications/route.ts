@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getUserSafely } from '@/lib/supabase-auth';
 
 const applicationSchema = z.object({
   businessName: z.string().min(2), contactName: z.string().min(2), email: z.string().email(), phone: z.string().min(7),
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
   if (!client) return NextResponse.json({ error: 'Applications are not configured yet.' }, { status: 503 });
   const parsed = applicationSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Complete all required processor application fields.' }, { status: 400 });
-  const { data: { user } } = await client.auth.getUser();
+  const { data: { user } } = await getUserSafely(client);
   const item = parsed.data;
   const { data, error } = await client.from('processor_applications').insert({
     business_name: item.businessName, contact_name: item.contactName, email: item.email, phone: item.phone, address: item.address,
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
 export async function GET() {
   const client = await createSupabaseServerClient();
   if (!client) return NextResponse.json({ error: 'Applications are not configured yet.' }, { status: 503 });
-  const { data: { user } } = await client.auth.getUser();
+  const { data: { user } } = await getUserSafely(client);
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   const { data: profile } = await client.from('profiles').select('role,status').eq('id', user.id).single();
   if (!profile || !['super_admin', 'dispatcher'].includes(profile.role) || profile.status !== 'active') return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });
@@ -40,7 +41,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   const client = await createSupabaseServerClient();
   if (!client) return NextResponse.json({ error: 'Applications are not configured yet.' }, { status: 503 });
-  const { data: { user } } = await client.auth.getUser();
+  const { data: { user } } = await getUserSafely(client);
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   const { data: profile } = await client.from('profiles').select('role,status').eq('id', user.id).single();
   if (!profile || !['super_admin', 'dispatcher'].includes(profile.role) || profile.status !== 'active') return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });

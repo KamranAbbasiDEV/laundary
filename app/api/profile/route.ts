@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getUserSafely } from '@/lib/supabase-auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const profileSchema = z.object({ fullName: z.string().min(2), phone: z.string().min(7), address: z.string().optional(), serviceZones: z.array(z.string()).default([]), availability: z.string().optional(), vehicleDetails: z.string().optional() });
@@ -8,7 +9,7 @@ const profileSchema = z.object({ fullName: z.string().min(2), phone: z.string().
 export async function GET() {
   const client = await createSupabaseServerClient();
   if (!client) return NextResponse.json({ error: 'The workspace is not configured.' }, { status: 503 });
-  const { data: { user } } = await client.auth.getUser(); if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+  const { data: { user } } = await getUserSafely(client); if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   const { data, error } = await client.from('profiles').select('id,full_name,role,status,phone,address,service_zones,availability,vehicle_details,onboarding_complete').eq('id', user.id).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ profile: data });
@@ -17,7 +18,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   const client = await createSupabaseServerClient();
   if (!client) return NextResponse.json({ error: 'The workspace is not configured.' }, { status: 503 });
-  const { data: { user } } = await client.auth.getUser(); if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+  const { data: { user } } = await getUserSafely(client); if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   const parsed = profileSchema.safeParse(await request.json()); if (!parsed.success) return NextResponse.json({ error: 'Complete the required profile fields.' }, { status: 400 });
   const item = parsed.data;
   const { data: current, error: currentError } = await client.from('profiles').select('status').eq('id', user.id).single();

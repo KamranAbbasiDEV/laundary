@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { calculateRoute, geocodeAddress } from '@/lib/mapbox';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getUserSafely } from '@/lib/supabase-auth';
 
 const routeSchema = z.object({ addresses: z.array(z.string().min(3)).min(1) });
 
 export async function POST(request: Request) {
   const authClient = await createSupabaseServerClient();
   if (!authClient) return NextResponse.json({ error: 'The workspace is not configured.' }, { status: 503 });
-  const { data: { user } } = await authClient.auth.getUser();
+  const { data: { user } } = await getUserSafely(authClient);
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   const { data: profile } = await authClient.from('profiles').select('role,status').eq('id', user.id).single();
   if (!profile || profile.status !== 'active' || !['super_admin', 'dispatcher', 'driver'].includes(profile.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });

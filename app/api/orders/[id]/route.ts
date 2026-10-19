@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getUserSafely } from '@/lib/supabase-auth';
 import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
 import { logOperationalNotification } from '@/lib/notifications';
@@ -23,7 +24,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!body.success) return NextResponse.json({ error: 'Invalid update payload' }, { status: 400 });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await getUserSafely(supabase);
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   const { data: actor } = await supabase.from('profiles').select('role,status,processor_id,driver_id').eq('id', user.id).single();
   if (!actor || actor.status !== 'active' || !['super_admin','dispatcher','driver','processor'].includes(actor.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });

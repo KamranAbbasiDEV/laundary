@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getUserSafely } from '@/lib/supabase-auth';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const authClient = await createSupabaseServerClient();
   if (!authClient) return NextResponse.json({ error: 'The workspace is not configured.' }, { status: 503 });
-  const { data: { user } } = await authClient.auth.getUser();
+  const { data: { user } } = await getUserSafely(authClient);
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   const { data: profile } = await authClient.from('profiles').select('role,status,processor_id').eq('id', user.id).single();
   if (!profile || profile.status !== 'active' || !['super_admin', 'dispatcher', 'driver', 'processor'].includes(profile.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });

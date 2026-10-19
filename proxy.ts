@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { getUserSafely } from '@/lib/supabase-auth';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -14,8 +15,14 @@ export async function proxy(request: NextRequest) {
       setAll(values) { values.forEach(({ name, value, options }) => { request.cookies.set(name, value); response.cookies.set(name, value, options); }); }
     }
   });
-  const { data: { user } } = await client.auth.getUser();
-  if (!user) return NextResponse.redirect(new URL('/login', request.url));
+  const { data: { user } } = await getUserSafely(client);
+  if (!user) {
+    const redirect = NextResponse.redirect(new URL('/login', request.url));
+    for (const cookie of request.cookies.getAll()) {
+      if (cookie.name.startsWith('sb-')) redirect.cookies.delete(cookie.name);
+    }
+    return redirect;
+  }
   return response;
 }
 

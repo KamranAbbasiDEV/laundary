@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getUserSafely } from '@/lib/supabase-auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { inngest } from '@/lib/inngest';
 import { logOperationalNotification } from '@/lib/notifications';
@@ -23,7 +24,7 @@ function mapOrder(row:Record<string,unknown>, processorName?: string) {
 export async function GET() {
   const client = await createSupabaseServerClient();
   if (!client) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
-  const { data:{ user } } = await client.auth.getUser();
+  const { data:{ user } } = await getUserSafely(client);
   if (!user) return NextResponse.json({ error:'Authentication required' }, { status:401 });
   const { data:profile } = await client.from('profiles').select('role,processor_id,driver_id').eq('id',user.id).single();
   if (!profile) return NextResponse.json({ error: 'Workspace profile not found.' }, { status: 403 });
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'Invalid order payload', details: parsed.error.flatten() }, { status: 400 });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await getUserSafely(supabase);
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   const { data:profile } = await supabase.from('profiles').select('role,status').eq('id',user.id).single();
   if (!profile || profile.status !== 'active' || !['super_admin', 'dispatcher', 'customer'].includes(profile.role)) return NextResponse.json({ error: 'Your account cannot create orders.' }, { status: 403 });
