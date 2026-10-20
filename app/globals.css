@@ -360,7 +360,7 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 
 /* Orders presentation cleanup: the existing state, permissions, and actions remain unchanged. */
 .orders-view-toolbar, .orders-workspace > .order-filters { display: none; }
-.orders-clean-toolbar { display: flex !important; align-items: center; justify-content: space-between; gap: 14px; min-width: 0; padding: 8px 0; }
+.orders-clean-toolbar { position: sticky; top: 0; z-index: 30; display: flex !important; align-items: center; justify-content: space-between; gap: 14px; min-width: 0; padding: 10px 0; border-bottom: 1px solid var(--line); background: var(--bg); }
 .orders-list-toolbar.is-list-toolbar { margin-bottom: 2px; }
 .orders-workspace .orders-clean-toolbar { display: flex !important; visibility: visible; }
 .orders-clean-toolbar-left, .orders-clean-toolbar-right { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -452,6 +452,7 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 .orders-workspace.is-kanban .order-card-action { margin-top: 2px; }
 @media (max-width: 760px) { .deadline-editor-fields { grid-template-columns: 1fr; } .deadline-editor-reason { grid-column: auto; } .deadline-editor-heading { flex-direction: column; } }
 .bulk-deadline-editor { display: grid; gap: 10px; width: min(100%, 760px); padding: 10px 12px; border: 1px solid #b8d8d4; border-radius: 10px; background: #f5fbfa; }
+.orders-workspace .kanban-selection-actions .bulk-deadline-editor { width: min(100%, 900px); min-width: 0; flex: 0 1 900px; }
 .bulk-deadline-heading { display: grid; gap: 2px; }
 .bulk-deadline-heading > div { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .bulk-deadline-heading strong { color: var(--navy); font-size: 11px; }
