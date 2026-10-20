@@ -29,7 +29,7 @@ export default function OrdersToolbar(props: Props) {
   const [open, setOpen] = useState<'filter' | 'sort' | null>(null);
   const isAdmin = props.role === 'super_admin';
   const filterCount = Number(props.deadlineFilter !== 'all') + Number(isAdmin && props.exact !== 'all') + Number(isAdmin && props.records !== 'active');
-  return <div className="orders-clean-toolbar">
+  return <div className={`orders-clean-toolbar orders-list-toolbar ${props.view === 'table' ? 'is-list-toolbar' : 'is-board-toolbar'}`}>
     <div className="orders-clean-toolbar-left">
       <div className="view-toggle" role="group" aria-label="Order view"><button type="button" className={props.view === 'kanban' ? 'active' : ''} onClick={() => props.onViewChange('kanban')}><KanbanSquare size={14}/>Board</button><button type="button" className={props.view === 'table' ? 'active' : ''} onClick={() => props.onViewChange('table')}><List size={14}/>Table</button></div>
       <label className="orders-stage-select"><span className="sr-only">Stage</span><select value={props.stage} onChange={event => props.onStageChange(event.target.value)}><option value="all">All stages</option>{statusGroups.map(group => <option key={group.id} value={group.id}>{group.label}</option>)}</select></label>
