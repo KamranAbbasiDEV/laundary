@@ -1,7 +1,7 @@
 'use client';
 
 import { Archive, ChevronRight, KanbanSquare, List, Map, Plus, RefreshCw, RotateCcw, Save, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { Order, OrderStatus, UserRole } from '@/lib/types';
 import { statusGroups, statusToneClass } from '@/lib/order-statuses';
 import { humanize } from '@/lib/presentation';
@@ -51,7 +51,7 @@ export default function OrdersWorkspace({ orders, role, notify, onRefresh, onCre
   const allSelectedArchived = selectedOrders.length > 0 && selectedOrders.every(order => order.archived);
 
   useEffect(() => { setPage(1); }, [query, stage, exact, records, sort, deadlineFilter]);
-  useEffect(() => { setOpenId(null); }, [view]);
+  useLayoutEffect(() => { setOpenId(null); }, [view]);
   useEffect(() => {
     const focus = window.localStorage.getItem('rinseline:orders-focus');
     if (focus === 'Overdue' || focus === 'Due today' || focus === 'Due within 24 hours' || focus === 'At risk') {
