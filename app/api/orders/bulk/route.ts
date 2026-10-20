@@ -37,7 +37,6 @@ export async function PATCH(request: Request) {
   if (role === 'driver') return NextResponse.json({ error: 'Driver handoffs must be completed one stop at a time with required evidence.' }, { status: 403 });
   if (payload.action === 'set_deadline' && !['super_admin', 'dispatcher'].includes(role)) return NextResponse.json({ error: 'Only Super Admin or Dispatcher can change deadlines.' }, { status: 403 });
   if (payload.action === 'set_deadline' && orders.some(order => ['delivered', 'processor_reviewed'].includes(order.status))) return NextResponse.json({ error: 'Completed orders are historical records and cannot have their deadlines changed.' }, { status: 409 });
-  if (payload.action === 'set_deadline' && payload.originalDueAt && orders.some(order => order.original_due_at && order.original_due_at !== payload.originalDueAt)) return NextResponse.json({ error: 'Bulk edits preserve each order’s original commitment. Edit original deadlines from an individual order.' }, { status: 409 });
   if (payload.action === 'set_deadline' && payload.originalDueAt && payload.dueAt && new Date(payload.dueAt).getTime() < new Date(payload.originalDueAt).getTime() && !payload.reason) return NextResponse.json({ error: 'A reason is required when the committed deadline is earlier than the original commitment.' }, { status: 400 });
   if (payload.action === 'set_status' && role === 'dispatcher') return NextResponse.json({ error: 'Dispatchers cannot change order status.' }, { status: 403 });
   if (['archive', 'restore'].includes(payload.action) && role !== 'super_admin') return NextResponse.json({ error: 'Only Super Admin can archive or restore orders.' }, { status: 403 });
@@ -65,7 +64,7 @@ export async function PATCH(request: Request) {
   const { error: updateError } = await auth.client.from('orders').update(update).in('id', payload.orderIds);
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
   if (payload.action === 'set_deadline' && payload.originalDueAt) {
-    const { error: originalError } = await auth.client.from('orders').update({ original_due_at: payload.originalDueAt }).in('id', payload.orderIds).is('original_due_at', null);
+    const { error: originalError } = await auth.client.from('orders').update({ original_due_at: payload.originalDueAt }).in('id', payload.orderIds);
     if (originalError) return NextResponse.json({ error: `Committed deadlines updated, but original deadline initialization failed: ${originalError.message}` }, { status: 500 });
   }
   if (payload.action === 'resolve_exception') {
