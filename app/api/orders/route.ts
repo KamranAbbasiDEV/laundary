@@ -12,13 +12,13 @@ const orderInput = z.object({
   items: z.string().max(2000).optional(), textileTypes: z.array(z.string().min(1).max(80)).max(12).optional(), specialHandling: z.array(z.string().min(1).max(120)).max(12).optional(), customerSpecifications: z.string().max(4000).optional(), priority: z.enum(['standard', 'priority', 'same_day']).optional()
 });
 
-function mapOrder(row:Record<string,unknown>, processorName?: string) {
+function mapOrder(row:Record<string,unknown>, processorName?: string, role?: string, exceptionDetail?: { description?: string; severity?: string; deadline_impact?: string } | null) {
   const statusMap:Record<string,string> = { created:'Created', validated:'Validated', processor_ranked:'Processor ranked', capacity_confirmed:'Capacity confirmed', pickup_scheduled:'Pickup scheduled', picked_up:'Picked up', at_processor:'At processor', processing:'Processing', ready_for_pickup:'Ready for pickup', picked_up_from_processor:'Picked up from processor', qc_reconciliation:'QC / Reconciliation', out_for_delivery:'Out for delivery', delivered:'Delivered', processor_reviewed:'Processor reviewed' };
   const priorityMap:Record<string,string> = { standard:'Standard', priority:'Priority', same_day:'Same day' };
   const deadline = typeof row.due_at === 'string' ? row.due_at : undefined;
   const deadlineLabel = deadline ? new Date(deadline).toLocaleString() : '';
   const due = [row.due_at_label ?? '', deadlineLabel ? `deadline ${deadlineLabel}` : ''].filter(Boolean).join(' · ');
-  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due, deadline, originalDeadline:row.original_due_at ?? deadline, deadlineRevisionReason:row.deadline_revision_reason ?? undefined, status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? 'Open exception' : undefined, exceptionMessage:row.customer_exception_message ?? undefined, archived:Boolean(row.archived_at) };
+  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due, deadline, originalDeadline:row.original_due_at ?? deadline, deadlineRevisionReason:row.deadline_revision_reason ?? undefined, status:statusMap[String(row.status)] ?? row.status, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? role === 'customer' ? 'Open exception' : exceptionDetail?.description ?? 'Open exception' : undefined, exceptionMessage:row.customer_exception_message ?? undefined, archived:Boolean(row.archived_at) };
 }
 
 export async function GET() {
@@ -39,6 +39,11 @@ export async function GET() {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error:error.message }, { status:500 });
   const rows = data ?? [];
+  const exceptionByOrder = new Map<string, { description?: string; severity?: string; deadline_impact?: string }>();
+  if (rows.length && profile.role !== 'customer') {
+    const { data: exceptionRows } = await client.from('exceptions').select('order_id,description,severity,deadline_impact').in('order_id', rows.map(row => row.id)).neq('status', 'resolved').order('created_at', { ascending: false });
+    (exceptionRows ?? []).forEach(exception => { if (!exceptionByOrder.has(exception.order_id)) exceptionByOrder.set(exception.order_id, exception); });
+  }
   const processorNames = new Map<string, string>();
   if (profile?.role && profile.role !== 'customer') {
     const processorIds = [...new Set(rows.map(row => row.processor_id).filter((id): id is string => typeof id === 'string'))];
@@ -47,7 +52,7 @@ export async function GET() {
       (processorRows ?? []).forEach(processor => processorNames.set(processor.id, processor.name));
     }
   }
-  return NextResponse.json({ orders: rows.map(row => mapOrder(row, typeof row.processor_id === 'string' ? processorNames.get(row.processor_id) : undefined)) });
+  return NextResponse.json({ orders: rows.map(row => mapOrder(row, typeof row.processor_id === 'string' ? processorNames.get(row.processor_id) : undefined, profile.role, exceptionByOrder.get(row.id) ?? null)) });
 }
 
 export async function POST(request: Request) {

@@ -11,6 +11,7 @@ const tones = ['#0d7c78', '#2563eb', '#7c3aed', '#d97706'];
 
 export default function OverviewMap() {
   const element = useRef<HTMLDivElement>(null); const map = useRef<mapboxgl.Map | null>(null);
+  const renderedIds = useRef<Set<string>>(new Set());
   const [plans, setPlans] = useState<Plan[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [mapReady, setMapReady] = useState(false);
   const load = useCallback(async () => { try { const response = await fetch('/api/route-plans', { cache: 'no-store' }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to load active routes.'); setPlans((body.plans ?? []).filter((plan: Plan) => Array.isArray(plan.mapbox_route?.coordinates) && plan.mapbox_route.coordinates.length)); setError(null); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to load active routes.'); } finally { setLoading(false); } }, []);
   useEffect(() => { void load(); const id = window.setInterval(() => void load(), 15000); const refresh = () => void load(); window.addEventListener('rinseline:data-changed', refresh); return () => { window.clearInterval(id); window.removeEventListener('rinseline:data-changed', refresh); }; }, [load]);
@@ -24,21 +25,25 @@ export default function OverviewMap() {
     return () => { instance.remove(); map.current = null; setMapReady(false); };
   }, []);
   useEffect(() => {
-    const instance = map.current; if (!instance || !plans.length) return;
+    const instance = map.current; if (!instance) return;
     const render = () => {
+      const activeSourceIds = new Set<string>();
       const bounds = new mapboxgl.LngLatBounds();
       plans.forEach((plan, index) => {
-        const sourceId = `overview-route-${plan.id}`; const layerId = `${sourceId}-line`; const coordinates = plan.mapbox_route?.coordinates ?? [];
+        const sourceId = `overview-route-${plan.id}`; activeSourceIds.add(sourceId); const layerId = `${sourceId}-line`; const coordinates = plan.mapbox_route?.coordinates ?? [];
         coordinates.forEach((point) => bounds.extend(point));
         const data = { type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates } };
         if (instance.getSource(sourceId)) (instance.getSource(sourceId) as mapboxgl.GeoJSONSource).setData(data); else { instance.addSource(sourceId, { type: 'geojson', data }); instance.addLayer({ id: layerId, type: 'line', source: sourceId, paint: { 'line-color': tones[index % tones.length], 'line-width': 4, 'line-opacity': .82 } }); }
         const driverSourceId = `${sourceId}-driver`;
         if (plan.driver_location) {
+          activeSourceIds.add(driverSourceId);
           const point = [plan.driver_location.longitude, plan.driver_location.latitude] as Coordinates; bounds.extend(point);
           const driverData = { type: 'Feature' as const, properties: {}, geometry: { type: 'Point' as const, coordinates: point } };
           if (instance.getSource(driverSourceId)) (instance.getSource(driverSourceId) as mapboxgl.GeoJSONSource).setData(driverData); else { instance.addSource(driverSourceId, { type: 'geojson', data: driverData }); instance.addLayer({ id: `${driverSourceId}-dot`, type: 'circle', source: driverSourceId, paint: { 'circle-radius': 7, 'circle-color': '#0d7c78', 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff' } }); }
         }
       });
+      renderedIds.current.forEach((sourceId) => { if (activeSourceIds.has(sourceId)) return; const layerId = sourceId.endsWith('-driver') ? `${sourceId}-dot` : `${sourceId}-line`; if (instance.getLayer(layerId)) instance.removeLayer(layerId); if (instance.getSource(sourceId)) instance.removeSource(sourceId); });
+      renderedIds.current = activeSourceIds;
       if (!bounds.isEmpty()) instance.fitBounds(bounds, { padding: 54, duration: 450, maxZoom: 13 });
     };
     if (instance.loaded()) render(); else instance.once('load', render);
