@@ -32,6 +32,7 @@ export async function PATCH(request: Request) {
   const role = auth.profile.role;
   if (role === 'customer') return NextResponse.json({ error: 'Customers cannot bulk-manage operational orders.' }, { status: 403 });
   if (role === 'driver') return NextResponse.json({ error: 'Driver handoffs must be completed one stop at a time with required evidence.' }, { status: 403 });
+  if (payload.action === 'set_status' && role === 'dispatcher') return NextResponse.json({ error: 'Dispatchers cannot change order status.' }, { status: 403 });
   if (['archive', 'restore'].includes(payload.action) && role !== 'super_admin') return NextResponse.json({ error: 'Only Super Admin can archive or restore orders.' }, { status: 403 });
   if (role === 'processor' && orders.some(order => order.processor_id !== auth.profile.processor_id)) return NextResponse.json({ error: 'You can only update your facility\'s orders.' }, { status: 403 });
   if (role === 'processor' && (payload.action !== 'set_status' || !payload.status || !['Processing', 'Ready for pickup'].includes(payload.status))) return NextResponse.json({ error: 'Processors can bulk-start work or mark work ready only.' }, { status: 403 });

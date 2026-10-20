@@ -46,6 +46,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     driver: ['Picked up','At processor','Picked up from processor','QC / Reconciliation','Out for delivery','Delivered'],
     processor: ['Processing','Ready for pickup']
   };
+  if (body.data.status && actor.role === 'dispatcher') return NextResponse.json({ error: 'Dispatchers cannot change order status.' }, { status: 403 });
   if (body.data.status && allowedByRole[actor.role] && !allowedByRole[actor.role].includes(body.data.status)) return NextResponse.json({ error: 'Your role cannot perform this transition.' }, { status: 403 });
   // Super Admin may repair or reconcile any workflow state; every other role remains bound to the normal transition graph.
   if (body.data.status && actor.role !== 'super_admin' && !canTransition(currentDisplay, body.data.status)) return NextResponse.json({ error: `Invalid transition from ${currentDisplay} to ${body.data.status}` }, { status: 409 });
