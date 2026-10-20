@@ -89,6 +89,18 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (body.data.originalDueAt !== undefined || (body.data.dueAt !== undefined && body.data.dueAt !== current.due_at)) update.deadline_revision_reason = body.data.deadlineReason ?? body.data.note ?? body.data.exception ?? null;
   const { data, error } = await supabase.from('orders').update(update).eq('id', current.id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (body.data.originalDueAt !== undefined || (body.data.dueAt !== undefined && body.data.dueAt !== current.due_at)) {
+    const { error: historyError } = await supabase.from('deadline_revisions').insert({
+      order_id: current.id,
+      previous_original_due_at: current.original_due_at ?? current.due_at,
+      original_due_at: body.data.originalDueAt !== undefined ? body.data.originalDueAt : current.original_due_at ?? current.due_at,
+      previous_committed_due_at: current.due_at,
+      committed_due_at: body.data.dueAt !== undefined ? body.data.dueAt : current.due_at,
+      reason: body.data.deadlineReason ?? body.data.note ?? body.data.exception ?? null,
+      changed_by: user.id
+    });
+    if (historyError) return NextResponse.json({ error: historyError.message }, { status: 500 });
+  }
   if (body.data.exception) {
     const { error: exceptionError } = await supabase.from('exceptions').insert({ order_id: current.id, type: 'route_issue', stage: 'route', description: body.data.exception, severity: 'medium', deadline_impact: body.data.deadlineImpact ?? (current.due_at ? 'at_risk' : 'none'), deadline_before: current.due_at, customer_message: body.data.customerMessage ?? null, opened_by: user.id, status: 'open' });
     if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });

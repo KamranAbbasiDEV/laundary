@@ -118,25 +118,38 @@ export async function PATCH(request: Request) {
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!plan) return NextResponse.json({ error: 'Route plan not found.' }, { status: 404 });
   if (plan.status !== 'draft') return NextResponse.json({ error: 'Only draft routes can be approved.' }, { status: 409 });
-  const { data, error } = await auth.client.from('route_plans').update({ status: 'approved', approved_by: auth.user.id, approved_at: new Date().toISOString() }).eq('id', plan.id).select('*').single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('order_id,status,orders(order_number,phone,due_at,status)').eq('route_id', plan.id);
+  const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('order_id,status,driver_id,orders(order_number,phone,due_at,status,assigned_driver_id)').eq('route_id', plan.id);
   if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
   const pendingStops = (stops ?? []).filter(stop => stop.status !== 'completed');
     const orderIds = pendingStops.map(stop => stop.order_id);
   if (orderIds.length && plan.driver_id) {
-    const { error: stopUpdateError } = await auth.client.from('route_stops').update({ driver_id: plan.driver_id }).eq('route_id', plan.id);
-    if (stopUpdateError) return NextResponse.json({ error: stopUpdateError.message }, { status: 500 });
     const nextOrderState = plan.route_type === 'pickup' ? 'pickup_scheduled' : undefined;
     let orderUpdate = auth.client.from('orders').update({ assigned_driver_id: plan.driver_id, ...(nextOrderState ? { status: nextOrderState } : {}), updated_at: new Date().toISOString() }).in('id', orderIds);
     if (nextOrderState) orderUpdate = orderUpdate.eq('status', 'capacity_confirmed');
     const { data: updatedOrders, error: orderUpdateError } = await orderUpdate.select('id');
     if (orderUpdateError) return NextResponse.json({ error: orderUpdateError.message }, { status: 500 });
     if (updatedOrders?.length !== orderIds.length) return NextResponse.json({ error: 'One or more orders changed before this route could be approved. Refresh the queue and create a new route.' }, { status: 409 });
+    const { error: stopUpdateError } = await auth.client.from('route_stops').update({ driver_id: plan.driver_id }).eq('route_id', plan.id);
+    if (stopUpdateError) {
+      await Promise.all(pendingStops.map(async stop => {
+        const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders;
+        await auth.client.from('orders').update({ assigned_driver_id: order?.assigned_driver_id ?? null, ...(nextOrderState ? { status: order?.status } : {}), updated_at: new Date().toISOString() }).eq('id', stop.order_id);
+      }));
+      return NextResponse.json({ error: stopUpdateError.message }, { status: 500 });
+    }
     const events = pendingStops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return { order_id: stop.order_id, from_status: order?.status ?? null, to_status: nextOrderState ?? order?.status ?? null, actor_id: auth.user.id, note: `Route approved for ${plan.route_type.replaceAll('_', ' ')}.` }; });
-    const { error: eventError } = await auth.client.from('order_events').insert(events);
-    if (eventError) return NextResponse.json({ error: `Route approved, but order history could not be recorded: ${eventError.message}` }, { status: 500 });
+     const { error: eventError } = await auth.client.from('order_events').insert(events);
+     if (eventError) {
+       await Promise.all(pendingStops.map(stop => auth.client.from('route_stops').update({ driver_id: stop.driver_id ?? null }).eq('route_id', plan.id).eq('order_id', stop.order_id)));
+       await Promise.all(pendingStops.map(async stop => {
+         const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders;
+         await auth.client.from('orders').update({ assigned_driver_id: order?.assigned_driver_id ?? null, ...(nextOrderState ? { status: order?.status } : {}), updated_at: new Date().toISOString() }).eq('id', stop.order_id);
+       }));
+       return NextResponse.json({ error: `Route approval rolled back because order history could not be recorded: ${eventError.message}` }, { status: 500 });
+     }
   }
+  const { data, error } = await auth.client.from('route_plans').update({ status: 'approved', approved_by: auth.user.id, approved_at: new Date().toISOString() }).eq('id', plan.id).eq('status', 'draft').select('*').single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   await Promise.all(pendingStops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; const deadline = order?.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${plan.route_type.replace('_', ' ')} route.${deadline}`, phone: order?.phone ?? undefined }); }));
   return NextResponse.json({ plan: data });
 }

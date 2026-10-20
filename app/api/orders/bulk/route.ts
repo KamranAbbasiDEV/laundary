@@ -60,12 +60,12 @@ export async function PATCH(request: Request) {
   }
 
   const now = new Date().toISOString();
-  const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'set_deadline' ? { due_at: payload.dueAt, deadline_revised_at: now, deadline_revised_by: auth.user.id, deadline_revision_reason: payload.reason ?? null, updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : payload.action === 'resolve_exception' ? { has_exception: false, updated_at: now } : payload.action === 'archive' ? { archived_at: now, archived_by: auth.user.id, updated_at: now } : { archived_at: null, archived_by: null, updated_at: now };
+  const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'set_deadline' ? { due_at: payload.dueAt, ...(payload.originalDueAt ? { original_due_at: payload.originalDueAt } : {}), deadline_revised_at: now, deadline_revised_by: auth.user.id, deadline_revision_reason: payload.reason ?? null, updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : payload.action === 'resolve_exception' ? { has_exception: false, updated_at: now } : payload.action === 'archive' ? { archived_at: now, archived_by: auth.user.id, updated_at: now } : { archived_at: null, archived_by: null, updated_at: now };
   const { error: updateError } = await auth.client.from('orders').update(update).in('id', payload.orderIds);
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
-  if (payload.action === 'set_deadline' && payload.originalDueAt) {
-    const { error: originalError } = await auth.client.from('orders').update({ original_due_at: payload.originalDueAt }).in('id', payload.orderIds);
-    if (originalError) return NextResponse.json({ error: `Committed deadlines updated, but original deadline initialization failed: ${originalError.message}` }, { status: 500 });
+  if (payload.action === 'set_deadline') {
+    const { error: historyError } = await auth.client.from('deadline_revisions').insert(orders.map(order => ({ order_id: order.id, previous_original_due_at: order.original_due_at ?? order.due_at, original_due_at: payload.originalDueAt ?? order.original_due_at ?? order.due_at, previous_committed_due_at: order.due_at, committed_due_at: payload.dueAt, reason: payload.reason ?? null, changed_by: auth.user.id })));
+    if (historyError) return NextResponse.json({ error: historyError.message }, { status: 500 });
   }
   if (payload.action === 'resolve_exception') {
     await Promise.all(payload.orderIds.map(async (orderId) => {

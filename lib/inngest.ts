@@ -105,12 +105,12 @@ async function queueDeadlineNotifications() {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
   const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
   const timezone = workspace?.timezone || 'UTC';
-  const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,phone,due_at,status,has_exception,customer_exception_message,customer_exception_notified_at').is('archived_at', null).not('due_at', 'is', null).not('status', 'in', '(delivered,processor_reviewed)');
+  const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,phone,due_at,status,has_exception').is('archived_at', null).not('due_at', 'is', null).not('status', 'in', '(delivered,processor_reviewed)');
   if (error) throw new Error(error.message);
   let queued = 0;
   const now = new Date();
   for (const order of orders ?? []) {
-    const status = getDeadlineStatus({ deadline: order.due_at, orderStatus: order.status, atRisk: order.has_exception || Boolean(order.customer_exception_message), now, timezone });
+    const status = getDeadlineStatus({ deadline: order.due_at, orderStatus: order.status, atRisk: Boolean(order.has_exception), now, timezone });
     const event = status === 'overdue' ? 'deadline_overdue' : status === 'due_today' ? 'deadline_due_today' : status === 'due_soon' ? 'deadline_due_soon' : null;
     if (!event) continue;
     const { data: existing } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', order.id).eq('event', event).limit(1);

@@ -14,15 +14,16 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   const detailClient = supabaseAdmin ?? auth.client;
-  const [events, handoffs, photos, exceptions, offers, stops] = await Promise.all([
+  const [events, handoffs, photos, exceptions, offers, stops, deadlineRevisions] = await Promise.all([
     auth.client.from('order_events').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('order_handoffs').select('*').eq('order_id', id).order('confirmed_at', { ascending: false }),
     detailClient.from('order_photos').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     detailClient.from('exceptions').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('processor_offers').select('id,rank,score,score_breakdown,status,rejection_reason,offered_at,responded_at,processors(name)').eq('order_id', id).order('rank'),
-    auth.client.from('route_stops').select('id,route_id,route_date,route_type,sequence,status,checked_in_at,completed_at,failure_reason,dispatcher_note').eq('order_id', id).order('route_date', { ascending: false })
+    auth.client.from('route_stops').select('id,route_id,route_date,route_type,sequence,status,checked_in_at,completed_at,failure_reason,dispatcher_note').eq('order_id', id).order('route_date', { ascending: false }),
+    auth.profile.role === 'customer' ? Promise.resolve({ data: [], error: null }) : auth.client.from('deadline_revisions').select('id,previous_original_due_at,original_due_at,previous_committed_due_at,committed_due_at,reason,changed_at').eq('order_id', id).order('changed_at', { ascending: false })
   ]);
-  const failed = [events, handoffs, photos, exceptions, offers, stops].find((result) => result.error);
+  const failed = [events, handoffs, photos, exceptions, offers, stops, deadlineRevisions].find((result) => result.error);
   if (failed?.error) return NextResponse.json({ error: failed.error.message }, { status: 500 });
   const photosWithUrls = await Promise.all((photos.data ?? []).map(async (photo) => {
     if (!supabaseAdmin) return photo;
@@ -32,5 +33,5 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const visibleExceptions = auth.profile.role === 'customer'
     ? (exceptions.data ?? []).filter(item => item.customer_message || item.status !== 'resolved').map(item => ({ id: item.id, status: item.status, deadline_impact: item.deadline_impact, deadline_after: item.deadline_after, customer_message: item.customer_message, customer_notified_at: item.customer_notified_at, created_at: item.created_at }))
     : exceptions.data ?? [];
-  return NextResponse.json({ order, events: events.data ?? [], handoffs: handoffs.data ?? [], photos: photosWithUrls, exceptions: visibleExceptions, offers: offers.data ?? [], routeStops: stops.data ?? [] });
+  return NextResponse.json({ order, events: events.data ?? [], handoffs: handoffs.data ?? [], photos: photosWithUrls, exceptions: visibleExceptions, offers: offers.data ?? [], routeStops: stops.data ?? [], deadlineRevisions: deadlineRevisions.data ?? [] });
 }

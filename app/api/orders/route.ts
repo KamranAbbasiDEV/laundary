@@ -20,7 +20,7 @@ function mapOrder(row:Record<string,unknown>, processorName?: string, role?: str
   const deadlineLabel = deadline ? new Date(deadline).toLocaleString() : '';
   const due = [row.due_at_label ?? '', deadlineLabel ? `deadline ${deadlineLabel}` : ''].filter(Boolean).join(' · ');
   const status = statusMap[String(row.status)] ?? row.status as string;
-  const atRisk = Boolean(routeDetail?.failed) || exceptionDetail?.deadline_impact === 'at_risk' || exceptionDetail?.deadline_impact === 'delayed' || Boolean(row.customer_exception_message);
+  const atRisk = Boolean(routeDetail?.failed) || exceptionDetail?.deadline_impact === 'at_risk' || exceptionDetail?.deadline_impact === 'delayed' || (role === 'customer' && Boolean(row.has_exception));
   const deadlineStatus = getDeadlineStatus({ deadline, actualCompletionAt: completionAt, orderStatus: status, atRisk, timezone });
   return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due, deadline, originalDeadline:row.original_due_at ?? deadline, deadlineRevisionReason:row.deadline_revision_reason ?? undefined, deadlineStatus, deadlineDelta:formatDeadlineDelta(deadline), actualCompletionAt:completionAt, routeAssigned:routeDetail?.active ?? false, failedStop:routeDetail?.failed ?? false, customerNotificationPending:Boolean(row.customer_exception_message && !row.customer_exception_notified_at), status:status as never, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? role === 'customer' ? 'Open exception' : exceptionDetail?.description ?? 'Open exception' : undefined, exceptionMessage:row.customer_exception_message ?? undefined, archived:Boolean(row.archived_at) };
 }
@@ -46,6 +46,7 @@ export async function GET() {
   const timezone = workspace?.timezone || 'UTC';
   const rows = data ?? [];
   const exceptionByOrder = new Map<string, { description?: string; severity?: string; deadline_impact?: string; customer_notified_at?: string | null }>();
+  const impactRank: Record<string, number> = { none: 0, at_risk: 1, delayed: 2 };
   const completionByOrder = new Map<string, string>();
   const routeByOrder = new Map<string, { active: boolean; failed: boolean }>();
   if (rows.length) {
@@ -58,8 +59,12 @@ export async function GET() {
     (stops ?? []).forEach(stop => { const current = routeByOrder.get(stop.order_id) ?? { active: false, failed: false }; current.active = current.active || ['planned', 'arrived'].includes(stop.status); current.failed = current.failed || stop.status === 'failed'; routeByOrder.set(stop.order_id, current); });
   }
   if (rows.length && profile.role !== 'customer') {
-    const { data: exceptionRows } = await client.from('exceptions').select('order_id,description,severity,deadline_impact,customer_notified_at').in('order_id', rows.map(row => row.id)).neq('status', 'resolved').order('created_at', { ascending: false });
-    (exceptionRows ?? []).forEach(exception => { if (!exceptionByOrder.has(exception.order_id)) exceptionByOrder.set(exception.order_id, exception); });
+    const { data: exceptionRows, error: exceptionError } = await client.from('exceptions').select('order_id,description,severity,deadline_impact,customer_notified_at').in('order_id', rows.map(row => row.id)).neq('status', 'resolved').order('created_at', { ascending: false });
+    if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });
+    (exceptionRows ?? []).forEach(exception => {
+      const current = exceptionByOrder.get(exception.order_id);
+      if (!current || (impactRank[exception.deadline_impact ?? 'none'] ?? 0) > (impactRank[current.deadline_impact ?? 'none'] ?? 0)) exceptionByOrder.set(exception.order_id, exception);
+    });
   }
   const processorNames = new Map<string, string>();
   if (profile?.role && profile.role !== 'customer') {

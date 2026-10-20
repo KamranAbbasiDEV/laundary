@@ -44,6 +44,14 @@ create table public.orders (
   due_at timestamptz, due_at_label text, priority public.order_priority not null default 'standard',
   status public.order_status not null default 'created', processor_id uuid, notes text, has_exception boolean not null default false, original_due_at timestamptz, deadline_revised_at timestamptz, deadline_revised_by uuid references auth.users(id) on delete set null, deadline_revision_reason text, customer_exception_message text, customer_exception_notified_at timestamptz, archived_at timestamptz, archived_by uuid references auth.users(id) on delete set null, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
+create table public.deadline_revisions (
+  id uuid primary key default gen_random_uuid(), order_id uuid not null references public.orders(id) on delete cascade,
+  previous_original_due_at timestamptz, original_due_at timestamptz,
+  previous_committed_due_at timestamptz, committed_due_at timestamptz,
+  reason text, changed_by uuid references auth.users(id) on delete set null,
+  changed_at timestamptz not null default now()
+);
+create index deadline_revisions_order_idx on public.deadline_revisions (order_id, changed_at desc);
 create table public.processors (
   id uuid primary key default gen_random_uuid(), name text not null, address text, service_area text, capabilities text[] not null default '{}', pricing text, capacity_limit integer not null default 0, capacity_percent integer not null default 0, operating_hours text, turnaround_hours numeric(8,2), performance_score numeric(5,2) not null default 0, phone text, active boolean not null default true, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
@@ -124,6 +132,7 @@ create table public.audit_log (
 );
 
 alter table public.orders enable row level security;
+alter table public.deadline_revisions enable row level security;
 alter table public.profiles enable row level security;
 alter table public.processors enable row level security;
 alter table public.order_events enable row level security;
@@ -203,6 +212,8 @@ create policy "users can update their own profile" on public.profiles for update
 create policy "super admins manage profiles" on public.profiles for all to authenticated using (public.is_super_admin()) with check (public.is_super_admin());
 
 create policy "authorized users can read orders" on public.orders for select to authenticated using (public.is_operations_user() or customer_user_id = auth.uid());
+create policy "operations read deadline revisions" on public.deadline_revisions for select to authenticated using (public.is_operations_user());
+create policy "operations create deadline revisions" on public.deadline_revisions for insert to authenticated with check (public.is_operations_user());
 create policy "customers and dispatch can create orders" on public.orders for insert to authenticated with check (public.current_user_role() in ('super_admin','dispatcher') or (public.current_user_role() = 'customer' and customer_user_id = auth.uid()));
 create policy "operations can update orders" on public.orders for update to authenticated using (public.is_operations_user()) with check (public.is_operations_user());
 create policy "super admins delete orders" on public.orders for delete to authenticated using (public.is_super_admin());
