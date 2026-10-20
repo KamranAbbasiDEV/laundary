@@ -361,6 +361,7 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 /* Orders presentation cleanup: the existing state, permissions, and actions remain unchanged. */
 .orders-view-toolbar, .orders-workspace > .order-filters { display: none; }
 .orders-clean-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-width: 0; padding: 8px 0; }
+.orders-workspace .orders-clean-toolbar { visibility: visible; }
 .orders-clean-toolbar-left, .orders-clean-toolbar-right { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .orders-clean-toolbar-left { flex-wrap: wrap; }
 .orders-clean-toolbar-right { justify-content: flex-end; flex: 1 1 auto; }
@@ -447,4 +448,15 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 .orders-workspace.is-kanban .order-card > .deadline-badge small { margin-left: auto; }
 .orders-workspace.is-kanban .order-card-action { margin-top: 2px; }
 @media (max-width: 760px) { .deadline-editor-fields { grid-template-columns: 1fr; } .deadline-editor-reason { grid-column: auto; } .deadline-editor-heading { flex-direction: column; } }
+.bulk-deadline-editor { display: grid; gap: 14px; width: 100%; padding: 15px; border: 1px solid #b8d8d4; border-radius: 12px; background: #f5fbfa; }
+.bulk-deadline-heading { display: grid; gap: 4px; }
+.bulk-deadline-heading strong { color: var(--navy); font-size: 13px; }
+.bulk-deadline-heading small { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.bulk-deadline-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; align-items: end; }
+.bulk-deadline-fields label { display: grid; gap: 5px; min-width: 0; color: var(--navy); font-size: 10px; font-weight: 800; }
+.bulk-deadline-fields label small { color: var(--subtle); font-size: 9px; font-weight: 500; line-height: 1.35; }
+.bulk-deadline-fields .date-field:disabled { background: #eaf2f2; color: var(--subtle); cursor: not-allowed; }
+.bulk-deadline-reason { grid-column: 1 / -1; }
+.bulk-deadline-save { justify-self: start; min-height: 36px; }
+@media (max-width: 760px) { .bulk-deadline-fields { grid-template-columns: 1fr; } .bulk-deadline-reason { grid-column: auto; } }
 .status-pill.status-blue{border-color:#b8d8ff;background:var(--blue-soft);color:#175ca8}.status-pill.status-teal{border-color:#afe3db;background:var(--teal-soft);color:#08756f}.status-pill.status-amber{border-color:#f3d58d;background:var(--amber-soft);color:var(--amber)}.status-pill.status-purple{border-color:#dfd0ff;background:#f7f3ff;color:#6941c6}.status-pill.status-green{border-color:#afe6c5;background:var(--green-soft);color:var(--green)}.status-pill.status-red{border-color:#f2c5c0;background:var(--red-soft);color:var(--red)}
