@@ -51,6 +51,7 @@ export default function OrdersWorkspace({ orders, role, notify, onRefresh, onCre
   const allSelectedArchived = selectedOrders.length > 0 && selectedOrders.every(order => order.archived);
 
   useEffect(() => { setPage(1); }, [query, stage, exact, records, sort, deadlineFilter]);
+  useEffect(() => { setOpenId(null); }, [view]);
   useEffect(() => {
     const focus = window.localStorage.getItem('rinseline:orders-focus');
     if (focus === 'Overdue' || focus === 'Due today' || focus === 'Due within 24 hours' || focus === 'At risk') {
