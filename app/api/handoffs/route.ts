@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireActiveUser } from '@/lib/api-auth';
+import { logOperationalNotification } from '@/lib/notifications';
 
 const handoffSchema = z.object({ orderId: z.string().uuid(), stage: z.enum(['customer_pickup','processor_dropoff','processor_pickup','customer_delivery']), actualBags: z.number().int().nonnegative(), discrepancy: z.string().max(1000).optional(), notes: z.string().max(1000).optional() });
 const photoKindByStage = { customer_pickup: 'customer-pickup', processor_dropoff: 'processor-dropoff', processor_pickup: 'processor-pickup', customer_delivery: 'customer-delivery' } as const;
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
   const parsed = handoffSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid handoff data.', details: parsed.error.flatten() }, { status: 400 });
   const item = parsed.data;
-  const { data: order, error: orderError } = await auth.client.from('orders').select('id,expected_bags,assigned_driver_id,has_exception').eq('id', item.orderId).single();
+  const { data: order, error: orderError } = await auth.client.from('orders').select('id,order_number,phone,expected_bags,assigned_driver_id,has_exception,due_at').eq('id', item.orderId).single();
   if (orderError || !order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (auth.profile.role === 'driver' && order.assigned_driver_id !== auth.user.id) return NextResponse.json({ error: 'You can only record handoffs for orders assigned to you.' }, { status: 403 });
   // Every physical transfer needs evidence. This is enforced here, not only in the UI.
@@ -60,10 +61,11 @@ export async function POST(request: Request) {
       ? await auth.client.from('exceptions').update({ description: item.discrepancy, status: 'open', resolution_notes: null, resolved_at: null, resolved_by: null }).eq('id', existingException.id).select('*').single()
       : await auth.client.from('exceptions').insert({
           order_id: item.orderId, type: exceptionTypeByStage[item.stage], stage: item.stage, issue_code: 'quantity_mismatch', description: item.discrepancy,
-          severity: 'medium', evidence_required: true, opened_by: auth.user.id, source_handoff_id: data.id, status: 'open'
+          severity: 'medium', evidence_required: true, deadline_impact: order.due_at ? 'at_risk' : 'none', deadline_before: order.due_at, opened_by: auth.user.id, source_handoff_id: data.id, status: 'open'
         }).select('*').single();
     if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });
     exception = insertedException;
+    await logOperationalNotification({ orderId: item.orderId, event: 'exception_recorded', message: `${order.order_number} has a ${item.stage.replaceAll('_', ' ')} discrepancy requiring review: ${item.discrepancy}.${order.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''}`, phone: order.phone });
   }
   const routeType = routeTypeByStage[item.stage];
   let stop: { id: string; route_id: string | null } | null = null;

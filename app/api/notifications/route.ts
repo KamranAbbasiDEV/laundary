@@ -16,6 +16,8 @@ async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireAct
   }
   if (auth.profile.role === 'customer') { const { data } = await db.from('orders').select('id').eq('customer_user_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
   let query = db.from('notification_log').select('id').eq('channel', 'in_app');
+  if (auth.profile.role === 'customer') query = query.eq('recipient', 'customer');
+  else query = query.eq('recipient', 'operations');
   if (orderIds) { if (!orderIds.length) return []; query = query.in('order_id', orderIds); }
   const { data } = await query;
   return (data ?? []).map(item => item.id);
@@ -33,6 +35,8 @@ export async function GET() {
   if (auth.profile.role === 'customer') { const { data } = await db.from('orders').select('id').eq('customer_user_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
   if (orderIds && !orderIds.length) return NextResponse.json({ notifications: [] });
   let query = db.from('notification_log').select('id,order_id,channel,event,message,status,created_at,sent_at').eq('channel', 'in_app').order('created_at', { ascending: false }).limit(30);
+  if (auth.profile.role === 'customer') query = query.eq('recipient', 'customer');
+  else query = query.eq('recipient', 'operations');
   if (orderIds) query = query.in('order_id', orderIds);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

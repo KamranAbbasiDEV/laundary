@@ -43,6 +43,15 @@ export async function PATCH(request: Request) {
     const routeBlock = await blockActiveRouteStatusChange(auth.client, payload.orderIds, role);
     if (routeBlock) return NextResponse.json({ error: routeBlock.error }, { status: routeBlock.status });
   }
+  if (payload.action === 'record_exception') {
+    const { data: affectedOrders } = await auth.client.from('orders').select('id,due_at').in('id', payload.orderIds);
+    const { error: exceptionError } = await auth.client.from('exceptions').insert((affectedOrders ?? []).map(order => ({ order_id: order.id, type: 'route_issue', stage: 'route', description: payload.reason!, severity: 'medium', deadline_impact: order.due_at ? 'at_risk' : 'none', deadline_before: order.due_at, opened_by: auth.user.id, status: 'open' })));
+    if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });
+  }
+  if (payload.action === 'resolve_exception') {
+    const { error: exceptionError } = await auth.client.from('exceptions').update({ status: 'resolved', resolution_notes: payload.reason || 'Resolved by dispatch.', resolved_at: new Date().toISOString(), resolved_by: auth.user.id }).in('order_id', payload.orderIds).neq('status', 'resolved');
+    if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });
+  }
 
   const now = new Date().toISOString();
   const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : payload.action === 'resolve_exception' ? { has_exception: false, updated_at: now } : payload.action === 'archive' ? { archived_at: now, archived_by: auth.user.id, updated_at: now } : { archived_at: null, archived_by: null, updated_at: now };

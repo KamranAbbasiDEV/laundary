@@ -7,7 +7,7 @@ import { DateField } from './ui/date-field';
 import type { Order, Processor } from '@/lib/types';
 import { humanize } from '@/lib/presentation';
 
-type Detail = { order_number: string; delivered_at: string; due_at?: string | null; issue?: string };
+type Detail = { order_number: string; delivered_at: string; due_at?: string | null; original_due_at?: string | null; deadline_revision_reason?: string | null; issue?: string };
 type Scorecard = { id: string; processor_id: string; period_start: string; period_end: string; orders_completed: number; on_time_rate: number; discrepancy_rate: number; issue_count: number; score: number; notes?: string | null; processors?: { name: string } | null; details?: Detail[] };
 
 const csvCell = (value: string | number) => '"' + String(value).replaceAll('"', '""') + '"';

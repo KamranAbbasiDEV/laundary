@@ -15,14 +15,14 @@ export async function GET() {
   const processorIds = [...new Set((data ?? []).map(card => card.processor_id))];
   if (!processorIds.length) return NextResponse.json({ scorecards: [] });
   const [{ data: orders }, { data: deliveries }, { data: exceptions }] = await Promise.all([
-    auth.client.from('orders').select('id,order_number,processor_id,due_at').in('processor_id', processorIds),
+    auth.client.from('orders').select('id,order_number,processor_id,due_at,original_due_at,deadline_revision_reason').in('processor_id', processorIds),
     auth.client.from('order_events').select('order_id,created_at').eq('to_status', 'delivered').order('created_at', { ascending: true }),
     auth.client.from('exceptions').select('order_id,description,created_at').order('created_at', { ascending: true })
   ]);
   const orderById = new Map((orders ?? []).map(order => [order.id, order]));
   const issuesByOrder = new Map<string, Array<{ description?: string | null; created_at: string }>>();
   for (const exception of exceptions ?? []) issuesByOrder.set(exception.order_id, [...(issuesByOrder.get(exception.order_id) ?? []), exception]);
-  const enriched = (data ?? []).map(card => ({ ...card, details: (deliveries ?? []).filter(event => { const order = orderById.get(event.order_id); return order?.processor_id === card.processor_id && event.created_at >= `${card.period_start}T00:00:00.000Z` && event.created_at <= `${card.period_end}T23:59:59.999Z`; }).reduce<Array<{ order_number: string; delivered_at: string; due_at?: string | null; issue?: string }>>((items, event) => { if (items.some(item => item.order_number === orderById.get(event.order_id)?.order_number)) return items; const order = orderById.get(event.order_id); if (!order) return items; const issue = (issuesByOrder.get(event.order_id) ?? []).find(item => item.created_at >= `${card.period_start}T00:00:00.000Z` && item.created_at <= `${card.period_end}T23:59:59.999Z`); items.push({ order_number: order.order_number, delivered_at: event.created_at, due_at: order.due_at, issue: issue?.description ?? undefined }); return items; }, []) }));
+  const enriched = (data ?? []).map(card => ({ ...card, details: (deliveries ?? []).filter(event => { const order = orderById.get(event.order_id); return order?.processor_id === card.processor_id && event.created_at >= `${card.period_start}T00:00:00.000Z` && event.created_at <= `${card.period_end}T23:59:59.999Z`; }).reduce<Array<{ order_number: string; delivered_at: string; due_at?: string | null; original_due_at?: string | null; deadline_revision_reason?: string | null; issue?: string }>>((items, event) => { if (items.some(item => item.order_number === orderById.get(event.order_id)?.order_number)) return items; const order = orderById.get(event.order_id); if (!order) return items; const issue = (issuesByOrder.get(event.order_id) ?? []).find(item => item.created_at >= `${card.period_start}T00:00:00.000Z` && item.created_at <= `${card.period_end}T23:59:59.999Z`); items.push({ order_number: order.order_number, delivered_at: event.created_at, due_at: order.due_at, original_due_at: order.original_due_at, deadline_revision_reason: order.deadline_revision_reason, issue: issue?.description ?? undefined }); return items; }, []) }));
   return NextResponse.json({ scorecards: enriched });
 }
 

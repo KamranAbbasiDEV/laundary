@@ -11,10 +11,13 @@ export type Order = {
   bags: number;
   due: string;
   deadline?: string;
+  originalDeadline?: string;
+  deadlineRevisionReason?: string;
   status: OrderStatus;
   processor: string;
   priority: 'Standard' | 'Priority' | 'Same day';
   exception?: string;
+  exceptionMessage?: string;
   archived?: boolean;
   created: string;
   notes?: string;

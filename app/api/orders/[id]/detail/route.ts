@@ -18,7 +18,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     auth.client.from('order_events').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('order_handoffs').select('*').eq('order_id', id).order('confirmed_at', { ascending: false }),
     detailClient.from('order_photos').select('*').eq('order_id', id).order('created_at', { ascending: false }),
-    auth.client.from('exceptions').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+    detailClient.from('exceptions').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('processor_offers').select('id,rank,score,score_breakdown,status,rejection_reason,offered_at,responded_at,processors(name)').eq('order_id', id).order('rank'),
     auth.client.from('route_stops').select('id,route_id,route_date,route_type,sequence,status,checked_in_at,completed_at,failure_reason,dispatcher_note').eq('order_id', id).order('route_date', { ascending: false })
   ]);
@@ -29,5 +29,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     const { data } = await supabaseAdmin.storage.from('order-photos').createSignedUrl(photo.storage_path, 3600);
     return { ...photo, url: data?.signedUrl ?? null };
   }));
-  return NextResponse.json({ order, events: events.data ?? [], handoffs: handoffs.data ?? [], photos: photosWithUrls, exceptions: exceptions.data ?? [], offers: offers.data ?? [], routeStops: stops.data ?? [] });
+  const visibleExceptions = auth.profile.role === 'customer'
+    ? (exceptions.data ?? []).filter(item => item.customer_message || item.status !== 'resolved').map(item => ({ id: item.id, status: item.status, deadline_impact: item.deadline_impact, deadline_after: item.deadline_after, customer_message: item.customer_message, customer_notified_at: item.customer_notified_at, created_at: item.created_at }))
+    : exceptions.data ?? [];
+  return NextResponse.json({ order, events: events.data ?? [], handoffs: handoffs.data ?? [], photos: photosWithUrls, exceptions: visibleExceptions, offers: offers.data ?? [], routeStops: stops.data ?? [] });
 }

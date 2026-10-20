@@ -4,11 +4,11 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { getUserSafely } from '@/lib/supabase-auth';
 import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
-import { logOperationalNotification } from '@/lib/notifications';
+import { logCustomerNotification, logOperationalNotification } from '@/lib/notifications';
 import { blockActiveRouteStatusChange, syncDraftRoutesAfterStatusChange } from '@/lib/route-consistency';
 
 const statusSchema = z.enum(['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed']);
-const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional(), customer: z.string().trim().min(2).max(160).optional(), phone: z.string().trim().min(7).max(40).optional(), address: z.string().trim().min(5).max(500).optional(), service: z.string().trim().min(1).max(120).optional(), bags: z.number().int().positive().optional(), due: z.string().trim().max(160).optional(), dueAt: z.string().datetime({ offset: true }).nullable().optional(), notes: z.string().trim().max(2000).nullable().optional() });
+const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional(), deadlineImpact: z.enum(['none','at_risk','delayed']).optional(), customerMessage: z.string().trim().max(1000).optional(), notifyCustomer: z.boolean().optional(), customer: z.string().trim().min(2).max(160).optional(), phone: z.string().trim().min(7).max(40).optional(), address: z.string().trim().min(5).max(500).optional(), service: z.string().trim().min(1).max(120).optional(), bags: z.number().int().positive().optional(), due: z.string().trim().max(160).optional(), dueAt: z.string().datetime({ offset: true }).nullable().optional(), notes: z.string().trim().max(2000).nullable().optional() });
 const displayStatus = (value: string): OrderStatus => ({
   created:'Created',validated:'Validated',processor_ranked:'Processor ranked',capacity_confirmed:'Capacity confirmed',pickup_scheduled:'Pickup scheduled',picked_up:'Picked up',at_processor:'At processor',processing:'Processing',ready_for_pickup:'Ready for pickup',picked_up_from_processor:'Picked up from processor',qc_reconciliation:'QC / Reconciliation',out_for_delivery:'Out for delivery',delivered:'Delivered',processor_reviewed:'Processor reviewed'
 } as Record<string, OrderStatus>)[value] ?? value as OrderStatus;
@@ -30,14 +30,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!actor || actor.status !== 'active' || !['super_admin','dispatcher','driver','processor'].includes(actor.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
 
   const currentQuery = isUuid
-    ? supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at').eq('id', id).maybeSingle()
-    : supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at').eq('order_number', id).maybeSingle();
+    ? supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at,original_due_at').eq('id', id).maybeSingle()
+    : supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at,original_due_at').eq('order_number', id).maybeSingle();
   const { data: current, error: readError } = await currentQuery;
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   if (actor.role === 'driver' && current.assigned_driver_id !== user.id) return NextResponse.json({ error: 'You can only update orders assigned to you.' }, { status: 403 });
   if (actor.role === 'processor' && current.processor_id !== actor.processor_id) return NextResponse.json({ error: 'You can only update orders assigned to your processor.' }, { status: 403 });
   if (body.data.resolveException && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can resolve an exception.' }, { status: 403 });
+  if ((body.data.deadlineImpact || body.data.customerMessage || body.data.notifyCustomer) && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can manage customer deadline updates.' }, { status: 403 });
   const isOrderEdit = body.data.customer !== undefined || body.data.phone !== undefined || body.data.address !== undefined || body.data.service !== undefined || body.data.bags !== undefined || body.data.due !== undefined || body.data.dueAt !== undefined || body.data.notes !== undefined;
   if (isOrderEdit && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can edit order details.' }, { status: 403 });
   if (isOrderEdit && ['delivered', 'processor_reviewed'].includes(current.status)) return NextResponse.json({ error: 'Completed orders are historical records and cannot be edited.' }, { status: 409 });
@@ -81,14 +82,27 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (body.data.due !== undefined) update.due_at_label = body.data.due || null;
   if (body.data.dueAt !== undefined) update.due_at = body.data.dueAt;
   if (body.data.notes !== undefined) update.notes = body.data.notes;
+  if (body.data.customerMessage !== undefined) update.customer_exception_message = body.data.customerMessage || null;
+  if (body.data.dueAt !== undefined && body.data.dueAt !== current.due_at) { update.original_due_at = current.original_due_at ?? current.due_at; update.deadline_revised_at = new Date().toISOString(); update.deadline_revised_by = user.id; update.deadline_revision_reason = body.data.note ?? body.data.exception ?? null; }
   const { data, error } = await supabase.from('orders').update(update).eq('id', current.id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (body.data.exception) {
+    const { error: exceptionError } = await supabase.from('exceptions').insert({ order_id: current.id, type: 'route_issue', stage: 'route', description: body.data.exception, severity: 'medium', deadline_impact: body.data.deadlineImpact ?? (current.due_at ? 'at_risk' : 'none'), deadline_before: current.due_at, customer_message: body.data.customerMessage ?? null, opened_by: user.id, status: 'open' });
+    if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });
+  }
+  if (body.data.resolveException) {
+    const { error: exceptionError } = await supabase.from('exceptions').update({ status: 'resolved', resolution_notes: body.data.note ?? 'Resolved by dispatch.', resolved_at: new Date().toISOString(), resolved_by: user.id }).eq('order_id', current.id).neq('status', 'resolved');
+    if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });
+    const { count: openExceptions } = await supabase.from('exceptions').select('id', { count: 'exact', head: true }).eq('order_id', current.id).neq('status', 'resolved');
+    if (openExceptions) await supabase.from('orders').update({ has_exception: true, updated_at: new Date().toISOString() }).eq('id', current.id);
+  }
   await supabase.from('order_events').insert({ order_id: current.id, from_status: current.status, to_status: body.data.status ? dbStatus(body.data.status) : current.status, note: body.data.note ?? body.data.exception ?? (body.data.resolveException ? 'Exception resolved by dispatch' : null) });
   const event = body.data.resolveException ? 'exception_resolved' : body.data.exception ? 'exception_recorded' : body.data.status ? `order_${dbStatus(body.data.status)}` : 'order_updated';
   const deadline = body.data.dueAt !== undefined ? body.data.dueAt : current.due_at;
   const deadlineText = deadline ? ` Deadline: ${new Date(deadline).toLocaleString()}.` : '';
   const message = body.data.resolveException ? `${current.order_number} exception resolved by dispatch.${deadlineText}` : body.data.exception ? `${current.order_number} requires dispatcher review: ${body.data.exception}.${deadlineText}` : body.data.status ? `${current.order_number} is now ${body.data.status}.${deadlineText}` : `${current.order_number} was updated.${deadlineText}`;
   await logOperationalNotification({ orderId: current.id, event, message, phone: current.phone });
+  if (body.data.notifyCustomer && body.data.customerMessage?.trim()) await logCustomerNotification({ orderId: current.id, event: 'customer_exception_update', message: body.data.customerMessage.trim(), phone: current.phone });
   const routeSync = body.data.status ? await syncDraftRoutesAfterStatusChange(supabase, new Map([[current.id, dbStatus(body.data.status)]])) : { invalidated: 0, warning: null };
   return NextResponse.json({ order: data, persistence: 'supabase', routeSync: { invalidated: routeSync.invalidated }, ...(routeSync.warning ? { warning: routeSync.warning } : {}) });
 }
