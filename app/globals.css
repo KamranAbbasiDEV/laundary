@@ -391,6 +391,34 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 .order-card-meta { font-size: 10px; }
 .order-card-footer { margin-top: 2px; }
 .order-card-action { min-height: 32px; border-radius: 8px; background: #fff; }
+.orders-workspace.is-table .orders-layout { gap: 14px; }
+.orders-workspace.is-table .orders-table-wrap { border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgba(15,31,53,.05); }
+.orders-workspace.is-table .list-summary { display: flex; align-items: center; justify-content: space-between; min-height: 42px; padding: 0 16px; background: #fbfcfd; font-size: 11px; }
+.orders-workspace.is-table .orders-table { min-width: 800px; }
+.orders-workspace.is-table .orders-table thead th { height: 42px; padding: 0 14px; border-bottom: 1px solid #e4ebef; background: #fbfcfd; color: var(--subtle); font-size: 9px; font-weight: 850; letter-spacing: .065em; text-transform: uppercase; white-space: nowrap; }
+.orders-workspace.is-table .orders-table thead th:first-child { width: 42px; padding-right: 4px; padding-left: 16px; }
+.orders-workspace.is-table .orders-table thead th:last-child { width: 82px; }
+.orders-workspace.is-table .orders-table tbody tr { height: 68px; border-bottom: 1px solid #edf1f3; }
+.orders-workspace.is-table .orders-table tbody tr:last-child { border-bottom: 0; }
+.orders-workspace.is-table .orders-table tbody td { padding: 11px 14px; color: var(--ink); font-size: 11px; vertical-align: middle; }
+.orders-workspace.is-table .orders-table tbody td:first-child { width: 42px; padding-right: 4px; padding-left: 16px; }
+.orders-workspace.is-table .orders-table tbody td:nth-child(2) strong { display: block; color: var(--teal-dark); font-size: 11px; font-weight: 850; }
+.orders-workspace.is-table .orders-table tbody td:nth-child(3) { max-width: 240px; }
+.orders-workspace.is-table .orders-table tbody td:nth-child(3) small { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orders-workspace.is-table .orders-table tbody td:nth-child(6) { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.orders-workspace.is-table .orders-table tbody tr.is-active { box-shadow: inset 3px 0 0 var(--teal); }
+.orders-workspace.is-table .orders-table tbody tr.is-active td { background: #effaf8; }
+.orders-workspace.is-table .orders-table tbody tr:hover td { background: #f8fcfc; }
+.orders-workspace.is-table .orders-table input[type='checkbox'] { width: 15px; height: 15px; accent-color: var(--teal); cursor: pointer; }
+.orders-workspace.is-table .orders-table .status-pill { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orders-workspace.is-table .orders-table .text-button { display: inline-flex; align-items: center; justify-content: center; min-height: 30px; padding: 0 8px; border: 1px solid transparent; border-radius: 7px; white-space: nowrap; }
+.orders-workspace.is-table .orders-table .text-button:hover { border-color: #b8d8d5; background: var(--teal-soft); text-decoration: none; }
+.orders-workspace.is-table .table-pagination { min-height: 52px; align-items: center; background: #fbfcfd; }
+.orders-workspace.is-table .order-drawer { border-radius: 14px; box-shadow: 0 8px 24px rgba(15,31,53,.05); }
+.orders-workspace.is-table .empty-state { min-height: 180px; padding: 30px 20px; }
+@media (max-width: 1050px) {
+  .orders-workspace.is-table .orders-table { min-width: 760px; }
+}
 @media (max-width: 760px) {
   .orders-clean-toolbar { align-items: stretch; flex-direction: column; }
   .orders-clean-toolbar-left, .orders-clean-toolbar-right { width: 100%; }
@@ -398,5 +426,7 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
   .orders-clean-toolbar-right > .button, .orders-search-control { flex: 1 1 0; }
   .orders-search-control { flex-basis: 160px; }
   .orders-toolbar-popover { right: 0; left: auto; max-width: calc(100vw - 32px); }
+  .orders-workspace.is-table .orders-table-wrap { border-radius: 10px; }
+  .orders-workspace.is-table .list-summary { padding: 0 12px; }
 }
 .status-pill.status-blue{border-color:#b8d8ff;background:var(--blue-soft);color:#175ca8}.status-pill.status-teal{border-color:#afe3db;background:var(--teal-soft);color:#08756f}.status-pill.status-amber{border-color:#f3d58d;background:var(--amber-soft);color:var(--amber)}.status-pill.status-purple{border-color:#dfd0ff;background:#f7f3ff;color:#6941c6}.status-pill.status-green{border-color:#afe6c5;background:var(--green-soft);color:var(--green)}.status-pill.status-red{border-color:#f2c5c0;background:var(--red-soft);color:var(--red)}
