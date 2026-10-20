@@ -430,4 +430,21 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
   .orders-workspace.is-table .orders-table-wrap { border-radius: 10px; }
   .orders-workspace.is-table .list-summary { padding: 0 12px; }
 }
+.orders-workspace.is-kanban .order-card { gap: 6px; padding: 14px; border-radius: 14px; background: #f1f3f3; }
+.orders-workspace.is-kanban .order-card:hover, .orders-workspace.is-kanban .order-card.is-selected { background: #edf9f7; border-color: #abd5d0; box-shadow: 0 6px 14px rgba(15,31,53,.08); }
+.orders-workspace.is-kanban .order-card-top { order: 1; }
+.orders-workspace.is-kanban .order-card-customer { order: 2; margin-top: 2px; }
+.orders-workspace.is-kanban .order-card-title { order: 3; }
+.orders-workspace.is-kanban .order-card-meta { order: 4; }
+.orders-workspace.is-kanban .order-card-meta + .order-card-meta { order: 5; }
+.orders-workspace.is-kanban .order-card > .deadline-badge { order: 6; align-self: start; }
+.orders-workspace.is-kanban .order-card-footer { order: 7; }
+.orders-workspace.is-kanban .order-card-action { order: 8; }
+.orders-workspace.is-kanban .order-card-customer { font-size: 15px; letter-spacing: -.025em; }
+.orders-workspace.is-kanban .order-card-title { font-size: 10px; }
+.orders-workspace.is-kanban .order-card-meta { min-height: 17px; }
+.orders-workspace.is-kanban .order-card > .deadline-badge { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; max-width: none; padding: 5px 7px; border: 1px solid #dce8e8; border-radius: 7px; background: #fff; }
+.orders-workspace.is-kanban .order-card > .deadline-badge small { margin-left: auto; }
+.orders-workspace.is-kanban .order-card-action { margin-top: 2px; }
+@media (max-width: 760px) { .deadline-editor-fields { grid-template-columns: 1fr; } .deadline-editor-reason { grid-column: auto; } .deadline-editor-heading { flex-direction: column; } }
 .status-pill.status-blue{border-color:#b8d8ff;background:var(--blue-soft);color:#175ca8}.status-pill.status-teal{border-color:#afe3db;background:var(--teal-soft);color:#08756f}.status-pill.status-amber{border-color:#f3d58d;background:var(--amber-soft);color:var(--amber)}.status-pill.status-purple{border-color:#dfd0ff;background:#f7f3ff;color:#6941c6}.status-pill.status-green{border-color:#afe6c5;background:var(--green-soft);color:var(--green)}.status-pill.status-red{border-color:#f2c5c0;background:var(--red-soft);color:var(--red)}
