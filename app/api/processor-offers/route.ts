@@ -46,6 +46,8 @@ export async function PATCH(request: Request) {
     if (acceptedError || !acceptedOffer) return NextResponse.json({ error: acceptedError?.message ?? 'Offer acceptance could not be confirmed.' }, { status: 500 });
     data = acceptedOffer;
     const { data: acceptedOrder } = await auth.client.from('orders').select('order_number,phone,due_at').eq('id', offer.order_id).maybeSingle();
+    const { error: eventError } = await auth.client.from('order_events').insert({ order_id: offer.order_id, from_status: 'processor_ranked', to_status: 'capacity_confirmed', actor_id: auth.user.id, note: 'Processor accepted the capacity offer.' });
+    if (eventError) return NextResponse.json({ error: `Offer accepted, but order history could not be recorded: ${eventError.message}` }, { status: 500 });
     const acceptedDeadline = acceptedOrder?.due_at ? ` Deadline: ${new Date(acceptedOrder.due_at).toLocaleString()}.` : '';
     await logOperationalNotification({ orderId: offer.order_id, event: 'processor_offer_accepted', message: `${acceptedOrder?.order_number ?? 'Order'} was accepted by its processor. Capacity is confirmed.${acceptedDeadline}`, phone: acceptedOrder?.phone ?? undefined });
   }

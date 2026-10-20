@@ -2,9 +2,21 @@ import type { OrderStatus } from './types';
 
 export type DeadlineStatus = 'on_track' | 'due_today' | 'due_soon' | 'at_risk' | 'overdue' | 'delivered_on_time' | 'delivered_late' | 'no_deadline';
 
+export function getDateKey(value: Date, timezone = 'UTC') {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
+  } catch {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
+  }
+}
+
+export function getWorkspaceDate(now = new Date(), timezone = 'UTC') {
+  return getDateKey(now, timezone);
+}
+
 const completedStatuses: OrderStatus[] = ['Delivered', 'Processor reviewed'];
 
-export function getDeadlineStatus(input: { deadline?: string | null; actualCompletionAt?: string | null; orderStatus?: OrderStatus | string; atRisk?: boolean; now?: Date }): DeadlineStatus {
+export function getDeadlineStatus(input: { deadline?: string | null; actualCompletionAt?: string | null; orderStatus?: OrderStatus | string; atRisk?: boolean; now?: Date; timezone?: string }): DeadlineStatus {
   if (!input.deadline) return 'no_deadline';
   const deadline = new Date(input.deadline).getTime();
   if (completedStatuses.includes(input.orderStatus as OrderStatus)) {
@@ -14,9 +26,9 @@ export function getDeadlineStatus(input: { deadline?: string | null; actualCompl
   if (now.getTime() > deadline) return 'overdue';
   if (input.atRisk) return 'at_risk';
   const endToday = new Date(now); endToday.setHours(23, 59, 59, 999);
-  if (new Date(input.deadline).toDateString() === now.toDateString()) return 'due_today';
+  if (getDateKey(new Date(input.deadline), input.timezone) === getDateKey(now, input.timezone)) return 'due_today';
   if (deadline - now.getTime() <= 24 * 60 * 60 * 1000) return 'due_soon';
-  return endToday.getTime() > deadline && deadline >= now.getTime() ? 'due_today' : 'on_track';
+  return getDateKey(new Date(input.deadline), input.timezone) === getDateKey(endToday, input.timezone) ? 'due_today' : 'on_track';
 }
 
 export const deadlineStatusLabel: Record<DeadlineStatus, string> = { on_track: 'On track', due_today: 'Due today', due_soon: 'Due soon', at_risk: 'At risk', overdue: 'Overdue', delivered_on_time: 'Delivered on time', delivered_late: 'Delivered late', no_deadline: 'No deadline' };

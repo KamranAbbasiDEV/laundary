@@ -13,7 +13,7 @@ const orderInput = z.object({
   items: z.string().max(2000).optional(), textileTypes: z.array(z.string().min(1).max(80)).max(12).optional(), specialHandling: z.array(z.string().min(1).max(120)).max(12).optional(), customerSpecifications: z.string().max(4000).optional(), priority: z.enum(['standard', 'priority', 'same_day']).optional()
 });
 
-function mapOrder(row:Record<string,unknown>, processorName?: string, role?: string, exceptionDetail?: { description?: string; severity?: string; deadline_impact?: string; customer_notified_at?: string | null } | null, completionAt?: string, routeDetail?: { active?: boolean; failed?: boolean } | null) {
+function mapOrder(row:Record<string,unknown>, processorName?: string, role?: string, exceptionDetail?: { description?: string; severity?: string; deadline_impact?: string; customer_notified_at?: string | null } | null, completionAt?: string, routeDetail?: { active?: boolean; failed?: boolean } | null, timezone = 'UTC') {
   const statusMap:Record<string,string> = { created:'Created', validated:'Validated', processor_ranked:'Processor ranked', capacity_confirmed:'Capacity confirmed', pickup_scheduled:'Pickup scheduled', picked_up:'Picked up', at_processor:'At processor', processing:'Processing', ready_for_pickup:'Ready for pickup', picked_up_from_processor:'Picked up from processor', qc_reconciliation:'QC / Reconciliation', out_for_delivery:'Out for delivery', delivered:'Delivered', processor_reviewed:'Processor reviewed' };
   const priorityMap:Record<string,string> = { standard:'Standard', priority:'Priority', same_day:'Same day' };
   const deadline = typeof row.due_at === 'string' ? row.due_at : undefined;
@@ -21,7 +21,7 @@ function mapOrder(row:Record<string,unknown>, processorName?: string, role?: str
   const due = [row.due_at_label ?? '', deadlineLabel ? `deadline ${deadlineLabel}` : ''].filter(Boolean).join(' · ');
   const status = statusMap[String(row.status)] ?? row.status as string;
   const atRisk = Boolean(routeDetail?.failed) || exceptionDetail?.deadline_impact === 'at_risk' || exceptionDetail?.deadline_impact === 'delayed' || Boolean(row.customer_exception_message);
-  const deadlineStatus = getDeadlineStatus({ deadline, actualCompletionAt: completionAt, orderStatus: status, atRisk });
+  const deadlineStatus = getDeadlineStatus({ deadline, actualCompletionAt: completionAt, orderStatus: status, atRisk, timezone });
   return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due, deadline, originalDeadline:row.original_due_at ?? deadline, deadlineRevisionReason:row.deadline_revision_reason ?? undefined, deadlineStatus, deadlineDelta:formatDeadlineDelta(deadline), actualCompletionAt:completionAt, routeAssigned:routeDetail?.active ?? false, failedStop:routeDetail?.failed ?? false, customerNotificationPending:Boolean(row.customer_exception_message && !row.customer_exception_notified_at), status:status as never, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? role === 'customer' ? 'Open exception' : exceptionDetail?.description ?? 'Open exception' : undefined, exceptionMessage:row.customer_exception_message ?? undefined, archived:Boolean(row.archived_at) };
 }
 
@@ -42,6 +42,8 @@ export async function GET() {
   if (profile.role !== 'super_admin') query = query.is('archived_at', null);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error:error.message }, { status:500 });
+  const { data: workspace } = await client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
+  const timezone = workspace?.timezone || 'UTC';
   const rows = data ?? [];
   const exceptionByOrder = new Map<string, { description?: string; severity?: string; deadline_impact?: string; customer_notified_at?: string | null }>();
   const completionByOrder = new Map<string, string>();
@@ -67,7 +69,7 @@ export async function GET() {
       (processorRows ?? []).forEach(processor => processorNames.set(processor.id, processor.name));
     }
   }
-  return NextResponse.json({ orders: rows.map(row => mapOrder(row, typeof row.processor_id === 'string' ? processorNames.get(row.processor_id) : undefined, profile.role, exceptionByOrder.get(row.id) ?? null, completionByOrder.get(row.id), routeByOrder.get(row.id) ?? null)) });
+  return NextResponse.json({ orders: rows.map(row => mapOrder(row, typeof row.processor_id === 'string' ? processorNames.get(row.processor_id) : undefined, profile.role, exceptionByOrder.get(row.id) ?? null, completionByOrder.get(row.id), routeByOrder.get(row.id) ?? null, timezone)), timezone });
 }
 
 export async function POST(request: Request) {

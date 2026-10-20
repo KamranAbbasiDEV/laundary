@@ -11,12 +11,15 @@ const toDisplayStatus = (value: string) => ({ created: 'Created', validated: 'Va
 
 const payloadSchema = z.object({
   orderIds: z.array(z.string().uuid()).min(1).max(100),
-  action: z.enum(['set_status', 'record_exception', 'resolve_exception', 'archive', 'restore']),
+  action: z.enum(['set_status', 'set_deadline', 'record_exception', 'resolve_exception', 'archive', 'restore']),
   status: z.enum(statuses).optional(),
-  reason: z.string().trim().min(3).max(1000).optional()
+  reason: z.string().trim().min(3).max(1000).optional(),
+  originalDueAt: z.string().datetime({ offset: true }).optional(),
+  dueAt: z.string().datetime({ offset: true }).optional()
 }).superRefine((value, context) => {
   if (value.action === 'set_status' && !value.status) context.addIssue({ code: 'custom', message: 'Choose a status.' });
   if ((value.action === 'set_status' || value.action === 'record_exception') && !value.reason) context.addIssue({ code: 'custom', message: 'A reason is required.' });
+  if (value.action === 'set_deadline' && !value.dueAt) context.addIssue({ code: 'custom', message: 'A committed deadline is required.' });
 });
 
 export async function PATCH(request: Request) {
@@ -25,13 +28,17 @@ export async function PATCH(request: Request) {
   const parsed = payloadSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid bulk update.', details: parsed.error.flatten() }, { status: 400 });
   const payload = parsed.data;
-  const { data: orders, error: readError } = await auth.client.from('orders').select('id,order_number,status,processor_id,assigned_driver_id').in('id', payload.orderIds);
+  const { data: orders, error: readError } = await auth.client.from('orders').select('id,order_number,status,processor_id,assigned_driver_id,original_due_at,due_at').in('id', payload.orderIds);
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!orders || orders.length !== payload.orderIds.length) return NextResponse.json({ error: 'One or more orders no longer exist.' }, { status: 404 });
 
   const role = auth.profile.role;
   if (role === 'customer') return NextResponse.json({ error: 'Customers cannot bulk-manage operational orders.' }, { status: 403 });
   if (role === 'driver') return NextResponse.json({ error: 'Driver handoffs must be completed one stop at a time with required evidence.' }, { status: 403 });
+  if (payload.action === 'set_deadline' && !['super_admin', 'dispatcher'].includes(role)) return NextResponse.json({ error: 'Only Super Admin or Dispatcher can change deadlines.' }, { status: 403 });
+  if (payload.action === 'set_deadline' && orders.some(order => ['delivered', 'processor_reviewed'].includes(order.status))) return NextResponse.json({ error: 'Completed orders are historical records and cannot have their deadlines changed.' }, { status: 409 });
+  if (payload.action === 'set_deadline' && payload.originalDueAt && orders.some(order => order.original_due_at && order.original_due_at !== payload.originalDueAt)) return NextResponse.json({ error: 'Bulk edits preserve each order’s original commitment. Edit original deadlines from an individual order.' }, { status: 409 });
+  if (payload.action === 'set_deadline' && payload.originalDueAt && payload.dueAt && new Date(payload.dueAt).getTime() < new Date(payload.originalDueAt).getTime() && !payload.reason) return NextResponse.json({ error: 'A reason is required when the committed deadline is earlier than the original commitment.' }, { status: 400 });
   if (payload.action === 'set_status' && role === 'dispatcher') return NextResponse.json({ error: 'Dispatchers cannot change order status.' }, { status: 403 });
   if (['archive', 'restore'].includes(payload.action) && role !== 'super_admin') return NextResponse.json({ error: 'Only Super Admin can archive or restore orders.' }, { status: 403 });
   if (role === 'processor' && orders.some(order => order.processor_id !== auth.profile.processor_id)) return NextResponse.json({ error: 'You can only update your facility\'s orders.' }, { status: 403 });
@@ -54,9 +61,13 @@ export async function PATCH(request: Request) {
   }
 
   const now = new Date().toISOString();
-  const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : payload.action === 'resolve_exception' ? { has_exception: false, updated_at: now } : payload.action === 'archive' ? { archived_at: now, archived_by: auth.user.id, updated_at: now } : { archived_at: null, archived_by: null, updated_at: now };
+  const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'set_deadline' ? { due_at: payload.dueAt, deadline_revised_at: now, deadline_revised_by: auth.user.id, deadline_revision_reason: payload.reason ?? null, updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : payload.action === 'resolve_exception' ? { has_exception: false, updated_at: now } : payload.action === 'archive' ? { archived_at: now, archived_by: auth.user.id, updated_at: now } : { archived_at: null, archived_by: null, updated_at: now };
   const { error: updateError } = await auth.client.from('orders').update(update).in('id', payload.orderIds);
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (payload.action === 'set_deadline' && payload.originalDueAt) {
+    const { error: originalError } = await auth.client.from('orders').update({ original_due_at: payload.originalDueAt }).in('id', payload.orderIds).is('original_due_at', null);
+    if (originalError) return NextResponse.json({ error: `Committed deadlines updated, but original deadline initialization failed: ${originalError.message}` }, { status: 500 });
+  }
   if (payload.action === 'resolve_exception') {
     await Promise.all(payload.orderIds.map(async (orderId) => {
       const { count } = await auth.client.from('exceptions').select('id', { count: 'exact', head: true }).eq('order_id', orderId).neq('status', 'resolved');
@@ -69,7 +80,7 @@ export async function PATCH(request: Request) {
     from_status: order.status,
     to_status: payload.action === 'set_status' ? toDatabaseStatus(payload.status!) : order.status,
     actor_id: auth.user.id,
-    note: payload.action === 'set_status' ? `Bulk ${role === 'super_admin' ? 'administrator override' : 'workflow action'}: ${payload.reason}` : payload.action === 'record_exception' ? `Bulk exception recorded: ${payload.reason}` : payload.action === 'resolve_exception' ? 'Bulk exception resolved' : `Bulk ${payload.action}: ${payload.reason || 'Administrator action'}`
+    note: payload.action === 'set_status' ? `Bulk ${role === 'super_admin' ? 'administrator override' : 'workflow action'}: ${payload.reason}` : payload.action === 'set_deadline' ? `Bulk deadline update. Original: ${payload.originalDueAt}; committed: ${payload.dueAt}.${payload.reason ? ` Reason: ${payload.reason}` : ''}` : payload.action === 'record_exception' ? `Bulk exception recorded: ${payload.reason}` : payload.action === 'resolve_exception' ? 'Bulk exception resolved' : `Bulk ${payload.action}: ${payload.reason || 'Administrator action'}`
   }));
   const { error: eventError } = await auth.client.from('order_events').insert(events);
   if (eventError) return NextResponse.json({ error: `Orders updated, but audit logging failed: ${eventError.message}` }, { status: 500 });

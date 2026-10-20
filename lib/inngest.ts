@@ -1,6 +1,7 @@
 import { Inngest } from 'inngest';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { isSmsAllowed, sendOrderNotification } from '@/lib/notifications';
+import { getDeadlineStatus } from '@/lib/deadlines';
 
 export const inngest = new Inngest({ id: 'rinseline-dispatch' });
 
@@ -100,6 +101,35 @@ async function advanceExpiredProcessorOffers() {
   return { activated };
 }
 
+async function queueDeadlineNotifications() {
+  if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
+  const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
+  const timezone = workspace?.timezone || 'UTC';
+  const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,phone,due_at,status,has_exception,customer_exception_message,customer_exception_notified_at').is('archived_at', null).not('due_at', 'is', null).not('status', 'in', '(delivered,processor_reviewed)');
+  if (error) throw new Error(error.message);
+  let queued = 0;
+  const now = new Date();
+  for (const order of orders ?? []) {
+    const status = getDeadlineStatus({ deadline: order.due_at, orderStatus: order.status, atRisk: order.has_exception || Boolean(order.customer_exception_message), now, timezone });
+    const event = status === 'overdue' ? 'deadline_overdue' : status === 'due_today' ? 'deadline_due_today' : status === 'due_soon' ? 'deadline_due_soon' : null;
+    if (!event) continue;
+    const { data: existing } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', order.id).eq('event', event).limit(1);
+    if (existing?.length) continue;
+    const deadline = new Intl.DateTimeFormat('en-US', { timeZone: timezone, dateStyle: 'medium', timeStyle: 'short' }).format(new Date(order.due_at));
+    const operationsMessage = `${order.order_number} is ${status.replaceAll('_', ' ')}. Current deadline: ${deadline}.`;
+    await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: 'operations', channel: 'in_app', event, message: operationsMessage, status: 'sent', sent_at: now.toISOString() });
+    const customerMessage = status === 'overdue' ? `Your order ${order.order_number} is delayed. We are reviewing the delivery timing and will share an updated expectation.` : status === 'due_today' ? `Your order ${order.order_number} is expected today. Current expected time: ${deadline}.` : `Your order ${order.order_number} is due within 24 hours. Current expected time: ${deadline}.`;
+    await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: 'customer', channel: 'in_app', event, message: customerMessage, status: 'sent', sent_at: now.toISOString() });
+    if (order.phone && await isSmsAllowed(order.phone, event)) {
+      const sms = await sendOrderNotification({ to: order.phone, message: customerMessage, channel: 'sms' });
+      const attemptedAt = new Date().toISOString();
+      await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: order.phone, channel: 'sms', event, message: customerMessage, status: sms.delivered ? 'sent' : 'queued', attempt_count: 1, last_attempt_at: attemptedAt, provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? attemptedAt : null });
+    }
+    queued += 1;
+  }
+  return { queued };
+}
+
 export const orderValidated = inngest.createFunction(
   { id: 'processor-offer-notification', triggers: [{ event: 'rinseline/order.validated' }, { event: 'rinseline/order.processor_offer_activated' }] },
   async ({ event, step }) => step.run('notify-pending-processors', () => notifyPendingProcessorOffers(event.data.orderId as string))
@@ -118,4 +148,9 @@ export const notificationRetry = inngest.createFunction(
 export const processorOfferExpiry = inngest.createFunction(
   { id: 'processor-offer-expiry', triggers: [{ cron: '*/15 * * * *' }] },
   async ({ step }) => step.run('advance-expired-processor-offers', advanceExpiredProcessorOffers)
+);
+
+export const deadlineNotificationSweep = inngest.createFunction(
+  { id: 'deadline-notification-sweep', triggers: [{ cron: '*/15 * * * *' }] },
+  async ({ step }) => step.run('queue-deadline-notifications', queueDeadlineNotifications)
 );
