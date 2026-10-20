@@ -15,14 +15,22 @@ export async function GET() {
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) return NextResponse.json({ error: 'Dispatcher access required.' }, { status: 403 });
   const today = new Date().toISOString().slice(0, 10);
-  const { data, error } = await auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason)').in('status', ['draft', 'approved', 'in_progress', 'failed']).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
+  const { data, error } = await auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason,orders(order_number,due_at,has_exception))').in('status', ['draft', 'approved', 'in_progress', 'failed']).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const routeIds = (data ?? []).map((plan) => plan.id);
   const { data: locations, error: locationError } = routeIds.length ? await auth.client.from('driver_location_events').select('route_id,driver_id,latitude,longitude,accuracy_meters,recorded_at').in('route_id', routeIds).order('recorded_at', { ascending: false }).limit(100) : { data: [], error: null };
   if (locationError) return NextResponse.json({ error: locationError.message }, { status: 500 });
   const latestLocations = new Map<string, { route_id: string; driver_id: string; latitude: number; longitude: number; accuracy_meters: number | null; recorded_at: string }>();
   (locations ?? []).forEach((location) => { if (!latestLocations.has(location.route_id)) latestLocations.set(location.route_id, location); });
-  return NextResponse.json({ plans: (data ?? []).map((plan) => ({ ...plan, driver_location: latestLocations.get(plan.id) ?? null })) });
+  const plans = (data ?? []).map((plan) => {
+    const stops = (plan.route_stops ?? []) as Array<{ status?: string; orders?: { due_at?: string | null; has_exception?: boolean } | Array<{ due_at?: string | null; has_exception?: boolean }> }>;
+    const pending = stops.filter((stop) => stop.status !== 'completed');
+    const failed = stops.filter((stop) => stop.status === 'failed').length;
+    const urgent = pending.filter((stop) => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return Boolean(order?.has_exception) || Boolean(order?.due_at && new Date(order.due_at).getTime() - Date.now() <= 24 * 60 * 60 * 1000); }).length;
+    const urgency = failed || pending.some((stop) => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return Boolean(order?.due_at && new Date(order.due_at).getTime() < Date.now()); }) ? 'overdue' : urgent ? 'due_soon' : 'on_track';
+    return { ...plan, progress: stops.length ? Math.round(((stops.length - pending.length) / stops.length) * 100) : 0, failed_stops: failed, urgent_stops: urgent, urgency, driver_location: latestLocations.get(plan.id) ?? null };
+  });
+  return NextResponse.json({ plans });
 }
 
 export async function POST(request: Request) {

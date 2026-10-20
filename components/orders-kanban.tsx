@@ -4,6 +4,7 @@ import { CalendarDays, CheckSquare, GripVertical, Square, TriangleAlert } from '
 import { useState } from 'react';
 import type { Order, OrderStatus } from '@/lib/types';
 import { statusGroups, statusToneClass } from '@/lib/order-statuses';
+import DeadlineBadge from './deadline-badge';
 
 type Props = { orders: Order[]; selected: Set<string>; onToggle: (id: string) => void; onInspect: (order: Order) => void; canMove: boolean; onMove: (orders: Order[], status: OrderStatus) => void };
 
@@ -26,6 +27,7 @@ export default function OrdersKanban({ orders, selected, onToggle, onInspect, ca
               <strong className="order-card-customer">{order.customer}</strong>
               <div className="order-card-meta">{order.service} · {order.bags} bag{order.bags === 1 ? '' : 's'}</div>
               <div className="order-card-meta"><CalendarDays size={12}/> {order.due || 'No due window'}</div>
+              <DeadlineBadge order={order}/>
               <div className="order-card-footer"><span>{order.processor || 'Unassigned'}</span>{order.exception && <span className="attention-label"><TriangleAlert size={12}/> Attention</span>}</div>
               <button className="order-card-action" type="button" onClick={() => onInspect(order)}>Open order details</button>
             </article>;

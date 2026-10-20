@@ -1,4 +1,5 @@
 export type OrderStatus = 'Created' | 'Validated' | 'Processor ranked' | 'Capacity confirmed' | 'Pickup scheduled' | 'Picked up' | 'At processor' | 'Processing' | 'Ready for pickup' | 'Picked up from processor' | 'QC / Reconciliation' | 'Out for delivery' | 'Delivered' | 'Processor reviewed';
+export type DeadlineStatus = 'on_track' | 'due_today' | 'due_soon' | 'at_risk' | 'overdue' | 'delivered_on_time' | 'delivered_late' | 'no_deadline';
 
 export type Order = {
   id: string;
@@ -13,6 +14,12 @@ export type Order = {
   deadline?: string;
   originalDeadline?: string;
   deadlineRevisionReason?: string;
+  deadlineStatus?: DeadlineStatus;
+  deadlineDelta?: string;
+  actualCompletionAt?: string;
+  routeAssigned?: boolean;
+  failedStop?: boolean;
+  customerNotificationPending?: boolean;
   status: OrderStatus;
   processor: string;
   priority: 'Standard' | 'Priority' | 'Same day';

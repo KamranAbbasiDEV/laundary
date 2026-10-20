@@ -57,6 +57,12 @@ export async function PATCH(request: Request) {
   const update = payload.action === 'set_status' ? { status: toDatabaseStatus(payload.status!), updated_at: now } : payload.action === 'record_exception' ? { has_exception: true, updated_at: now } : payload.action === 'resolve_exception' ? { has_exception: false, updated_at: now } : payload.action === 'archive' ? { archived_at: now, archived_by: auth.user.id, updated_at: now } : { archived_at: null, archived_by: null, updated_at: now };
   const { error: updateError } = await auth.client.from('orders').update(update).in('id', payload.orderIds);
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (payload.action === 'resolve_exception') {
+    await Promise.all(payload.orderIds.map(async (orderId) => {
+      const { count } = await auth.client.from('exceptions').select('id', { count: 'exact', head: true }).eq('order_id', orderId).neq('status', 'resolved');
+      await auth.client.from('orders').update({ has_exception: Boolean(count), updated_at: now }).eq('id', orderId);
+    }));
+  }
 
   const events = orders.map(order => ({
     order_id: order.id,

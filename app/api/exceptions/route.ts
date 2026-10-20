@@ -53,7 +53,7 @@ export async function PATCH(request: Request) {
   if (body.status === 'resolved' && !body.resolutionNotes?.trim()) return NextResponse.json({ error: 'A resolution note is required when resolving an exception.' }, { status: 400 });
   const { data: current, error: currentError } = await auth.client.from('exceptions').select('id,order_id,deadline_before').eq('id', body.id).single();
   if (currentError || !current) return NextResponse.json({ error: currentError?.message || 'Exception not found.' }, { status: currentError ? 500 : 404 });
-  const { data: order } = await auth.client.from('orders').select('id,order_number,phone,due_at').eq('id', current.order_id).single();
+  const { data: order } = await auth.client.from('orders').select('id,order_number,phone,due_at,original_due_at').eq('id', current.order_id).single();
   if (!order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   const deadlineImpact = body.deadlineImpact ?? (body.revisedDueAt ? 'delayed' : undefined);
   if (body.revisedDueAt && !body.deadlineReason?.trim()) return NextResponse.json({ error: 'A reason is required when revising the deadline.' }, { status: 400 });
@@ -71,9 +71,9 @@ export async function PATCH(request: Request) {
     if (!count) await auth.client.from('orders').update({ has_exception: false, updated_at: new Date().toISOString() }).eq('id', data.order_id);
   }
   if (body.revisedDueAt) {
-    await auth.client.from('orders').update({ due_at: body.revisedDueAt, original_due_at: order.due_at ?? current.deadline_before, deadline_revised_at: new Date().toISOString(), deadline_revised_by: auth.user.id, deadline_revision_reason: body.deadlineReason?.trim() || null, customer_exception_message: body.customerMessage?.trim() || null, updated_at: new Date().toISOString() }).eq('id', current.order_id);
+    await auth.client.from('orders').update({ due_at: body.revisedDueAt, original_due_at: order.original_due_at ?? order.due_at ?? current.deadline_before, deadline_revised_at: new Date().toISOString(), deadline_revised_by: auth.user.id, deadline_revision_reason: body.deadlineReason?.trim() || null, customer_exception_message: body.customerMessage?.trim() || null, ...(body.notifyCustomer && body.customerMessage?.trim() ? { customer_exception_notified_at: new Date().toISOString() } : {}), updated_at: new Date().toISOString() }).eq('id', current.order_id);
   } else if (body.customerMessage?.trim()) {
-    await auth.client.from('orders').update({ customer_exception_message: body.customerMessage.trim(), updated_at: new Date().toISOString() }).eq('id', current.order_id);
+    await auth.client.from('orders').update({ customer_exception_message: body.customerMessage.trim(), ...(body.notifyCustomer ? { customer_exception_notified_at: new Date().toISOString() } : {}), updated_at: new Date().toISOString() }).eq('id', current.order_id);
   }
   const deadline = body.revisedDueAt ?? order.due_at;
   const statusText = body.status === 'resolved' ? 'resolved' : body.status === 'in_review' ? 'assigned for review' : 'updated';
