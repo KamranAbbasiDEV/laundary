@@ -9,8 +9,12 @@ function mapRow(row:Record<string,unknown>) { return { id:row.id, name:row.name,
 export async function GET() {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (auth.profile.role === 'customer' || auth.profile.role === 'driver') return NextResponse.json({ processors: [] });
   let query = auth.client.from('processors').select('*').order('name');
-  if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) query = query.eq('active', true);
+  if (auth.profile.role === 'processor') {
+    if (!auth.profile.processor_id) return NextResponse.json({ processors: [] });
+    query = query.eq('id', auth.profile.processor_id);
+  } else if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) query = query.eq('active', true);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error:error.message }, { status:500 });
   return NextResponse.json({ processors:(data ?? []).map(mapRow) });

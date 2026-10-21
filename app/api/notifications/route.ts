@@ -5,6 +5,13 @@ import { z } from 'zod';
 
 const updateSchema = z.object({ action: z.enum(['mark_read', 'mark_all_read', 'clear_all']), notificationId: z.string().uuid().optional() });
 
+function roleCanSeeOperationalEvent(role: string, event: string) {
+  if (role === 'super_admin' || role === 'dispatcher') return true;
+  if (role === 'driver') return ['route_approved', 'exception_recorded', 'order_pickup_scheduled', 'order_picked_up', 'order_picked_up_from_processor', 'order_out_for_delivery', 'order_delivered'].includes(event);
+  if (role === 'processor') return event === 'processor_offer' || event === 'processor_offer_accepted' || event === 'processor_offer_rejected' || event === 'exception_recorded' || event === 'order_at_processor' || event === 'order_processing' || event === 'order_ready_for_pickup';
+  return false;
+}
+
 async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireActiveUser>>, db: NonNullable<typeof supabaseAdmin>) {
   if ('error' in auth) return [] as string[];
   let orderIds: string[] | null = null;
@@ -15,12 +22,13 @@ async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireAct
     orderIds = [...new Set([...(assigned ?? []).map(order => order.id), ...(offers ?? []).map(offer => offer.order_id)])];
   }
   if (auth.profile.role === 'customer') { const { data } = await db.from('orders').select('id').eq('customer_user_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
-  let query = db.from('notification_log').select('id').eq('channel', 'in_app');
+  let query = db.from('notification_log').select('id,event').eq('channel', 'in_app');
   if (auth.profile.role === 'customer') query = query.eq('recipient', 'customer');
+  else if (auth.profile.role === 'processor' && auth.profile.processor_id) query = query.or(`recipient.eq.operations,recipient.eq.processor:${auth.profile.processor_id}`);
   else query = query.eq('recipient', 'operations');
   if (orderIds) { if (!orderIds.length) return []; query = query.in('order_id', orderIds); }
   const { data } = await query;
-  return (data ?? []).map(item => item.id);
+  return (data ?? []).filter(item => auth.profile.role === 'customer' || roleCanSeeOperationalEvent(auth.profile.role, item.event)).map(item => item.id);
 }
 
 export async function GET() {
@@ -36,18 +44,20 @@ export async function GET() {
   if (orderIds && !orderIds.length) return NextResponse.json({ notifications: [] });
   let query = db.from('notification_log').select('id,order_id,channel,event,message,status,created_at,sent_at').eq('channel', 'in_app').order('created_at', { ascending: false }).limit(30);
   if (auth.profile.role === 'customer') query = query.eq('recipient', 'customer');
+  else if (auth.profile.role === 'processor' && auth.profile.processor_id) query = query.or(`recipient.eq.operations,recipient.eq.processor:${auth.profile.processor_id}`);
   else query = query.eq('recipient', 'operations');
   if (orderIds) query = query.in('order_id', orderIds);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const notificationIds = (data ?? []).map(item => item.id);
+  const visibleData = (data ?? []).filter(item => auth.profile.role === 'customer' || roleCanSeeOperationalEvent(auth.profile.role, item.event));
+  const notificationIds = visibleData.map(item => item.id);
   const [{ data: reads }, { data: dismissed }] = await Promise.all([
     notificationIds.length ? db.from('notification_reads').select('notification_id').eq('user_id', auth.user.id).in('notification_id', notificationIds) : Promise.resolve({ data: [] }),
     notificationIds.length ? db.from('notification_dismissals').select('notification_id').eq('user_id', auth.user.id).in('notification_id', notificationIds) : Promise.resolve({ data: [] }),
   ]);
   const readIds = new Set((reads ?? []).map(item => item.notification_id));
   const dismissedIds = new Set((dismissed ?? []).map(item => item.notification_id));
-  return NextResponse.json({ notifications: (data ?? []).filter(item => !dismissedIds.has(item.id)).map(item => ({ ...item, read: readIds.has(item.id) })) });
+  return NextResponse.json({ notifications: visibleData.filter(item => !dismissedIds.has(item.id)).map(item => ({ ...item, read: readIds.has(item.id) })) });
 }
 
 export async function PATCH(request: Request) {

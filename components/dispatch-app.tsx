@@ -16,7 +16,7 @@ import { defaultServiceCatalog, normalizeServiceCatalog, type ServiceCatalogItem
 type Profile = { full_name: string; role: UserRole; status: AccountStatus; phone?: string; processor_id?: string; driver_id?: string; onboarding_complete?: boolean };
 
 const roleLabels: Record<UserRole, string> = { super_admin: 'Super Admin', dispatcher: 'Dispatcher', driver: 'Driver', processor: 'Processor', customer: 'Customer' };
-const nav: Record<UserRole, string[]> = { super_admin: ['Overview', 'Orders', 'Dispatch', 'Processors', 'Routes', 'Team', 'Reports', 'Payments', 'Settings', 'Help'], dispatcher: ['Orders', 'Dispatch', 'Processors', 'Routes', 'Reports', 'Payments', 'Settings', 'Help'], driver: ['Orders', 'Driver app', 'Help'], processor: ['Orders', 'Processor portal', 'Help'], customer: ['Orders', 'Customer portal', 'Help'] };
+const nav: Record<UserRole, string[]> = { super_admin: ['Overview', 'Orders', 'Dispatch', 'Processors', 'Routes', 'Team', 'Reports', 'Payments', 'Settings', 'Help'], dispatcher: ['Orders', 'Dispatch', 'Processors', 'Routes', 'Reports', 'Payments', 'Settings', 'Help'], driver: ['Driver app', 'Help'], processor: ['Processor portal', 'Help'], customer: ['Customer portal', 'Help'] };
 const isSuperAdmin = (role: UserRole): boolean => role === 'super_admin';
 
 function Sidebar({ active, profile, onSelect, onLogout }: { active: string; profile: Profile; onSelect: (value: string) => void; onLogout: () => void }) {
