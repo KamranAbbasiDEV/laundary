@@ -544,6 +544,17 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 .processor-ready-note { display: flex; align-items: center; gap: 8px; }
 .processor-ready-note span { color: var(--muted); font-size: 11px; line-height: 1.4; }
 .orders-workspace.is-read-only .kanban-selection-actions, .orders-workspace.is-read-only .selection-toolbar { display: none !important; }
+
+/* Keep the Kanban order-detail modal above the sticky app header and give its
+   composite detail/deadline content one predictable viewport scroll area. */
+.order-detail-overlay { z-index: 220; padding: 16px; }
+.order-detail-dialog { display: flex; flex-direction: column; width: min(720px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }
+.order-detail-dialog .drawer-composite { min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.order-detail-dialog .drawer-content { max-height: none; overflow: visible; }
+@media (max-width: 620px) {
+  .order-detail-overlay { padding: 8px; }
+  .order-detail-dialog { width: 100%; max-height: calc(100dvh - 16px); }
+}
 .orders-workspace.is-read-only .orders-table thead th:first-child, .orders-workspace.is-read-only .orders-table tbody td:first-child { display: none; }
 .orders-workspace.is-read-only .orders-table thead th:first-child + th { padding-left: 16px; }
 @media (max-width: 780px) {
