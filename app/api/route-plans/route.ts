@@ -10,6 +10,13 @@ const approveSchema = z.object({ planId: z.string().uuid() });
 const reorderSchema = z.object({ action: z.literal('reorder'), planId: z.string().uuid(), stopIds: z.array(z.string().uuid()).min(1) });
 const cancelSchema = z.object({ action: z.literal('cancel'), planId: z.string().uuid(), reason: z.string().min(3).max(1000) });
 const recoverSchema = z.object({ action: z.literal('recover'), planId: z.string().uuid() });
+function calendarDateInTimezone(value: string, timezone: string) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(value));
+    const values = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  } catch { return calendarDateInTimezone(value, 'UTC'); }
+}
 
 export async function GET() {
   const auth = await requireActiveUser();
@@ -44,10 +51,13 @@ export async function POST(request: Request) {
   try {
     const { data: driver, error: driverError } = await auth.client.from('profiles').select('id').eq('id', parsed.data.driverId).eq('role', 'driver').eq('status', 'active').maybeSingle();
     if (driverError || !driver) return NextResponse.json({ error: 'Select an active Driver for this route.' }, { status: 400 });
-    const { data: orders, error: orderError } = await auth.client.from('orders').select('id,order_number,pickup_address,customer_delivery_address,processor_id,status,phone').in('id', parsed.data.orderIds);
+    const { data: workspace } = await auth.client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
+    const workspaceTimezone = workspace?.timezone || 'UTC';
+    const { data: orders, error: orderError } = await auth.client.from('orders').select('id,order_number,pickup_address,customer_delivery_address,processor_id,status,phone,pickup_window_start_at').in('id', parsed.data.orderIds);
     if (orderError || !orders?.length || orders.length !== parsed.data.orderIds.length) return NextResponse.json({ error: 'One or more route orders could not be found.' }, { status: 404 });
     const expectedStatus = parsed.data.routeType === 'pickup' ? 'capacity_confirmed' : parsed.data.routeType === 'processor_dropoff' ? 'picked_up' : parsed.data.routeType === 'processor_pickup' ? 'ready_for_pickup' : 'picked_up_from_processor';
     if (orders.some(order => order.status !== expectedStatus)) return NextResponse.json({ error: 'One or more orders are not eligible for this route type.' }, { status: 409 });
+    if (parsed.data.routeType === 'pickup' && orders.some(order => order.pickup_window_start_at && calendarDateInTimezone(order.pickup_window_start_at, workspaceTimezone) !== parsed.data.routeDate)) return NextResponse.json({ error: 'Customer pickup routes must use each order\'s pickup window date.' }, { status: 409 });
     const processorIds = [...new Set(orders.map(order => order.processor_id).filter((id): id is string => typeof id === 'string'))];
     const { data: processors, error: processorError } = processorIds.length ? await auth.client.from('processors').select('id,address').in('id', processorIds) : { data: [], error: null };
     if (processorError) return NextResponse.json({ error: processorError.message }, { status: 500 });

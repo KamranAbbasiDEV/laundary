@@ -12,18 +12,25 @@ type RouteType = 'pickup' | 'processor_dropoff' | 'processor_pickup' | 'delivery
 type Draft = { id: string; durationSeconds?: number | null; distanceMeters?: number | null; coordinates?: [number, number][]; stopCoordinates?: [number, number][]; stops: Array<{ id: string; order_id: string; sequence: number }> };
 const formatDistance = (meters?: number | null) => meters == null ? 'Distance unavailable' : meters === 0 ? 'No travel required' : meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
 const formatDuration = (seconds?: number | null) => seconds == null ? 'Duration unavailable' : seconds === 0 ? 'No travel time' : seconds < 60 ? `${Math.max(1, Math.round(seconds))} sec` : `${Math.max(1, Math.round(seconds / 60))} min`;
+const calendarDateInTimezone = (value: string | null | undefined, timezone: string) => { if (!value) return ''; try { const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(value)); const values = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, part.value])); return `${values.year}-${values.month}-${values.day}`; } catch { return calendarDateInTimezone(value, 'UTC'); } };
 
 export default function RoutePlannerPanel({ orders, notify }: { orders: Order[]; notify: (message: string) => void }) {
   const [routeType, setRouteType] = useState<RouteType>('pickup');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [timezone, setTimezone] = useState('UTC');
   const [driverId, setDriverId] = useState('');
   const [drivers, setDrivers] = useState<Array<{ id: string; name: string }>>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
-  const eligible = useMemo(() => orders.filter(order => routeType === 'pickup' ? order.status === 'Capacity confirmed' : routeType === 'processor_dropoff' ? order.status === 'Picked up' : routeType === 'processor_pickup' ? order.status === 'Ready for pickup' : order.status === 'Picked up from processor'), [orders, routeType]);
+  const eligible = useMemo(() => orders.filter(order => {
+    const statusEligible = routeType === 'pickup' ? order.status === 'Capacity confirmed' : routeType === 'processor_dropoff' ? order.status === 'Picked up' : routeType === 'processor_pickup' ? order.status === 'Ready for pickup' : order.status === 'Picked up from processor';
+    if (!statusEligible) return false;
+    return routeType !== 'pickup' || !order.pickupWindowStartAt || calendarDateInTimezone(order.pickupWindowStartAt, timezone) === date;
+  }), [orders, routeType, date, timezone]);
   const selectedOrders = eligible.filter(order => order.internalId && selected.includes(order.internalId));
   useEffect(() => { void fetch('/api/drivers').then(response => response.ok ? response.json() : { drivers: [] }).then(body => setDrivers(body.drivers ?? [])); }, []);
+  useEffect(() => { void fetch('/api/settings', { cache: 'no-store' }).then(response => response.ok ? response.json() : null).then(body => { if (body?.settings?.timezone) setTimezone(body.settings.timezone); }); }, []);
   useEffect(() => { setSelected([]); setDraft(null); }, [routeType]);
   const toggle = (id?: string) => { if (id) { setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]); setDraft(null); } };
   async function generate() {

@@ -63,6 +63,15 @@ export default function OrdersWorkspace({ orders, role, notify, onRefresh, onCre
     if (focus) window.localStorage.removeItem('rinseline:orders-focus');
   }, []);
   useEffect(() => {
+    const focus = window.localStorage.getItem('rinseline:global-order-focus');
+    if (!focus) return;
+    const target = displayOrders.find(order => (order.internalId ?? order.id) === focus || order.id === focus);
+    window.localStorage.removeItem('rinseline:global-order-focus');
+    if (!target) return;
+    setView('table');
+    setOpenId(target.internalId ?? target.id);
+  }, [displayOrders]);
+  useEffect(() => {
     if (!opened) return;
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpenId(null); };
     window.addEventListener('keydown', closeOnEscape);

@@ -24,6 +24,14 @@ function LegacyDriverWorkflowPanel({ orders, notify, onStatusChange, onRefresh }
   const [evidenceAttached, setEvidenceAttached] = useState(false); const [uploading, setUploading] = useState(false); const [refreshing, setRefreshing] = useState(false);
   const activeOrder = activeStops.find((order) => order.id === selectedId) ?? activeStops[0];
   useEffect(() => { setCount(''); setNote(''); setEvidenceAttached(false); }, [activeOrder?.id]);
+  useEffect(() => {
+    const focus = window.localStorage.getItem('rinseline:global-order-focus');
+    if (!focus) return;
+    const target = activeStops.find(order => (order.internalId ?? order.id) === focus || order.id === focus);
+    window.localStorage.removeItem('rinseline:global-order-focus');
+    if (!target) return;
+    setSelectedId(target.id);
+  }, [activeStops]);
   async function refreshStops() { setRefreshing(true); try { await onRefresh(); } finally { setRefreshing(false); } }
   if (!activeOrder) return <section className="panel"><div className="panel-heading"><div><h2>Stops</h2><p>New work will appear here automatically.</p></div><Button variant="outline" size="sm" onClick={() => void refreshStops()} disabled={refreshing}><RefreshCw className={refreshing ? 'spin' : ''} size={14}/>Refresh</Button></div><div className="panel-body"><div className="empty">No stops are assigned to you right now.</div></div></section>;
   const action = stages[activeOrder.status];
@@ -71,5 +79,5 @@ function LegacyDriverWorkflowPanel({ orders, notify, onStatusChange, onRefresh }
 }
 
 export default function DriverWorkflowPanel(props: { orders: Order[]; notify: (message: string) => void; onStatusChange: (id: string, status: OrderStatus, note?: string) => Promise<void>; onRefresh: () => Promise<void> }) {
-  return <><DeadlineRolePanel role="driver" orders={props.orders}/><LegacyDriverWorkflowPanel {...props}/></>;
+  return <div className="driver-portal-shell"><DeadlineRolePanel role="driver" orders={props.orders}/><div className="driver-legacy-shell"><LegacyDriverWorkflowPanel {...props}/></div></div>;
 }

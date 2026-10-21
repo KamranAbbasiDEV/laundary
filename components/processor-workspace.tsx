@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, ClipboardCheck, PackageCheck, Play, RefreshCw, Timer } from 'lucide-react';
 import ProcessorOffersPanel from './processor-offers-panel';
 import { Button } from './ui/button';
@@ -34,6 +34,14 @@ function LegacyProcessorWorkspace({ orders, notify, onStatusChange, onRefresh }:
   const selectedAtProcessor = selected.filter(id => queue.some(order => order.id === id && order.status === 'At processor'));
   const selectedProcessing = selected.filter(id => queue.some(order => order.id === id && order.status === 'Processing'));
   const allSelected = selectable.length > 0 && selectable.every(order => selected.includes(order.id));
+  useEffect(() => {
+    const focus = window.localStorage.getItem('rinseline:global-order-focus');
+    if (!focus) return;
+    const target = queue.find(order => (order.internalId ?? order.id) === focus || order.id === focus);
+    window.localStorage.removeItem('rinseline:global-order-focus');
+    if (!target) return;
+    setSelectedId(target.id);
+  }, [queue]);
 
   function toggle(id: string) {
     setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
@@ -89,25 +97,28 @@ function LegacyProcessorWorkspace({ orders, notify, onStatusChange, onRefresh }:
         <div><div className="eyebrow">Processor workspace</div><h1>Production queue</h1><p>Accept capacity, confirm intake, process to QC, then release completed work.</p></div>
         <div className="row-actions"><span className="status status-amber">{actionable.length} to work</span><Button size="sm" variant="outline" onClick={() => void refreshQueue()} disabled={refreshing || busyId !== null}><RefreshCw className={refreshing ? 'spin' : ''} size={14} />Refresh</Button></div>
       </div>
+      <DeadlineRolePanel role="processor" orders={orders} />
       <ProcessorOffersPanel notify={notify} />
       <div className="orders-layout processor-orders-layout">
         <section className="orders-table-wrap panel">
           <div className="panel-heading processor-queue-heading">
             <div><h2>Assigned work</h2><p>Select assigned jobs for a bulk workflow action, or open one for details.</p></div>
             <div className="processor-selection-actions">
-              <input className="processor-select-all-checkbox" type="checkbox" aria-label="Select all assigned orders" title="Select all assigned orders" checked={allSelected} disabled={!selectable.length || busyId !== null} onChange={event => setSelected(event.target.checked ? selectable.map(order => order.id) : [])} />
               {selected.length > 0 && <span className="processor-selected-count">{selected.length} selected</span>}
               {selectedAtProcessor.length > 0 && <Button size="sm" variant="outline" onClick={() => void bulkAdvance('Processing')} disabled={busyId !== null}><ClipboardCheck size={13} />Confirm intake</Button>}
               {selectedProcessing.length > 0 && <Button size="sm" onClick={() => void bulkAdvance('Ready for pickup')} disabled={busyId !== null}><PackageCheck size={13} />Mark ready</Button>}
             </div>
           </div>
-          <div className="ops-queue">
+          <div className="processor-assigned-table">
+            <div className="processor-assigned-header" role="row"><span><input className="processor-select-all-checkbox" type="checkbox" aria-label="Select all assigned orders" title="Select all assigned orders" checked={allSelected} disabled={!selectable.length || busyId !== null} onChange={event => setSelected(event.target.checked ? selectable.map(order => order.id) : [])} /></span><span>Order / customer</span><span>Service / quantity</span><span>Due</span><span>Status</span><span>Action</span></div>
             {queue.map(order => {
               const action = actionFor(order.status);
               const ActionIcon = action?.icon;
-              return <div className={'ops-queue-row ' + (selectedOrder?.id === order.id ? 'selected' : '')} key={order.id} onClick={() => setSelectedId(order.id)}>
+              return <div className={'processor-assigned-row ' + (selectedOrder?.id === order.id ? 'selected' : '')} key={order.id} onClick={() => setSelectedId(order.id)}>
                 <input type="checkbox" aria-label={`Select ${order.id}`} checked={selected.includes(order.id)} disabled={busyId !== null || !order.internalId} onChange={() => toggle(order.id)} onClick={event => event.stopPropagation()} />
                 <span className="processor-order-summary"><strong>{order.id} · {order.customer}</strong><small>{order.service} · {order.bags} bags · due {order.due || 'not set'}</small></span>
+                <span className="processor-cell-secondary">{order.service} · {order.bags} bags</span>
+                <span className="processor-cell-secondary">{order.due || 'Not set'}</span>
                 <span className={'status ' + (order.status === 'Ready for pickup' ? 'status-green' : 'status-amber')}>{order.status}</span>
                 {action && ActionIcon && <Button size="sm" onClick={event => { event.stopPropagation(); void advance(order); }} disabled={busyId !== null}><ActionIcon size={13} />{busyId === order.id ? 'Saving…' : action.label}</Button>}
               </div>;
@@ -130,5 +141,5 @@ function LegacyProcessorWorkspace({ orders, notify, onStatusChange, onRefresh }:
 }
 
 export default function ProcessorWorkspace(props: Props) {
-  return <div className="processor-portal-shell"><DeadlineRolePanel role="processor" orders={props.orders} /><LegacyProcessorWorkspace {...props} /></div>;
+  return <div className="processor-portal-shell"><LegacyProcessorWorkspace {...props} /></div>;
 }
