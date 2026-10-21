@@ -8,6 +8,9 @@ import { X } from 'lucide-react';
 import { DateField, PickupWindowField } from './ui/date-field';
 import { pickupDeadlineError } from '@/lib/order-scheduling';
 
+const pad = (value: number) => String(value).padStart(2, '0');
+const deadlineMinimum = (value: string) => { const date = new Date(value); if (Number.isNaN(date.getTime())) return undefined; date.setMinutes(date.getMinutes() + 1); return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`; };
+
 export const orderSchema = z.object({
   customer: z.string().min(2, 'Customer name is required'),
   phone: z.string().min(7, 'Phone number is required'),
@@ -20,7 +23,9 @@ export const orderSchema = z.object({
   notes: z.string().optional()
 }).superRefine((value, context) => {
   const error = pickupDeadlineError({ pickupStartAt: value.pickupStart, pickupEndAt: value.pickupEnd, deadlineAt: value.deadline });
-  if (error) context.addIssue({ code: 'custom', path: ['deadline'], message: error });
+  if (!error) return;
+  const path = error.includes('Pickup window end') || error.includes('Pickup window start and end') ? ['pickupEnd'] : ['deadline'];
+  context.addIssue({ code: 'custom', path, message: error });
 });
 
 export type OrderForm = z.infer<typeof orderSchema>;
@@ -40,13 +45,15 @@ export default function NewOrderModal({
   description = 'One focused form; matching starts automatically after validation.',
   submitLabel = 'Create and match'
 }: Props) {
-  const { register, control, watch, setValue, handleSubmit, formState: { errors, isSubmitting } } = useForm<OrderForm>({
+  const { register, control, watch, setValue, handleSubmit, formState: { errors, isSubmitting, isValid } } = useForm<OrderForm>({
     resolver: zodResolver(orderSchema),
+    mode: 'onChange',
     defaultValues: { service: 'Wash & Fold', bags: 1, pickupStart: '', pickupEnd: '', deadline: '' }
   });
   const [submitError, setSubmitError] = useState('');
   const pickupStart = watch('pickupStart');
   const pickupEnd = watch('pickupEnd');
+  const deadlineMin = pickupEnd ? deadlineMinimum(pickupEnd) : undefined;
 
   async function submit(data: OrderForm) {
     setSubmitError('');
@@ -72,12 +79,12 @@ export default function NewOrderModal({
             <Field label="Service"><select className="form-control" {...register('service')}><option>Wash & Fold</option><option>Dry Cleaning</option><option>Commercial Linen</option><option>Specialty Care</option></select></Field>
             <Field label="Expected bags"><input type="number" min="1" className="form-control" {...register('bags', { valueAsNumber: true })}/></Field>
             <Field label="Pickup window" full><PickupWindowField startValue={pickupStart ?? ''} endValue={pickupEnd ?? ''} onStartChange={value => setValue('pickupStart', value, { shouldDirty: true, shouldValidate: true })} onEndChange={value => setValue('pickupEnd', value, { shouldDirty: true, shouldValidate: true })} disabled={isSubmitting} aria-label="Pickup window" />{(errors.pickupStart || errors.pickupEnd) && <span className="field-error">{errors.pickupStart?.message || errors.pickupEnd?.message}</span>}</Field>
-            <Field label="Requested customer deadline" full><Controller control={control} name="deadline" render={({ field }) => <DateField type="datetime-local" value={field.value ?? ''} onChange={field.onChange} disabled={isSubmitting} aria-label="Requested customer deadline" />}/>{errors.deadline && <span className="field-error">{errors.deadline.message}</span>}</Field>
+            <Field label="Requested customer deadline" full><Controller control={control} name="deadline" render={({ field }) => <DateField type="datetime-local" value={field.value ?? ''} min={deadlineMin} onChange={field.onChange} disabled={isSubmitting} aria-label="Requested customer deadline" />}/>{errors.deadline && <span className="field-error">{errors.deadline.message}</span>}</Field>
             <Field label="Notes" full><textarea className="form-control" {...register('notes')}/></Field>
           </div>
           {submitError && <div className="field-error" role="alert" style={{ marginTop: 12 }}>{submitError}</div>}
         </div>
-        <footer className="modal-footer"><button type="button" className="button button-secondary" onClick={onClose} disabled={isSubmitting}>Cancel</button><button type="submit" className="button button-primary" disabled={isSubmitting}>{isSubmitting ? 'Creating...' : submitLabel}</button></footer>
+        <footer className="modal-footer"><button type="button" className="button button-secondary" onClick={onClose} disabled={isSubmitting}>Cancel</button><button type="submit" className="button button-primary" disabled={isSubmitting || !isValid}>{isSubmitting ? 'Creating...' : submitLabel}</button></footer>
       </form>
     </section>
   </div>;

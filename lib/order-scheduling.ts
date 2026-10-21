@@ -6,7 +6,7 @@ export function pickupDeadlineError(input: { pickupStartAt?: string | null; pick
   const end = new Date(pickupEndAt).getTime();
   const deadline = new Date(deadlineAt).getTime();
   if (![start, end, deadline].every(Number.isFinite)) return 'Pickup window and requested deadline must be valid date and time values.';
-  if (end < start) return 'Pickup window end must be after its start time.';
+  if (end <= start) return 'Pickup window end must be after its start time.';
   if (deadline <= end) return 'Requested customer deadline must be after the pickup window ends.';
   return null;
 }
