@@ -30,6 +30,8 @@ export default function ProfileEditor({ onClose, onSaved }: { onClose: () => voi
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     let active = true;
     void fetch('/api/profile', { cache: 'no-store' }).then(async response => {
       const body = await response.json();
@@ -45,7 +47,7 @@ export default function ProfileEditor({ onClose, onSaved }: { onClose: () => voi
         vehicleDetails: body.profile.vehicle_details ?? ''
       });
     }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Unable to load your profile.'); }).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    return () => { active = false; document.body.style.overflow = previousOverflow; };
   }, []);
 
   const update = (key: keyof FormState, value: string) => setForm(current => ({ ...current, [key]: value }));

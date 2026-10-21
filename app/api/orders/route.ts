@@ -28,7 +28,7 @@ function mapOrder(row:Record<string,unknown>, processorName?: string, role?: str
   return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due, pickupWindow:row.due_at_label ?? undefined, pickupWindowStartAt:row.pickup_window_start_at ?? undefined, pickupWindowEndAt:row.pickup_window_end_at ?? undefined, deadline, originalDeadline:isCustomer ? undefined : row.original_due_at ?? deadline, deadlineRevisionReason:isCustomer ? undefined : row.deadline_revision_reason ?? undefined, deadlineStatus, deadlineDelta:formatDeadlineDelta(deadline), actualCompletionAt:isCustomer ? undefined : completionAt, routeAssigned:isCustomer ? undefined : routeDetail?.active ?? false, failedStop:isCustomer ? undefined : routeDetail?.failed ?? false, customerNotificationPending:isCustomer ? undefined : Boolean(row.customer_exception_message && !row.customer_exception_notified_at), status:status as never, processor:isCustomer ? 'Operations team' : processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:isCustomer ? undefined : row.notes ?? undefined, actualBags:isCustomer ? undefined : row.actual_bags ?? undefined, processorBags:isCustomer ? undefined : row.processor_bags ?? undefined, completedBags:isCustomer ? undefined : row.completed_bags ?? undefined, exception:row.has_exception ? isCustomer ? 'Open exception' : exceptionDetail?.description ?? 'Open exception' : undefined, exceptionMessage:row.customer_exception_message ?? undefined, archived:Boolean(row.archived_at) };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const client = await createSupabaseServerClient();
   if (!client) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
   const { data:{ user } } = await getUserSafely(client);
@@ -43,6 +43,9 @@ export async function GET() {
   }
   if (profile.role === 'driver') query = query.eq('assigned_driver_id', user.id);
   if (profile.role !== 'super_admin') query = query.is('archived_at', null);
+  const rawSearch = new URL(request.url).searchParams.get('q')?.trim().slice(0, 80);
+  const search = rawSearch?.replace(/[\\%(),]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (search) query = query.or(`order_number.ilike.%${search}%,customer_name.ilike.%${search}%,phone.ilike.%${search}%,pickup_address.ilike.%${search}%,service_type.ilike.%${search}%,item_description.ilike.%${search}%`).limit(20);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error:error.message }, { status:500 });
   const { data: workspace } = await client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
