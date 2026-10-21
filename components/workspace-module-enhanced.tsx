@@ -10,15 +10,17 @@ import RouteRecoveryPanel from './route-recovery-panel';
 import DriverWorkflowPanel from './driver-workflow-panel';
 import ProcessorManagerPanel from './processor-manager-panel';
 import ScorecardsPanel from './scorecards-panel';
+import DeadlineCoverageReport from './deadline-coverage-report';
 import TeamAccessPanel from './team-access-panel';
 import DispatchWorkspace from './dispatch-workspace';
 import OrdersWorkspace from './orders-workspace';
 import ExperimentalOrdersWorkspace from './orders-workspace-experimental';
 import CustomerWorkspace from './customer-workspace';
 import type { OrderForm } from './new-order-modal';
+import type { ServiceCatalogItem } from '@/lib/service-catalog';
 import type { Order, OrderStatus, Processor, UserRole } from '@/lib/types';
 
-type Props={active:string;orders:Order[];processors:Processor[];role:UserRole;onSelect:(order:Order)=>void;notify:(message:string)=>void;onStatusChange:(id:string,status:OrderStatus,note?:string)=>Promise<void>;onApproveRoute:(orderIds?:string[])=>void;onCreateOrder:(data:OrderForm)=>Promise<void>;onCreate:()=>void;onProcessorCreated:()=>Promise<void>;onNavigate?:(section:string)=>void};
+type Props={active:string;orders:Order[];processors:Processor[];role:UserRole;services:ServiceCatalogItem[];onSelect:(order:Order)=>void;notify:(message:string)=>void;onStatusChange:(id:string,status:OrderStatus,note?:string)=>Promise<void>;onApproveRoute:(orderIds?:string[])=>void;onCreateOrder:(data:OrderForm)=>Promise<void>;onCreate:()=>void;onProcessorCreated:()=>Promise<void>;onNavigate?:(section:string)=>void};
 const USE_EXPERIMENTAL_ORDERS_VIEW = true;
 export default function EnhancedWorkspaceModule(props:Props){
   if(props.active==='Orders') { const ordersProps = { orders: props.orders, role: props.role, notify: props.notify, onRefresh: props.onProcessorCreated, onCreate: props.onCreate, onNavigate: props.onNavigate }; return USE_EXPERIMENTAL_ORDERS_VIEW ? <ExperimentalOrdersWorkspace {...ordersProps}/> : <OrdersWorkspace {...ordersProps}/>; }
@@ -28,11 +30,11 @@ export default function EnhancedWorkspaceModule(props:Props){
   if(props.active==='Payments' && ['super_admin','dispatcher'].includes(props.role)) return <PaymentsPanel orders={props.orders} notify={props.notify}/>;
   if(props.active==='Routes' && ['super_admin','dispatcher'].includes(props.role)) return <><RouteRecoveryPanel notify={props.notify}/><RoutePlannerPanel orders={props.orders} notify={props.notify}/></>;
   if(props.active==='Driver app' && props.role==='driver') return <DriverWorkflowPanel orders={props.orders} notify={props.notify} onStatusChange={props.onStatusChange} onRefresh={props.onProcessorCreated}/>;
-  if(props.active==='Customer portal' && props.role==='customer') return <CustomerWorkspace orders={props.orders} notify={props.notify} onCreateOrder={props.onCreateOrder} onRefresh={props.onProcessorCreated}/>;
+  if(props.active==='Customer portal' && props.role==='customer') return <CustomerWorkspace orders={props.orders} notify={props.notify} services={props.services} onCreateOrder={props.onCreateOrder} onRefresh={props.onProcessorCreated}/>;
   if(props.active==='Processors' && ['super_admin','dispatcher'].includes(props.role)) return <ProcessorManagerPanel processors={props.processors} notify={props.notify} onRefresh={props.onProcessorCreated}/>;
-  if(props.active==='Reports' && ['super_admin','dispatcher'].includes(props.role)) return <ScorecardsPanel orders={props.orders} processors={props.processors} notify={props.notify}/>;
+  if(props.active==='Reports' && ['super_admin','dispatcher'].includes(props.role)) return <><DeadlineCoverageReport orders={props.orders}/><ScorecardsPanel orders={props.orders} processors={props.processors} notify={props.notify}/></>;
   if(props.active==='Processor portal' && props.role==='processor') return <ProcessorWorkspace orders={props.orders} notify={props.notify} onStatusChange={props.onStatusChange} onRefresh={props.onProcessorCreated}/>;
-  const { onNavigate: _onNavigate, ...workspaceProps } = props;
+  const { onNavigate: _onNavigate, services: _services, ...workspaceProps } = props;
   // The legacy workspace is retained as a fallback, but the enhanced workspace is the active path.
   return <WorkspaceModule {...workspaceProps} onCreateOrder={workspaceProps.onCreateOrder as unknown as Parameters<typeof WorkspaceModule>[0]['onCreateOrder']} />;
 }

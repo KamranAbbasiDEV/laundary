@@ -7,6 +7,7 @@ import { inngest } from '@/lib/inngest';
 import { logOperationalNotification } from '@/lib/notifications';
 import { getDeadlineStatus, formatDeadlineDelta } from '@/lib/deadlines';
 import { pickupDeadlineError } from '@/lib/order-scheduling';
+import { serviceIsConfigured } from '@/lib/service-catalog';
 
 const orderInput = z.object({
   customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
@@ -91,8 +92,7 @@ export async function POST(request: Request) {
   if (!profile || profile.status !== 'active' || !['super_admin', 'dispatcher', 'customer'].includes(profile.role)) return NextResponse.json({ error: 'Your account cannot create orders.' }, { status: 403 });
   const matchingClient = supabaseAdmin ?? supabase;
   const { data: workspace } = await matchingClient.from('workspace_settings').select('services,matching_rules').eq('id', 'default').maybeSingle();
-  const configuredServices = Array.isArray(workspace?.services) ? workspace.services.map(service => typeof service === 'object' && service ? String((service as Record<string, unknown>).name ?? '').trim().toLowerCase() : '').filter(Boolean) : [];
-  if (configuredServices.length && !configuredServices.includes(parsed.data.service.trim().toLowerCase())) return NextResponse.json({ error: 'Choose a service from the active workspace service catalog.' }, { status: 400 });
+  if (!serviceIsConfigured(parsed.data.service, workspace?.services)) return NextResponse.json({ error: 'Choose a service from the active workspace service catalog.' }, { status: 400 });
 
   const needsManualReview = profile.role === 'customer';
   const { data, error } = await supabase.from('orders').insert({

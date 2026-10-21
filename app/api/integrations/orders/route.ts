@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { pickupDeadlineError } from '@/lib/order-scheduling';
+import { serviceIsConfigured } from '@/lib/service-catalog';
 
 const payloadSchema = z.object({
   externalId: z.string().min(1).max(160), customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
@@ -18,7 +19,8 @@ export async function POST(request: Request) {
   const item = parsed.data;
   const pickupError = pickupDeadlineError({ pickupStartAt: item.pickupWindowStartAt, pickupEndAt: item.pickupWindowEndAt, deadlineAt: item.dueAt });
   if (pickupError) return NextResponse.json({ error: pickupError }, { status: 400 });
-  const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('matching_rules').eq('id', 'default').maybeSingle();
+  const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('services,matching_rules').eq('id', 'default').maybeSingle();
+  if (!serviceIsConfigured(item.service, workspace?.services)) return NextResponse.json({ error: 'Choose a service from the active workspace service catalog.' }, { status: 400 });
   const { data: existing, error: lookupError } = await supabaseAdmin.from('orders').select('id,order_number,status').eq('intake_source', item.source).eq('external_id', item.externalId).maybeSingle();
   if (lookupError) return NextResponse.json({ error: lookupError.message }, { status: 500 });
   if (existing) return NextResponse.json({ order: existing, idempotent: true });

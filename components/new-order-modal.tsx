@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
 import { DateField, PickupWindowField } from './ui/date-field';
 import { pickupDeadlineError } from '@/lib/order-scheduling';
+import { defaultServiceCatalog, type ServiceCatalogItem } from '@/lib/service-catalog';
 
 const pad = (value: number) => String(value).padStart(2, '0');
 const deadlineMinimum = (value: string) => { const date = new Date(value); if (Number.isNaN(date.getTime())) return undefined; date.setMinutes(date.getMinutes() + 1); return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`; };
@@ -36,6 +37,7 @@ type Props = {
   title?: string;
   description?: string;
   submitLabel?: string;
+  services?: ServiceCatalogItem[];
 };
 
 export default function NewOrderModal({
@@ -43,7 +45,8 @@ export default function NewOrderModal({
   onCreate,
   title = 'Create new order',
   description = 'One focused form; matching starts automatically after validation.',
-  submitLabel = 'Create and match'
+  submitLabel = 'Create and match',
+  services = defaultServiceCatalog
 }: Props) {
   const { register, control, watch, setValue, handleSubmit, formState: { errors, isSubmitting, isValid } } = useForm<OrderForm>({
     resolver: zodResolver(orderSchema),
@@ -76,7 +79,7 @@ export default function NewOrderModal({
             <Field label="Customer"><input className="form-control" {...register('customer')}/>{errors.customer && <span className="field-error">{errors.customer.message}</span>}</Field>
             <Field label="Phone"><input className="form-control" {...register('phone')}/>{errors.phone && <span className="field-error">{errors.phone.message}</span>}</Field>
             <Field label="Pickup address" full><input className="form-control" {...register('address')}/>{errors.address && <span className="field-error">{errors.address.message}</span>}</Field>
-            <Field label="Service"><select className="form-control" {...register('service')}><option>Wash & Fold</option><option>Dry Cleaning</option><option>Commercial Linen</option><option>Specialty Care</option></select></Field>
+            <Field label="Service"><select className="form-control" {...register('service')}>{services.map(service => <option key={service.name} value={service.name}>{service.name}</option>)}</select></Field>
             <Field label="Expected bags"><input type="number" min="1" className="form-control" {...register('bags', { valueAsNumber: true })}/></Field>
             <Field label="Pickup window" full><PickupWindowField startValue={pickupStart ?? ''} endValue={pickupEnd ?? ''} onStartChange={value => setValue('pickupStart', value, { shouldDirty: true, shouldValidate: true })} onEndChange={value => setValue('pickupEnd', value, { shouldDirty: true, shouldValidate: true })} disabled={isSubmitting} aria-label="Pickup window" />{(errors.pickupStart || errors.pickupEnd) && <span className="field-error">{errors.pickupStart?.message || errors.pickupEnd?.message}</span>}</Field>
             <Field label="Requested customer deadline" full><Controller control={control} name="deadline" render={({ field }) => <DateField type="datetime-local" value={field.value ?? ''} min={deadlineMin} onChange={field.onChange} disabled={isSubmitting} aria-label="Requested customer deadline" />}/>{errors.deadline && <span className="field-error">{errors.deadline.message}</span>}</Field>
