@@ -4,6 +4,7 @@ import { requireActiveUser } from '@/lib/api-auth';
 import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
 import { blockActiveRouteStatusChange, syncDraftRoutesAfterStatusChange } from '@/lib/route-consistency';
+import { pickupDeadlineError } from '@/lib/order-scheduling';
 
 const statuses = ['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed'] as const;
 const toDatabaseStatus = (value: OrderStatus) => ({ Created: 'created', Validated: 'validated', 'Processor ranked': 'processor_ranked', 'Capacity confirmed': 'capacity_confirmed', 'Pickup scheduled': 'pickup_scheduled', 'Picked up': 'picked_up', 'At processor': 'at_processor', Processing: 'processing', 'Ready for pickup': 'ready_for_pickup', 'Picked up from processor': 'picked_up_from_processor', 'QC / Reconciliation': 'qc_reconciliation', 'Out for delivery': 'out_for_delivery', Delivered: 'delivered', 'Processor reviewed': 'processor_reviewed' } as Record<OrderStatus, string>)[value];
@@ -28,7 +29,7 @@ export async function PATCH(request: Request) {
   const parsed = payloadSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid bulk update.', details: parsed.error.flatten() }, { status: 400 });
   const payload = parsed.data;
-  const { data: orders, error: readError } = await auth.client.from('orders').select('id,order_number,status,processor_id,assigned_driver_id,original_due_at,due_at').in('id', payload.orderIds);
+  const { data: orders, error: readError } = await auth.client.from('orders').select('id,order_number,status,processor_id,assigned_driver_id,original_due_at,due_at,pickup_window_start_at,pickup_window_end_at').in('id', payload.orderIds);
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!orders || orders.length !== payload.orderIds.length) return NextResponse.json({ error: 'One or more orders no longer exist.' }, { status: 404 });
 
@@ -37,6 +38,10 @@ export async function PATCH(request: Request) {
   if (role === 'driver') return NextResponse.json({ error: 'Driver handoffs must be completed one stop at a time with required evidence.' }, { status: 403 });
   if (payload.action === 'set_deadline' && !['super_admin', 'dispatcher'].includes(role)) return NextResponse.json({ error: 'Only Super Admin or Dispatcher can change deadlines.' }, { status: 403 });
   if (payload.action === 'set_deadline' && orders.some(order => ['delivered', 'processor_reviewed'].includes(order.status))) return NextResponse.json({ error: 'Completed orders are historical records and cannot have their deadlines changed.' }, { status: 409 });
+  if (payload.action === 'set_deadline') {
+    const pickupError = orders.map(order => pickupDeadlineError({ pickupStartAt: order.pickup_window_start_at, pickupEndAt: order.pickup_window_end_at, deadlineAt: payload.dueAt })).find(Boolean);
+    if (pickupError) return NextResponse.json({ error: pickupError }, { status: 400 });
+  }
   if (payload.action === 'set_deadline' && payload.originalDueAt && payload.dueAt && new Date(payload.dueAt).getTime() < new Date(payload.originalDueAt).getTime() && !payload.reason) return NextResponse.json({ error: 'A reason is required when the committed deadline is earlier than the original commitment.' }, { status: 400 });
   if (payload.action === 'set_status' && role === 'dispatcher') return NextResponse.json({ error: 'Dispatchers cannot change order status.' }, { status: 403 });
   if (['archive', 'restore'].includes(payload.action) && role !== 'super_admin') return NextResponse.json({ error: 'Only Super Admin can archive or restore orders.' }, { status: 403 });

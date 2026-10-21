@@ -29,6 +29,8 @@ export type Order = {
   created: string;
   notes?: string;
   pickupWindow?: string;
+  pickupWindowStartAt?: string;
+  pickupWindowEndAt?: string;
   deliveryWindow?: string;
   actualBags?: number;
   processorBags?: number;

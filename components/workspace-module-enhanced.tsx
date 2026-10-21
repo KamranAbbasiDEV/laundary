@@ -15,9 +15,10 @@ import DispatchWorkspace from './dispatch-workspace';
 import OrdersWorkspace from './orders-workspace';
 import ExperimentalOrdersWorkspace from './orders-workspace-experimental';
 import CustomerWorkspace from './customer-workspace';
+import type { OrderForm } from './new-order-modal';
 import type { Order, OrderStatus, Processor, UserRole } from '@/lib/types';
 
-type Props={active:string;orders:Order[];processors:Processor[];role:UserRole;onSelect:(order:Order)=>void;notify:(message:string)=>void;onStatusChange:(id:string,status:OrderStatus,note?:string)=>Promise<void>;onApproveRoute:(orderIds?:string[])=>void;onCreateOrder:(data:{customer:string;phone:string;address:string;service:string;bags:number;due:string;deadline:string;notes?:string})=>Promise<void>;onCreate:()=>void;onProcessorCreated:()=>Promise<void>;onNavigate?:(section:string)=>void};
+type Props={active:string;orders:Order[];processors:Processor[];role:UserRole;onSelect:(order:Order)=>void;notify:(message:string)=>void;onStatusChange:(id:string,status:OrderStatus,note?:string)=>Promise<void>;onApproveRoute:(orderIds?:string[])=>void;onCreateOrder:(data:OrderForm)=>Promise<void>;onCreate:()=>void;onProcessorCreated:()=>Promise<void>;onNavigate?:(section:string)=>void};
 const USE_EXPERIMENTAL_ORDERS_VIEW = true;
 export default function EnhancedWorkspaceModule(props:Props){
   if(props.active==='Orders') { const ordersProps = { orders: props.orders, role: props.role, notify: props.notify, onRefresh: props.onProcessorCreated, onCreate: props.onCreate, onNavigate: props.onNavigate }; return USE_EXPERIMENTAL_ORDERS_VIEW ? <ExperimentalOrdersWorkspace {...ordersProps}/> : <OrdersWorkspace {...ordersProps}/>; }
@@ -32,5 +33,6 @@ export default function EnhancedWorkspaceModule(props:Props){
   if(props.active==='Reports' && ['super_admin','dispatcher'].includes(props.role)) return <ScorecardsPanel orders={props.orders} processors={props.processors} notify={props.notify}/>;
   if(props.active==='Processor portal' && props.role==='processor') return <ProcessorWorkspace orders={props.orders} notify={props.notify} onStatusChange={props.onStatusChange} onRefresh={props.onProcessorCreated}/>;
   const { onNavigate: _onNavigate, ...workspaceProps } = props;
-  return <WorkspaceModule {...workspaceProps}/>;
+  // The legacy workspace is retained as a fallback, but the enhanced workspace is the active path.
+  return <WorkspaceModule {...workspaceProps} onCreateOrder={workspaceProps.onCreateOrder as unknown as Parameters<typeof WorkspaceModule>[0]['onCreateOrder']} />;
 }

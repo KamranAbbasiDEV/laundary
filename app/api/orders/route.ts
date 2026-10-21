@@ -6,10 +6,11 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { inngest } from '@/lib/inngest';
 import { logOperationalNotification } from '@/lib/notifications';
 import { getDeadlineStatus, formatDeadlineDelta } from '@/lib/deadlines';
+import { pickupDeadlineError } from '@/lib/order-scheduling';
 
 const orderInput = z.object({
   customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
-  service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), dueAt: z.string().datetime({ offset: true }), notes: z.string().optional(),
+  service: z.string().min(1), bags: z.number().int().positive(), due: z.string().min(1), dueAt: z.string().datetime({ offset: true }), pickupWindowStartAt: z.string().datetime({ offset: true }).optional(), pickupWindowEndAt: z.string().datetime({ offset: true }).optional(), notes: z.string().optional(),
   items: z.string().max(2000).optional(), textileTypes: z.array(z.string().min(1).max(80)).max(12).optional(), specialHandling: z.array(z.string().min(1).max(120)).max(12).optional(), customerSpecifications: z.string().max(4000).optional(), priority: z.enum(['standard', 'priority', 'same_day']).optional()
 });
 
@@ -22,7 +23,7 @@ function mapOrder(row:Record<string,unknown>, processorName?: string, role?: str
   const status = statusMap[String(row.status)] ?? row.status as string;
   const atRisk = Boolean(routeDetail?.failed) || exceptionDetail?.deadline_impact === 'at_risk' || exceptionDetail?.deadline_impact === 'delayed' || (role === 'customer' && Boolean(row.has_exception));
   const deadlineStatus = getDeadlineStatus({ deadline, actualCompletionAt: completionAt, orderStatus: status, atRisk, timezone });
-  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due, deadline, originalDeadline:row.original_due_at ?? deadline, deadlineRevisionReason:row.deadline_revision_reason ?? undefined, deadlineStatus, deadlineDelta:formatDeadlineDelta(deadline), actualCompletionAt:completionAt, routeAssigned:routeDetail?.active ?? false, failedStop:routeDetail?.failed ?? false, customerNotificationPending:Boolean(row.customer_exception_message && !row.customer_exception_notified_at), status:status as never, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? role === 'customer' ? 'Open exception' : exceptionDetail?.description ?? 'Open exception' : undefined, exceptionMessage:row.customer_exception_message ?? undefined, archived:Boolean(row.archived_at) };
+  return { id:row.order_number ?? row.id, internalId:row.id, customer:row.customer_name, phone:row.phone, address:row.pickup_address, service:row.service_type, items:row.item_description ?? '', bags:row.expected_bags, due, pickupWindow:row.due_at_label ?? undefined, pickupWindowStartAt:row.pickup_window_start_at ?? undefined, pickupWindowEndAt:row.pickup_window_end_at ?? undefined, deadline, originalDeadline:row.original_due_at ?? deadline, deadlineRevisionReason:row.deadline_revision_reason ?? undefined, deadlineStatus, deadlineDelta:formatDeadlineDelta(deadline), actualCompletionAt:completionAt, routeAssigned:routeDetail?.active ?? false, failedStop:routeDetail?.failed ?? false, customerNotificationPending:Boolean(row.customer_exception_message && !row.customer_exception_notified_at), status:status as never, processor:processorName ?? 'Unassigned', priority:priorityMap[String(row.priority)] ?? row.priority, created:row.created_at, notes:row.notes ?? undefined, actualBags:row.actual_bags ?? undefined, processorBags:row.processor_bags ?? undefined, completedBags:row.completed_bags ?? undefined, exception:row.has_exception ? role === 'customer' ? 'Open exception' : exceptionDetail?.description ?? 'Open exception' : undefined, exceptionMessage:row.customer_exception_message ?? undefined, archived:Boolean(row.archived_at) };
 }
 
 export async function GET() {
@@ -80,6 +81,8 @@ export async function GET() {
 export async function POST(request: Request) {
   const parsed = orderInput.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid order payload', details: parsed.error.flatten() }, { status: 400 });
+  const pickupError = pickupDeadlineError({ pickupStartAt: parsed.data.pickupWindowStartAt, pickupEndAt: parsed.data.pickupWindowEndAt, deadlineAt: parsed.data.dueAt });
+  if (pickupError) return NextResponse.json({ error: pickupError }, { status: 400 });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error:'Supabase is not configured' }, { status:503 });
   const { data: { user } } = await getUserSafely(supabase);
@@ -94,7 +97,7 @@ export async function POST(request: Request) {
   const needsManualReview = profile.role === 'customer';
   const { data, error } = await supabase.from('orders').insert({
     customer_name: parsed.data.customer, phone: parsed.data.phone, pickup_address: parsed.data.address,
-    service_type: parsed.data.service, expected_bags: parsed.data.bags, due_at_label: parsed.data.due, due_at: parsed.data.dueAt, original_due_at: parsed.data.dueAt,
+    service_type: parsed.data.service, expected_bags: parsed.data.bags, due_at_label: parsed.data.due, due_at: parsed.data.dueAt, original_due_at: parsed.data.dueAt, pickup_window_start_at: parsed.data.pickupWindowStartAt ?? null, pickup_window_end_at: parsed.data.pickupWindowEndAt ?? null,
     notes: parsed.data.notes ?? null, item_description: parsed.data.items ?? null, textile_types: parsed.data.textileTypes ?? [], special_handling: parsed.data.specialHandling ?? [], customer_specifications: parsed.data.customerSpecifications ?? null, priority: parsed.data.priority ?? 'standard', validation_state: needsManualReview ? 'manual_review' : 'validated', validated_at: needsManualReview ? null : new Date().toISOString(), validated_by: needsManualReview ? null : user.id, status: needsManualReview ? 'created' : 'validated', customer_user_id: profile?.role === 'customer' ? user.id : null
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

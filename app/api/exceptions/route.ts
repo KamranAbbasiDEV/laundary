@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { hasRole, requireActiveUser } from '@/lib/api-auth';
 import { logCustomerNotification, logOperationalNotification } from '@/lib/notifications';
+import { pickupDeadlineError } from '@/lib/order-scheduling';
 
 const updateSchema = z.object({ id: z.string().uuid(), status: z.enum(['open', 'in_review', 'resolved']), resolutionNotes: z.string().max(2000).optional(), assignedTo: z.string().uuid().nullable().optional(), deadlineImpact: z.enum(['none','at_risk','delayed']).optional(), revisedDueAt: z.string().datetime({ offset: true }).nullable().optional(), deadlineReason: z.string().trim().max(1000).optional(), customerMessage: z.string().trim().max(1000).optional(), notifyCustomer: z.boolean().optional() });
 const createSchema = z.object({ orderId: z.string().uuid(), type: z.enum(['pickup_discrepancy','processor_discrepancy','quality_issue','damaged_item','route_issue','missing_customer_specification']), stage: z.string().optional(), description: z.string().trim().min(3).max(2000), severity: z.enum(['low','medium','high','critical']).default('medium') });
@@ -55,7 +56,7 @@ export async function PATCH(request: Request) {
   if (body.status === 'resolved' && !body.resolutionNotes?.trim()) return NextResponse.json({ error: 'A resolution note is required when resolving an exception.' }, { status: 400 });
   const { data: current, error: currentError } = await auth.client.from('exceptions').select('id,order_id,status,deadline_impact,deadline_before,deadline_after,deadline_reason,customer_message,customer_notified_at,customer_notified_by,resolution_notes').eq('id', body.id).single();
   if (currentError || !current) return NextResponse.json({ error: currentError?.message || 'Exception not found.' }, { status: currentError ? 500 : 404 });
-  const { data: order } = await auth.client.from('orders').select('id,order_number,phone,due_at,original_due_at').eq('id', current.order_id).single();
+  const { data: order } = await auth.client.from('orders').select('id,order_number,phone,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('id', current.order_id).single();
   if (!order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (body.assignedTo) {
     const { data: assignee, error: assigneeError } = await auth.client.from('profiles').select('id,role,status').eq('id', body.assignedTo).maybeSingle();
@@ -64,6 +65,8 @@ export async function PATCH(request: Request) {
   }
   const deadlineImpact = body.deadlineImpact ?? (body.revisedDueAt ? 'delayed' : undefined);
   if (body.revisedDueAt && !body.deadlineReason?.trim()) return NextResponse.json({ error: 'A reason is required when revising the deadline.' }, { status: 400 });
+  const pickupError = pickupDeadlineError({ pickupStartAt: order.pickup_window_start_at, pickupEndAt: order.pickup_window_end_at, deadlineAt: body.revisedDueAt ?? order.due_at });
+  if (pickupError) return NextResponse.json({ error: pickupError }, { status: 400 });
   const { data, error } = await auth.client.from('exceptions').update({
     status: body.status, ...(body.assignedTo !== undefined ? { assigned_to: body.assignedTo } : {}), resolution_notes: body.resolutionNotes?.trim() || current.resolution_notes || null,
     deadline_impact: deadlineImpact ?? current.deadline_impact ?? 'none', deadline_before: current.deadline_before ?? order.due_at, deadline_after: body.revisedDueAt !== undefined ? body.revisedDueAt : current.deadline_after ?? null, deadline_reason: body.deadlineReason !== undefined ? body.deadlineReason?.trim() || null : current.deadline_reason ?? null,

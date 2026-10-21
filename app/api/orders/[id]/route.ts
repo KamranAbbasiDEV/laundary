@@ -6,6 +6,7 @@ import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
 import { logCustomerNotification, logOperationalNotification } from '@/lib/notifications';
 import { blockActiveRouteStatusChange, syncDraftRoutesAfterStatusChange } from '@/lib/route-consistency';
+import { pickupDeadlineError } from '@/lib/order-scheduling';
 
 const statusSchema = z.enum(['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed']);
 const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional(), deadlineImpact: z.enum(['none','at_risk','delayed']).optional(), customerMessage: z.string().trim().max(1000).optional(), notifyCustomer: z.boolean().optional(), deadlineReason: z.string().trim().max(1000).optional(), customer: z.string().trim().min(2).max(160).optional(), phone: z.string().trim().min(7).max(40).optional(), address: z.string().trim().min(5).max(500).optional(), service: z.string().trim().min(1).max(120).optional(), bags: z.number().int().positive().optional(), due: z.string().trim().max(160).optional(), dueAt: z.string().datetime({ offset: true }).nullable().optional(), originalDueAt: z.string().datetime({ offset: true }).nullable().optional(), notes: z.string().trim().max(2000).nullable().optional() });
@@ -30,8 +31,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!actor || actor.status !== 'active' || !['super_admin','dispatcher','driver','processor'].includes(actor.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
 
   const currentQuery = isUuid
-    ? supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at,original_due_at').eq('id', id).maybeSingle()
-    : supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at,original_due_at').eq('order_number', id).maybeSingle();
+    ? supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('id', id).maybeSingle()
+    : supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('order_number', id).maybeSingle();
   const { data: current, error: readError } = await currentQuery;
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -101,6 +102,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     });
     if (historyError) return NextResponse.json({ error: historyError.message }, { status: 500 });
   }
+  const pickupError = pickupDeadlineError({ pickupStartAt: current.pickup_window_start_at, pickupEndAt: current.pickup_window_end_at, deadlineAt: body.data.dueAt ?? current.due_at });
+  if (pickupError) return NextResponse.json({ error: pickupError }, { status: 400 });
   if (body.data.exception) {
     const { error: exceptionError } = await supabase.from('exceptions').insert({ order_id: current.id, type: 'route_issue', stage: 'route', description: body.data.exception, severity: 'medium', deadline_impact: body.data.deadlineImpact ?? (current.due_at ? 'at_risk' : 'none'), deadline_before: current.due_at, customer_message: body.data.customerMessage ?? null, opened_by: user.id, status: 'open' });
     if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });

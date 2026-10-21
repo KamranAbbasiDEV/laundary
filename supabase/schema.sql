@@ -41,7 +41,7 @@ for each row execute procedure public.handle_new_user();
 create table public.orders (
   id uuid primary key default gen_random_uuid(), order_number text not null unique default ('RL-' || floor(random() * 900000 + 100000)::text), customer_name text not null, phone text not null,
   pickup_address text not null, service_type text not null, item_description text, expected_bags integer not null check (expected_bags > 0), customer_user_id uuid references auth.users(id),
-  due_at timestamptz, due_at_label text, priority public.order_priority not null default 'standard',
+  due_at timestamptz, due_at_label text, pickup_window_start_at timestamptz, pickup_window_end_at timestamptz, priority public.order_priority not null default 'standard',
   status public.order_status not null default 'created', processor_id uuid, notes text, has_exception boolean not null default false, original_due_at timestamptz, deadline_revised_at timestamptz, deadline_revised_by uuid references auth.users(id) on delete set null, deadline_revision_reason text, customer_exception_message text, customer_exception_notified_at timestamptz, archived_at timestamptz, archived_by uuid references auth.users(id) on delete set null, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 create table public.deadline_revisions (
