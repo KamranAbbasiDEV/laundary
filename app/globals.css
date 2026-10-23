@@ -518,6 +518,39 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 .orders-workspace.is-table .table-pagination { min-height: 52px; align-items: center; background: #fbfcfd; }
 .orders-workspace.is-table .order-drawer { border-radius: 14px; box-shadow: 0 8px 24px rgba(15,31,53,.05); }
 .orders-workspace.is-table .orders-layout:has(.drawer-empty) { grid-template-columns: 1fr; }
+
+/* Shared post-sidebar layout refinement: keep every role on the same readable content grid. */
+.app-shell { min-height: 100dvh; }
+.main { width: 100%; min-width: 0; background: var(--canvas); }
+.content,
+main.main:has(.orders-experimental-shell) .content { width: min(100%, 1720px); max-width: 1720px; margin: 0 auto; padding: 38px clamp(20px, 3vw, 48px) 64px; }
+.workspace-header-bar { box-shadow: 0 1px 0 rgba(15,31,53,.03), 0 8px 24px rgba(15,31,53,.035); }
+.workspace-top-row { min-height: 74px; padding-right: clamp(20px, 3vw, 48px); padding-left: clamp(20px, 3vw, 48px); gap: clamp(14px, 2vw, 30px); }
+.workspace-nav { min-height: 52px; padding-right: clamp(20px, 3vw, 48px); padding-left: clamp(20px, 3vw, 48px); border-top: 1px solid #f0f3f6; background: #fbfcfd; }
+.workspace-nav-item { min-height: 34px; padding-right: 12px; padding-left: 12px; }
+.page-heading { margin-bottom: 30px; }
+.page-heading h1 { font-size: clamp(30px, 2.8vw, 42px); letter-spacing: -.045em; line-height: 1.05; }
+.page-heading p { max-width: 680px; }
+.orders-workspace { gap: 20px; }
+.orders-workspace.is-kanban .orders-kanban { grid-template-columns: repeat(6, minmax(230px, 1fr)); gap: 14px; }
+.orders-workspace.is-kanban .kanban-column { border-radius: 13px; }
+.orders-workspace.is-kanban .kanban-column-header { padding: 15px 14px 12px; }
+.orders-workspace.is-kanban .kanban-column-body { min-height: clamp(440px, 60vh, 760px); padding: 11px; }
+.orders-workspace.is-kanban .order-card { padding: 15px; }
+@media (max-width: 900px) {
+  .content,
+  main.main:has(.orders-experimental-shell) .content { padding-right: 20px; padding-left: 20px; }
+  .workspace-top-row { gap: 14px; }
+}
+@media (max-width: 760px) {
+  .content,
+  main.main:has(.orders-experimental-shell) .content { padding: 24px 16px 44px; }
+  .workspace-top-row { min-height: 68px; }
+  .workspace-nav { min-height: 48px; }
+  .page-heading { margin-bottom: 24px; }
+  .page-heading h1 { font-size: 30px; }
+  .orders-workspace.is-kanban .orders-kanban { grid-template-columns: repeat(6, minmax(245px, 1fr)); }
+}
 .orders-workspace.is-table .order-drawer:has(.drawer-empty) { display: none; }
 .orders-workspace.is-table .empty-state { min-height: 180px; padding: 30px 20px; }
 @media (max-width: 1050px) {
