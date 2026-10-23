@@ -523,8 +523,9 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 .app-shell { min-height: 100dvh; }
 .main { width: 100%; min-width: 0; background: var(--canvas); }
 .content,
-main.main:has(.orders-experimental-shell) .content { width: min(100%, 1500px); max-width: 1500px; margin: 0 auto; padding: 38px clamp(20px, 3vw, 48px) 64px; }
+main.main:has(.orders-experimental-shell) .content { width: 100%; max-width: none; margin: 0; padding: 38px clamp(20px, 3vw, 48px) 64px; }
 .workspace-header-bar { box-shadow: 0 1px 0 rgba(15,31,53,.03), 0 8px 24px rgba(15,31,53,.035); }
+.workspace-top-row, .workspace-nav { width: 100%; max-width: none; }
 .workspace-top-row { min-height: 74px; padding-right: clamp(20px, 3vw, 48px); padding-left: clamp(20px, 3vw, 48px); gap: clamp(14px, 2vw, 30px); }
 .workspace-nav { min-height: 52px; padding-right: clamp(20px, 3vw, 48px); padding-left: clamp(20px, 3vw, 48px); border-top: 1px solid #f0f3f6; background: #fbfcfd; }
 .workspace-nav-item { min-height: 34px; padding-right: 12px; padding-left: 12px; }
@@ -550,6 +551,19 @@ main.main:has(.orders-experimental-shell) .content { width: min(100%, 1500px); m
   .page-heading { margin-bottom: 24px; }
   .page-heading h1 { font-size: 30px; }
   .orders-workspace.is-kanban .orders-kanban { grid-template-columns: repeat(6, minmax(245px, 1fr)); }
+}
+
+/* Keep the global search centered to the viewport, independent of role-specific controls. */
+@media (min-width: 761px) {
+  .workspace-top-row > .global-search { position: absolute; top: 50%; left: 50%; z-index: 1; margin: 0; transform: translate(-50%, -50%); }
+  .workspace-links, .workspace-header-actions { position: relative; z-index: 2; }
+  .workspace-header-actions { align-self: center; }
+}
+@media (max-width: 1100px) and (min-width: 761px) {
+  .workspace-top-row > .global-search { width: min(360px, 32vw); }
+}
+@media (max-width: 760px) {
+  .workspace-top-row > .global-search { position: static; top: auto; left: auto; transform: none; }
 }
 .orders-workspace.is-table .order-drawer:has(.drawer-empty) { display: none; }
 .orders-workspace.is-table .empty-state { min-height: 180px; padding: 30px 20px; }
