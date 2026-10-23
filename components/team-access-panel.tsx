@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, Mail, RefreshCw, UserPlus, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { FormModal } from './ui/form-modal';
 import type { Processor, UserRole } from '@/lib/types';
 import { humanize } from '@/lib/presentation';
 
@@ -19,6 +20,7 @@ export default function TeamAccessPanel({ processors, notify }: { processors: Pr
   const [applications, setApplications] = useState<Application[]>([]);
   const [invite, setInvite] = useState<InviteForm>({ fullName: '', email: '', role: 'driver', phone: '', processorId: '' });
   const [processorAssignments, setProcessorAssignments] = useState<Record<string, string>>({});
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [busy, setBusy] = useState(''); const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -45,6 +47,7 @@ export default function TeamAccessPanel({ processors, notify }: { processors: Pr
     setBusy('');
     if (!response.ok) { notify(body.error || 'Unable to send invitation'); return; }
     setInvite({ fullName: '', email: '', role: 'driver', phone: '', processorId: '' });
+    setInviteOpen(false);
     notify('Setup invitation sent');
     await load();
   }
@@ -91,16 +94,15 @@ export default function TeamAccessPanel({ processors, notify }: { processors: Pr
   }
 
   return <>
-    <div className="page-heading"><div><div className="eyebrow">Access management</div><h1>Team and invitations</h1><p>Invite staff, restore an incomplete invitation, and manage access without bypassing secure onboarding.</p></div><span className="status status-teal">Super Admin</span></div>
+    <div className="page-heading"><div><div className="eyebrow">Access management</div><h1>Team and invitations</h1><p>Invite staff, restore an incomplete invitation, and manage access without bypassing secure onboarding.</p></div><Button onClick={() => setInviteOpen(true)}><UserPlus size={14} />Invite member</Button></div>
 
-    <section className="panel" style={{ marginBottom: 18 }}><div className="panel-heading"><div><h2>Invite a team member</h2><p>Drivers, dispatchers, and processors complete secure setup before access activates.</p></div><UserPlus size={17} color="var(--teal)" /></div><div className="panel-body form-grid">
+    {inviteOpen && <FormModal title="Invite a team member" description="Drivers, dispatchers, and processors complete secure setup before access activates." onClose={() => setInviteOpen(false)} labelledBy="invite-form-title" footer={<><Button variant="outline" onClick={() => setInviteOpen(false)} disabled={busy === 'invite'}>Cancel</Button><Button onClick={() => void sendInvite()} disabled={busy === 'invite'}><UserPlus size={14} />{busy === 'invite' ? 'Sending...' : 'Send invitation'}</Button></>}><div className="modal-body"><div className="form-grid">
       <div className="form-field"><label>Full name</label><input className="form-control" value={invite.fullName} onChange={event => setInvite({ ...invite, fullName: event.target.value })} placeholder="Team member name" /></div>
       <div className="form-field"><label>Email</label><input className="form-control" type="email" value={invite.email} onChange={event => setInvite({ ...invite, email: event.target.value })} placeholder="name@company.com" /></div>
       <div className="form-field"><label>Role</label><select className="form-control" value={invite.role} onChange={event => setInvite({ ...invite, role: event.target.value as InviteForm['role'], processorId: '' })}><option value="driver">Driver</option><option value="dispatcher">Dispatcher</option><option value="processor">Processor</option></select></div>
       <div className="form-field"><label>Phone</label><input className="form-control" value={invite.phone} onChange={event => setInvite({ ...invite, phone: event.target.value })} placeholder="Optional phone number" /></div>
       {invite.role === 'processor' && <div className="form-field full"><label>Approved processor</label><select className="form-control" value={invite.processorId} onChange={event => setInvite({ ...invite, processorId: event.target.value })}><option value="">Choose a processor</option>{processors.map(processor => <option key={processor.id} value={processor.id}>{processor.name}</option>)}</select></div>}
-      <div className="form-field full" style={{ display: 'flex', justifyContent: 'flex-end' }}><Button onClick={() => void sendInvite()} disabled={busy === 'invite'}><UserPlus size={14} />{busy === 'invite' ? 'Sending...' : 'Send invitation'}</Button></div>
-    </div></section>
+    </div></div></FormModal>}
 
     <section className="panel" style={{ marginBottom: 18 }}><div className="panel-heading"><div><h2>Processor applications</h2><p>Approve facilities before inviting their processor account.</p></div></div><div className="table-wrap"><table><thead><tr><th>Business</th><th>Contact</th><th>Capabilities</th><th>Status</th><th>Decision</th></tr></thead><tbody>{applications.map(application => <tr key={application.id}><td>{application.business_name}<div className="customer-location">{application.address}</div></td><td>{application.contact_name}<div className="customer-location">{application.email}</div></td><td>{application.capabilities.join(' · ')}</td><td>{badge(application.status)}</td><td>{application.status === 'pending' && <div style={{ display: 'flex', gap: 7 }}><Button size="sm" onClick={() => void review(application, 'approved')} disabled={busy === application.id}><Check size={13} />Approve</Button><Button size="sm" variant="destructive" onClick={() => void review(application, 'rejected')} disabled={busy === application.id}><X size={13} />Reject</Button></div>}</td></tr>)}</tbody></table>{!applications.length && <div className="empty">No processor applications yet.</div>}</div></section>
 
