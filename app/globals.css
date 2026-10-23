@@ -407,7 +407,7 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 .workspace-header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .workspace-icon-button { display: grid; place-items: center; width: 35px; height: 35px; padding: 0; border: 0; background: transparent; color: var(--ink); }
 .workspace-icon-button:hover { color: var(--teal); }
-.workspace-new-order { min-height: 36px; padding: 0 15px; border: 0; border-radius: 999px; background: var(--navy); color: #fff; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.workspace-new-order { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 15px; border: 0; border-radius: 999px; background: var(--navy); color: #fff; font-size: 12px; font-weight: 800; white-space: nowrap; }
 .workspace-new-order:hover { background: var(--navy-2); }
 .workspace-nav { display: flex; align-items: center; gap: 7px; min-height: 49px; padding: 0 32px; overflow-x: auto; }
 .workspace-nav-item { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; padding: 0 10px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 650; white-space: nowrap; }
@@ -523,7 +523,7 @@ button,input,select,textarea{transition:border-color .15s ease,box-shadow .15s e
 .app-shell { min-height: 100dvh; }
 .main { width: 100%; min-width: 0; background: var(--canvas); }
 .content,
-main.main:has(.orders-experimental-shell) .content { width: min(100%, 1720px); max-width: 1720px; margin: 0 auto; padding: 38px clamp(20px, 3vw, 48px) 64px; }
+main.main:has(.orders-experimental-shell) .content { width: min(100%, 1500px); max-width: 1500px; margin: 0 auto; padding: 38px clamp(20px, 3vw, 48px) 64px; }
 .workspace-header-bar { box-shadow: 0 1px 0 rgba(15,31,53,.03), 0 8px 24px rgba(15,31,53,.035); }
 .workspace-top-row { min-height: 74px; padding-right: clamp(20px, 3vw, 48px); padding-left: clamp(20px, 3vw, 48px); gap: clamp(14px, 2vw, 30px); }
 .workspace-nav { min-height: 52px; padding-right: clamp(20px, 3vw, 48px); padding-left: clamp(20px, 3vw, 48px); border-top: 1px solid #f0f3f6; background: #fbfcfd; }

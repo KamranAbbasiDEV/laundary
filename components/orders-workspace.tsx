@@ -1,6 +1,6 @@
 'use client';
 
-import { Archive, ChevronRight, KanbanSquare, List, Map, Plus, RefreshCw, RotateCcw, Save, X } from 'lucide-react';
+import { Archive, ChevronRight, KanbanSquare, List, Map, RefreshCw, RotateCcw, Save, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { Order, OrderStatus, UserRole } from '@/lib/types';
 import { statusGroups, statusToneClass } from '@/lib/order-statuses';
@@ -14,13 +14,13 @@ import BulkDeadlineEditor from './bulk-deadline-editor';
 import OrdersToolbar from './orders-toolbar';
 // RoutePlannerPanel remains on the dedicated Routes page and is intentionally not embedded here.
 
-type Props = { orders: Order[]; role: UserRole; notify: (message: string) => void; onRefresh: () => Promise<void>; onCreate: () => void; onNavigate?: (section: string) => void };
+type Props = { orders: Order[]; role: UserRole; notify: (message: string) => void; onRefresh: () => Promise<void>; onNavigate?: (section: string) => void };
 type BulkAction = 'set_status' | 'record_exception' | 'archive' | 'restore';
 
 const admin = (role: UserRole) => role === 'super_admin';
 const date = (value?: string | null) => value ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
 
-export default function OrdersWorkspace({ orders, role, notify, onRefresh, onCreate, onNavigate }: Props) {
+export default function OrdersWorkspace({ orders, role, notify, onRefresh, onNavigate }: Props) {
   const [view, setView] = useState<'kanban' | 'table'>('kanban');
   const [query, setQuery] = useState('');
   const [stage, setStage] = useState('all');
@@ -141,11 +141,10 @@ export default function OrdersWorkspace({ orders, role, notify, onRefresh, onCre
     } catch (error) { const message = error instanceof Error ? error.message : 'Lifecycle action failed.'; setNotice(message); notify(message); } finally { setBusy(false); }
   }
 
-  const canCreateOrders = role === 'super_admin' || role === 'dispatcher';
   const canSelectOrders = role === 'super_admin' || role === 'dispatcher';
 
   return <section className={`orders-workspace ${view === 'kanban' ? 'is-kanban' : 'is-table'} ${canSelectOrders ? '' : 'is-read-only'} role-${role}`}>
-    <header className="workspace-header"><div><span className="eyebrow">Order operations</span><h1>Orders</h1><p>Search, filter, sort, and inspect the complete order record.</p></div><div className="workspace-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => void refresh('Order list refreshed.')}><RefreshCw className={busy ? 'spin' : ''} size={15} />Refresh</Button>{canCreateOrders && <Button type="button" disabled={busy} onClick={onCreate}><Plus size={16} />New order</Button>}</div></header>
+    <header className="workspace-header"><div><span className="eyebrow">Order operations</span><h1>Orders</h1><p>Search, filter, sort, and inspect the complete order record.</p></div><div className="workspace-actions"><Button variant="outline" type="button" disabled={busy} onClick={() => void refresh('Order list refreshed.')}><RefreshCw className={busy ? 'spin' : ''} size={15} />Refresh</Button></div></header>
     {notice && <div className="inline-notice" role="status">{notice}</div>}
     <div className="orders-view-toolbar"><div className="orders-view-summary"><strong>{filtered.length}</strong> order{filtered.length === 1 ? '' : 's'} shown <span>·</span> {filtered.filter(order => Boolean(order.exception) || Boolean(order.failedStop) || Boolean(order.customerNotificationPending) || ['overdue', 'due_today', 'at_risk'].includes(order.deadlineStatus ?? '')).length} needing attention</div><div className="orders-view-actions">{(role === 'super_admin' || role === 'dispatcher') && <Button variant="outline" size="sm" type="button" onClick={() => onNavigate?.('Routes')}><Map size={14}/>Plan routes</Button>}<div className="view-toggle" role="group" aria-label="Order view"><button type="button" className={view === 'kanban' ? 'active' : ''} onClick={() => setView('kanban')}><KanbanSquare size={14}/>Board</button><button type="button" className={view === 'table' ? 'active' : ''} onClick={() => setView('table')}><List size={14}/>Table</button></div></div></div>
     <OrdersToolbar role={role} view={view} query={query} stage={stage} exact={exact} records={records} deadlineFilter={deadlineFilter} attentionFilter={attentionFilter} showEmpty={showEmpty} sort={sort} onViewChange={nextView => setView(nextView)} onQueryChange={setQuery} onStageChange={setStage} onExactChange={setExact} onRecordsChange={setRecords} onDeadlineChange={setDeadlineFilter} onAttentionChange={setAttentionFilter} onShowEmptyChange={setShowEmpty} onSortChange={setSort} onNavigate={onNavigate} />
