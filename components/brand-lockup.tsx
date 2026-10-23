@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export function BrandLockup({ subtitle }: { subtitle: string }) {
+export function BrandLockup({ subtitle, compact = false }: { subtitle: string; compact?: boolean }) {
   const [companyName, setCompanyName] = useState('RinseLine');
   useEffect(() => {
     let active = true;
@@ -21,5 +21,5 @@ export function BrandLockup({ subtitle }: { subtitle: string }) {
     window.addEventListener('workspace-branding-updated', listener);
     return () => { active = false; window.removeEventListener('workspace-branding-updated', listener); };
   }, []);
-  return <div className="brand"><div className="brand-mark">{companyName.slice(0, 2).toUpperCase()}</div><div><div className="brand-name">{companyName}</div><div className="brand-sub">{subtitle}</div></div></div>;
+  return <div className={`brand ${compact ? 'brand-compact' : ''}`} aria-label={companyName}><div className="brand-mark">{companyName.slice(0, 2).toUpperCase()}</div>{!compact && <div><div className="brand-name">{companyName}</div><div className="brand-sub">{subtitle}</div></div>}</div>;
 }

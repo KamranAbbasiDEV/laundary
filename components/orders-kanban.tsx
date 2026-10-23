@@ -6,15 +6,16 @@ import type { Order, OrderStatus } from '@/lib/types';
 import { statusGroups, statusToneClass } from '@/lib/order-statuses';
 import DeadlineBadge from './deadline-badge';
 
-type Props = { orders: Order[]; selected: Set<string>; onToggle: (id: string) => void; onInspect: (order: Order) => void; canMove: boolean; canSelect: boolean; onMove: (orders: Order[], status: OrderStatus) => void };
+type Props = { orders: Order[]; selected: Set<string>; onToggle: (id: string) => void; onInspect: (order: Order) => void; canMove: boolean; canSelect: boolean; showEmpty: boolean; onMove: (orders: Order[], status: OrderStatus) => void };
 
-export default function OrdersKanban({ orders, selected, onToggle, onInspect, canMove, canSelect, onMove }: Props) {
+export default function OrdersKanban({ orders, selected, onToggle, onInspect, canMove, canSelect, showEmpty, onMove }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   return <div className="orders-kanban" aria-label="Orders board">
     {statusGroups.map(group => {
       const items = orders.filter(order => group.statuses.includes(order.status));
       const groupKeys = items.map(order => order.internalId ?? order.id);
       const allSelected = groupKeys.length > 0 && groupKeys.every(key => selected.has(key));
+      if (!showEmpty && !items.length) return null;
       return <section className="kanban-column" key={group.id}>
         <header className="kanban-column-header"><div><span>{group.label}</span><strong>{items.length}</strong></div><div className="kanban-column-tools">{canSelect && <button className="kanban-select-button" type="button" disabled={!groupKeys.length} onClick={() => groupKeys.forEach(key => { if (allSelected) { if (selected.has(key)) onToggle(key); } else if (!selected.has(key)) onToggle(key); })}>{allSelected ? 'Clear' : 'Select all'}</button>}<small>{group.statuses.length} stage{group.statuses.length === 1 ? '' : 's'}</small></div></header>
         <div className={`kanban-column-body ${draggedId ? 'is-drop-target' : ''}`} onDragOver={event => { if (canMove) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } }} onDrop={event => { event.preventDefault(); const sourceId = event.dataTransfer.getData('text/plain') || draggedId || ''; const payload = event.dataTransfer.getData('application/x-rinseline-orders'); let payloadIds: string[] = []; if (payload) { try { const parsed = JSON.parse(payload); if (Array.isArray(parsed) && parsed.every(value => typeof value === 'string')) payloadIds = parsed; } catch { payloadIds = []; } } const order = orders.find(item => (item.internalId ?? item.id) === sourceId); const sourceGroup = order && statusGroups.find(source => source.statuses.includes(order.status)); if (order && canMove && !group.statuses.includes(order.status)) { const moving = payloadIds.length > 0 ? orders.filter(item => payloadIds.includes(item.internalId ?? item.id)) : selected.has(sourceId) ? orders.filter(item => selected.has(item.internalId ?? item.id) && sourceGroup?.statuses.includes(item.status)) : [order]; onMove(moving.length ? moving : [order], group.statuses[0]); } setDraggedId(null); }}>

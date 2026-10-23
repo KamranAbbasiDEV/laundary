@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDownUp, Filter, KanbanSquare, List, Map, Search } from 'lucide-react';
+import { ArrowDownUp, ChevronDown, Eye, EyeOff, Filter, KanbanSquare, List, Map, Search, TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { OrderStatus, UserRole } from '@/lib/types';
 import { statusGroups } from '@/lib/order-statuses';
@@ -14,6 +14,8 @@ type Props = {
   exact: string;
   records: 'active' | 'archived' | 'all';
   deadlineFilter: 'all' | 'overdue' | 'due_today' | 'due_soon' | 'at_risk';
+  attentionFilter: 'all' | 'needs_attention';
+  showEmpty: boolean;
   sort: 'created' | 'due' | 'status';
   onViewChange: (view: 'kanban' | 'table') => void;
   onQueryChange: (value: string) => void;
@@ -21,12 +23,14 @@ type Props = {
   onExactChange: (value: string) => void;
   onRecordsChange: (value: 'active' | 'archived' | 'all') => void;
   onDeadlineChange: (value: Props['deadlineFilter']) => void;
+  onAttentionChange: (value: Props['attentionFilter']) => void;
+  onShowEmptyChange: (value: boolean) => void;
   onSortChange: (value: Props['sort']) => void;
   onNavigate?: (section: string) => void;
 };
 
 export default function OrdersToolbar(props: Props) {
-  const [open, setOpen] = useState<'filter' | 'sort' | null>(null);
+  const [open, setOpen] = useState<'filter' | 'sort' | 'attention' | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const isAdmin = props.role === 'super_admin';
   const filterCount = Number(props.deadlineFilter !== 'all') + Number(isAdmin && props.exact !== 'all') + Number(isAdmin && props.records !== 'active');
@@ -44,6 +48,8 @@ export default function OrdersToolbar(props: Props) {
       <label className="orders-stage-select"><span className="sr-only">Stage</span><select value={props.stage} onChange={event => props.onStageChange(event.target.value)}><option value="all">All stages</option>{statusGroups.map(group => <option key={group.id} value={group.id}>{group.label}</option>)}</select></label>
       <div className="orders-filter-menu"><button className={`orders-toolbar-button ${filterCount ? 'has-filter' : ''}`} type="button" onClick={() => setOpen(open === 'filter' ? null : 'filter')}><Filter size={14}/>Filter{filterCount > 0 && <span>{filterCount}</span>}</button>{open === 'filter' && <div className="orders-toolbar-popover"><strong>Filter orders</strong><label><span>Deadline</span><select value={props.deadlineFilter} onChange={event => { props.onDeadlineChange(event.target.value as Props['deadlineFilter']); setOpen(null); }}><option value="all">All deadlines</option><option value="overdue">Overdue</option><option value="due_today">Due today</option><option value="due_soon">Due within 24 hours</option><option value="at_risk">At risk</option></select></label>{isAdmin && <><label><span>Status</span><select value={props.exact} onChange={event => { props.onExactChange(event.target.value); setOpen(null); }}><option value="all">All statuses</option>{statusGroups.flatMap(group => group.statuses).map(status => <option key={status}>{status}</option>)}</select></label><label><span>Records</span><select value={props.records} onChange={event => { props.onRecordsChange(event.target.value as Props['records']); setOpen(null); }}><option value="active">Active only</option><option value="archived">Archived only</option><option value="all">All records</option></select></label></>}</div>}</div>
       <div className="orders-filter-menu"><button className="orders-toolbar-button" type="button" onClick={() => setOpen(open === 'sort' ? null : 'sort')}><ArrowDownUp size={14}/>Sort</button>{open === 'sort' && <div className="orders-toolbar-popover"><strong>Sort orders</strong><label><span>Order by</span><select value={props.sort} onChange={event => { props.onSortChange(event.target.value as Props['sort']); setOpen(null); }}><option value="created">Newest first</option><option value="due">Due window</option><option value="status">Status</option></select></label></div>}</div>
+      {props.view === 'kanban' && <button className={`orders-toolbar-button ${props.showEmpty ? 'has-filter' : ''}`} type="button" aria-pressed={props.showEmpty} onClick={() => props.onShowEmptyChange(!props.showEmpty)}>{props.showEmpty ? <Eye size={14}/> : <EyeOff size={14}/>}Show empty</button>}
+      <div className="orders-filter-menu"><button className={`orders-toolbar-button attention-filter-button ${props.attentionFilter === 'needs_attention' ? 'has-filter' : ''}`} type="button" onClick={() => setOpen(open === 'attention' ? null : 'attention')}><TriangleAlert size={14}/>Needs attention<ChevronDown size={13}/></button>{open === 'attention' && <div className="orders-toolbar-popover attention-filter-popover"><strong>Order focus</strong><button type="button" className={props.attentionFilter === 'needs_attention' ? 'selected' : ''} onClick={() => { props.onAttentionChange('needs_attention'); setOpen(null); }}>Needs attention</button><button type="button" className={props.attentionFilter === 'all' ? 'selected' : ''} onClick={() => { props.onAttentionChange('all'); setOpen(null); }}>All orders</button></div>}</div>
     </div>
     <div className="orders-clean-toolbar-right">{(props.role === 'super_admin' || props.role === 'dispatcher') && <Button variant="outline" size="sm" type="button" onClick={() => props.onNavigate?.('Routes')}><Map size={14}/>Plan routes</Button>}<label className="orders-search-control"><Search size={15}/><span className="sr-only">Search orders</span><input value={props.query} onChange={event => props.onQueryChange(event.target.value)} placeholder="Search orders" /></label></div>
   </div>;
