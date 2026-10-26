@@ -1,3 +1,8 @@
+/** Returns only the browser-safe Mapbox token; never expose the server token. */
+export function publicMapboxToken() {
+  return process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+}
+
 export async function geocodeAddress(address: string) {
   const token = process.env.MAPBOX_ACCESS_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   if (!token) throw new Error('Mapbox is not configured');
