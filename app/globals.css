@@ -266,7 +266,7 @@ select[multiple] option:checked{background:var(--teal);color:#fff;font-weight:70
 .bulk-actions select{border-color:var(--line-strong);border-radius:7px;padding-left:10px}
 
 /* Popovers must escape card clipping and sit above the form sections below them. */
-.panel:has(.date-field){overflow:visible;position:relative;z-index:4}
+.panel:has(.date-field){overflow:visible;position:relative;z-index:4;animation:none}
 .date-field{z-index:60}
 .date-popover{z-index:100;isolation:isolate}
 .date-popover,.notification-popover{will-change:transform}
