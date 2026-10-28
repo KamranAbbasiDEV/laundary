@@ -89,7 +89,7 @@ function DriverDefectReporter({ orders, notify, onRefresh }: { orders: Order[]; 
 
 type DriverPlan = { id: string; route_date: string; route_type: string; status: string; driver_location?: { latitude: number; longitude: number } | null; mapbox_route?: { coordinates?: [number, number][] } | null; route_stops: Array<{ id: string; sequence: number; status: string; address?: string | null; destination_name?: string | null; orders?: { order_number?: string } | Array<{ order_number?: string }> }> };
 
-function DriverRouteMapPanel() {
+function LegacyDriverRouteMapPanel() {
   const [plans, setPlans] = useState<DriverPlan[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [route, setRoute] = useState<{ coordinates: [number, number][]; stopCoordinates: [number, number][] } | null>(null);
@@ -114,6 +114,44 @@ function DriverRouteMapPanel() {
   return <section className="panel driver-route-panel"><div className="panel-heading"><div><div className="eyebrow">Live route map</div><h2><Route size={16}/>Where you are going</h2><p>Pickup, processor handoff, processor pickup, and delivery destinations for your assigned route.</p></div>{loading && <LoaderCircle className="spin" size={16}/>}</div>{plans.length > 1 && <div className="panel-body driver-route-controls"><label><span>Route</span><select className="form-control" value={selected?.id ?? ''} onChange={event => setSelectedId(event.target.value)}>{plans.map(plan => <option key={plan.id} value={plan.id}>{plan.route_date} · {plan.route_type.replaceAll('_', ' ')} · {plan.status}</option>)}</select></label></div>}{error ? <div className="panel-body"><div className="empty">{error}</div></div> : selected && route ? <><div className="route-map-wrap driver-route-map"><RouteMap routeCoordinates={route.coordinates} stopCoordinates={route.stopCoordinates}/></div><div className="driver-route-stops">{selected.route_stops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return <div className="driver-route-stop" key={stop.id}><span className="route-index">{stop.sequence}</span><span><strong>{order?.order_number ?? 'Assigned order'}</strong><small>{stop.destination_name ?? 'Route stop'} · {stop.address ?? 'Address unavailable'}</small></span><em>{stop.status}</em></div>; })}</div></> : <div className="panel-body"><div className="empty">{loading ? 'Loading your assigned route…' : 'No active route has been assigned yet.'}</div></div>}</section>;
 }
 
+function InteractiveDriverRoutePanel() {
+  const [plans, setPlans] = useState<DriverPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [selectedStopId, setSelectedStopId] = useState('');
+  const [route, setRoute] = useState<{ coordinates: [number, number][]; stopCoordinates: [number, number][]; distanceMeters: number; durationSeconds: number } | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [refreshTick, setRefreshTick] = useState(0);
+  const selectedPlan = plans.find(plan => plan.id === selectedPlanId) ?? plans[0];
+  const selectedStopIndex = selectedPlan?.route_stops.findIndex(stop => stop.id === selectedStopId) ?? -1;
+  const selectedStopCoordinate = selectedStopIndex >= 0 ? route?.stopCoordinates[selectedStopIndex] ?? null : null;
+  useEffect(() => { const refresh = () => setRefreshTick(value => value + 1); window.addEventListener('rinseline:data-changed', refresh); return () => window.removeEventListener('rinseline:data-changed', refresh); }, []);
+  useEffect(() => {
+    let active = true;
+    void fetch('/api/route-plans', { cache: 'no-store' }).then(async response => { const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to load your route.'); return body; }).then(body => { if (!active) return; const next = body.plans ?? []; setPlans(next); setSelectedPlanId(current => next.some((plan: DriverPlan) => plan.id === current) ? current : next[0]?.id ?? ''); }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Unable to load your route.'); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [refreshTick]);
+  useEffect(() => {
+    if (!selectedPlan) { setRoute(null); setSelectedStopId(''); setCurrentLocation(null); return; }
+    setSelectedStopId(current => selectedPlan.route_stops.some(stop => stop.id === current) ? current : selectedPlan.route_stops[0]?.id ?? '');
+    setCurrentLocation(selectedPlan.driver_location ? [selectedPlan.driver_location.longitude, selectedPlan.driver_location.latitude] : null);
+    const addresses = selectedPlan.route_stops.map(stop => stop.address).filter((address): address is string => Boolean(address));
+    if (!addresses.length) { setRoute(null); return; }
+    let active = true;
+    void fetch('/api/routes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ addresses }) }).then(async response => { const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to map this route.'); return body; }).then(body => { if (!active) return; setRoute({ coordinates: body.route?.coordinates ?? [], stopCoordinates: (body.geocoded ?? []).map((item: { coordinates: [number, number] }) => item.coordinates), distanceMeters: body.route?.distanceMeters ?? 0, durationSeconds: body.route?.durationSeconds ?? 0 }); setError(''); }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Unable to map this route.'); });
+    return () => { active = false; };
+  }, [selectedPlan]);
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    const watch = navigator.geolocation.watchPosition(({ coords }) => setCurrentLocation([coords.longitude, coords.latitude]), () => undefined, { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 });
+    return () => navigator.geolocation.clearWatch(watch);
+  }, []);
+  const distance = route ? route.distanceMeters < 1000 ? `${Math.round(route.distanceMeters)} m` : `${(route.distanceMeters / 1000).toFixed(1)} km` : '—';
+  const duration = route ? route.durationSeconds < 60 ? `${Math.max(1, Math.round(route.durationSeconds))} min` : `${Math.max(1, Math.round(route.durationSeconds / 60))} min` : '—';
+  return <section className="panel driver-route-panel"><div className="panel-heading"><div><div className="eyebrow">Today’s route</div><h2><Route size={16}/>Map and stops</h2><p>Select an order to focus its destination on the map.</p></div>{loading && <LoaderCircle className="spin" size={16}/>}</div>{plans.length > 1 && <div className="panel-body driver-route-controls"><label><span>Route</span><select className="form-control" value={selectedPlan?.id ?? ''} onChange={event => setSelectedPlanId(event.target.value)}>{plans.map(plan => <option key={plan.id} value={plan.id}>{plan.route_date} · {plan.route_type.replaceAll('_', ' ')} · {plan.status}</option>)}</select></label></div>}{error ? <div className="panel-body"><div className="empty">{error}</div></div> : selectedPlan && route ? <><div className="driver-route-map-summary"><div><span>Distance</span><strong>{distance}</strong></div><div><span>Estimated drive</span><strong>{duration}</strong></div><div><span>Position</span><strong>{currentLocation ? 'Live' : 'Waiting for GPS'}</strong></div></div><div className="route-map-wrap driver-route-map"><RouteMap routeCoordinates={route.coordinates} stopCoordinates={route.stopCoordinates} currentLocation={currentLocation} selectedStopIndex={selectedStopIndex} focusCoordinate={selectedStopCoordinate}/></div><div className="driver-route-stops"><div className="driver-route-stops-heading"><strong>Stops</strong><small>{selectedPlan.route_stops.length} assigned</small></div>{selectedPlan.route_stops.map((stop, index) => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return <button className={`driver-route-stop ${stop.id === selectedStopId ? 'selected' : ''}`} type="button" key={stop.id} onClick={() => setSelectedStopId(stop.id)}><span className="route-index">{stop.sequence}</span><span><strong>{order?.order_number ?? 'Assigned order'}</strong><small>{stop.destination_name ?? 'Route stop'} · {stop.address ?? 'Address unavailable'}</small></span><em>{stop.status}</em></button>; })}</div></> : <div className="panel-body"><div className="empty">{loading ? 'Loading your assigned route…' : 'No active route has been assigned yet.'}</div></div>}</section>;
+}
+
 export default function DriverWorkflowPanel(props: { orders: Order[]; notify: (message: string) => void; onStatusChange: (id: string, status: OrderStatus, note?: string) => Promise<void>; onRefresh: () => Promise<void> }) {
-  return <div className="driver-portal-shell"><DeadlineRolePanel role="driver" orders={props.orders}/><DriverRouteMapPanel/><div className="driver-legacy-shell"><LegacyDriverWorkflowPanel {...props}/><DriverDefectReporter orders={props.orders} notify={props.notify} onRefresh={props.onRefresh}/></div></div>;
+  return <div className="driver-portal-shell"><DeadlineRolePanel role="driver" orders={props.orders}/><InteractiveDriverRoutePanel/><div className="driver-legacy-shell"><LegacyDriverWorkflowPanel {...props}/><DriverDefectReporter orders={props.orders} notify={props.notify} onRefresh={props.onRefresh}/></div></div>;
 }
