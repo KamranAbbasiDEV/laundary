@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Camera, ChevronRight, MapPin, PackageCheck, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Camera, ChevronRight, LoaderCircle, MapPin, PackageCheck, RefreshCw, Route } from 'lucide-react';
 import { Button } from './ui/button';
 import type { Order, OrderStatus } from '@/lib/types';
 import DeadlineRolePanel from './deadline-role-panel';
+import RouteMap from './route-map';
 
 type HandoffStage = 'customer_pickup' | 'processor_dropoff' | 'processor_pickup' | 'customer_delivery';
 type Stage = { label: string; helper: string; handoff?: HandoffStage; next: OrderStatus; kind: string };
@@ -86,6 +87,31 @@ function DriverDefectReporter({ orders, notify, onRefresh }: { orders: Order[]; 
   return <section className="panel driver-defect-reporter"><div className="panel-heading"><div><h2><AlertTriangle size={16}/> Report a defect</h2><p>Send damage, missing-item, discrepancy, or route issues directly to dispatch.</p></div></div><div className="panel-body form-grid"><label><span>Order</span><select className="form-control" value={orderId} onChange={event => setOrderId(event.target.value)}>{assigned.map(order => <option key={order.internalId} value={order.internalId}>{order.id} · {order.customer}</option>)}</select></label><label><span>Type</span><select className="form-control" value={type} onChange={event => setType(event.target.value as typeof type)}><option value="damaged_item">Damaged item</option><option value="pickup_discrepancy">Pickup discrepancy</option><option value="route_issue">Route or access issue</option></select></label><label><span>Severity</span><select className="form-control" value={severity} onChange={event => setSeverity(event.target.value as typeof severity)}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></label><label className="form-field full"><span>Description</span><textarea className="form-control" value={description} onChange={event => setDescription(event.target.value)} placeholder="Describe what happened and what dispatch needs to know." /></label><div className="form-field full"><Button type="button" onClick={() => void submit()} disabled={busy || !assigned.length}>{busy ? 'Submitting…' : 'Submit defect report'}</Button></div></div></section>;
 }
 
+type DriverPlan = { id: string; route_date: string; route_type: string; status: string; mapbox_route?: { coordinates?: [number, number][] } | null; route_stops: Array<{ id: string; sequence: number; status: string; address?: string | null; destination_name?: string | null; orders?: { order_number?: string } | Array<{ order_number?: string }> }> };
+
+function DriverRouteMapPanel() {
+  const [plans, setPlans] = useState<DriverPlan[]>([]);
+  const [selectedId, setSelectedId] = useState('');
+  const [route, setRoute] = useState<{ coordinates: [number, number][]; stopCoordinates: [number, number][] } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const selected = plans.find(plan => plan.id === selectedId) ?? plans[0];
+  useEffect(() => {
+    let active = true;
+    void fetch('/api/route-plans', { cache: 'no-store' }).then(async response => { const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to load your route.'); return body; }).then(body => { if (!active) return; const next = body.plans ?? []; setPlans(next); setSelectedId(next[0]?.id ?? ''); }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Unable to load your route.'); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (!selected) { setRoute(null); return; }
+    const addresses = selected.route_stops.map(stop => stop.address).filter((address): address is string => Boolean(address));
+    if (!addresses.length) { setRoute(null); return; }
+    let active = true;
+    void fetch('/api/routes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ addresses }) }).then(async response => { const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to map this route.'); return body; }).then(body => { if (!active) return; setRoute({ coordinates: body.route?.coordinates ?? [], stopCoordinates: (body.geocoded ?? []).map((item: { coordinates: [number, number] }) => item.coordinates) }); setError(''); }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Unable to map this route.'); });
+    return () => { active = false; };
+  }, [selected]);
+  return <section className="panel driver-route-panel"><div className="panel-heading"><div><div className="eyebrow">Live route map</div><h2><Route size={16}/>Where you are going</h2><p>Pickup, processor handoff, processor pickup, and delivery destinations for your assigned route.</p></div>{loading && <LoaderCircle className="spin" size={16}/>}</div>{plans.length > 1 && <div className="panel-body driver-route-controls"><label><span>Route</span><select className="form-control" value={selected?.id ?? ''} onChange={event => setSelectedId(event.target.value)}>{plans.map(plan => <option key={plan.id} value={plan.id}>{plan.route_date} · {plan.route_type.replaceAll('_', ' ')} · {plan.status}</option>)}</select></label></div>}{error ? <div className="panel-body"><div className="empty">{error}</div></div> : selected && route ? <><div className="route-map-wrap driver-route-map"><RouteMap routeCoordinates={route.coordinates} stopCoordinates={route.stopCoordinates}/></div><div className="driver-route-stops">{selected.route_stops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return <div className="driver-route-stop" key={stop.id}><span className="route-index">{stop.sequence}</span><span><strong>{order?.order_number ?? 'Assigned order'}</strong><small>{stop.destination_name ?? 'Route stop'} · {stop.address ?? 'Address unavailable'}</small></span><em>{stop.status}</em></div>; })}</div></> : <div className="panel-body"><div className="empty">{loading ? 'Loading your assigned route…' : 'No active route has been assigned yet.'}</div></div>}</section>;
+}
+
 export default function DriverWorkflowPanel(props: { orders: Order[]; notify: (message: string) => void; onStatusChange: (id: string, status: OrderStatus, note?: string) => Promise<void>; onRefresh: () => Promise<void> }) {
-  return <div className="driver-portal-shell"><DeadlineRolePanel role="driver" orders={props.orders}/><div className="driver-legacy-shell"><LegacyDriverWorkflowPanel {...props}/><DriverDefectReporter orders={props.orders} notify={props.notify} onRefresh={props.onRefresh}/></div></div>;
+  return <div className="driver-portal-shell"><DeadlineRolePanel role="driver" orders={props.orders}/><DriverRouteMapPanel/><div className="driver-legacy-shell"><LegacyDriverWorkflowPanel {...props}/><DriverDefectReporter orders={props.orders} notify={props.notify} onRefresh={props.onRefresh}/></div></div>;
 }

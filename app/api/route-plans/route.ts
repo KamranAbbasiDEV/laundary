@@ -21,23 +21,34 @@ function calendarDateInTimezone(value: string, timezone: string) {
 export async function GET() {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) return NextResponse.json({ error: 'Dispatcher access required.' }, { status: 403 });
+  if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher', 'driver'])) return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });
   const { data: workspace } = await auth.client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
   const today = getWorkspaceDate(new Date(), workspace?.timezone || 'UTC');
-  const { data, error } = await auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason,orders(order_number,due_at,has_exception))').in('status', ['draft', 'approved', 'in_progress', 'failed']).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
+  let planQuery = auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason,orders(order_number,customer_name,pickup_address,customer_delivery_address,processor_id,due_at,has_exception))').in('status', ['draft', 'approved', 'in_progress', 'failed']).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
+  if (auth.profile.role === 'driver') planQuery = planQuery.eq('driver_id', auth.user.id);
+  const { data, error } = await planQuery;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const routeIds = (data ?? []).map((plan) => plan.id);
   const { data: locations, error: locationError } = routeIds.length ? await auth.client.from('driver_location_events').select('route_id,driver_id,latitude,longitude,accuracy_meters,recorded_at').in('route_id', routeIds).order('recorded_at', { ascending: false }).limit(100) : { data: [], error: null };
   if (locationError) return NextResponse.json({ error: locationError.message }, { status: 500 });
   const latestLocations = new Map<string, { route_id: string; driver_id: string; latitude: number; longitude: number; accuracy_meters: number | null; recorded_at: string }>();
   (locations ?? []).forEach((location) => { if (!latestLocations.has(location.route_id)) latestLocations.set(location.route_id, location); });
+  const processorIds = [...new Set((data ?? []).flatMap(plan => (plan.route_stops ?? []).map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return order?.processor_id; }).filter((id): id is string => typeof id === 'string')) )];
+  const { data: processors } = processorIds.length ? await auth.client.from('processors').select('id,name,address').in('id', processorIds) : { data: [] };
+  const processorById = new Map((processors ?? []).map(processor => [processor.id, processor]));
   const plans = (data ?? []).map((plan) => {
     const stops = (plan.route_stops ?? []) as Array<{ status?: string; orders?: { due_at?: string | null; has_exception?: boolean } | Array<{ due_at?: string | null; has_exception?: boolean }> }>;
     const pending = stops.filter((stop) => stop.status !== 'completed');
     const failed = stops.filter((stop) => stop.status === 'failed').length;
     const urgent = pending.filter((stop) => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return Boolean(order?.has_exception) || Boolean(order?.due_at && new Date(order.due_at).getTime() - Date.now() <= 24 * 60 * 60 * 1000); }).length;
     const urgency = failed || pending.some((stop) => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return Boolean(order?.due_at && new Date(order.due_at).getTime() < Date.now()); }) ? 'overdue' : urgent ? 'due_soon' : 'on_track';
-    return { ...plan, progress: stops.length ? Math.round(((stops.length - pending.length) / stops.length) * 100) : 0, failed_stops: failed, urgent_stops: urgent, urgency, driver_location: latestLocations.get(plan.id) ?? null };
+    const routeStops = (plan.route_stops ?? []).map(stop => {
+      const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders;
+      const processor = order?.processor_id ? processorById.get(order.processor_id) : undefined;
+      const address = ['processor_dropoff', 'processor_pickup'].includes(plan.route_type) ? processor?.address : plan.route_type === 'delivery' ? order?.customer_delivery_address ?? order?.pickup_address : order?.pickup_address;
+      return { ...stop, address: address ?? null, destination_name: ['processor_dropoff', 'processor_pickup'].includes(plan.route_type) ? processor?.name ?? 'Processor facility' : plan.route_type === 'delivery' ? 'Customer delivery' : 'Customer pickup' };
+    });
+    return { ...plan, route_stops: routeStops, progress: stops.length ? Math.round(((stops.length - pending.length) / stops.length) * 100) : 0, failed_stops: failed, urgent_stops: urgent, urgency, driver_location: latestLocations.get(plan.id) ?? null };
   });
   return NextResponse.json({ plans });
 }
