@@ -32,8 +32,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!actor || actor.status !== 'active' || !['super_admin','dispatcher','driver','processor'].includes(actor.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
 
   const currentQuery = isUuid
-    ? supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,service_type,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('id', id).maybeSingle()
-    : supabase.from('orders').select('id,order_number,phone,status,assigned_driver_id,processor_id,service_type,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('order_number', id).maybeSingle();
+    ? supabase.from('orders').select('id,order_number,phone,customer_user_id,status,assigned_driver_id,processor_id,service_type,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('id', id).maybeSingle()
+    : supabase.from('orders').select('id,order_number,phone,customer_user_id,status,assigned_driver_id,processor_id,service_type,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('order_number', id).maybeSingle();
   const { data: current, error: readError } = await currentQuery;
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -129,7 +129,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const originalText = originalDeadline ? ` Original commitment: ${new Date(originalDeadline).toLocaleString()}.` : '';
   const message = body.data.resolveException ? `${current.order_number} exception resolved by dispatch.${deadlineText}` : body.data.exception ? `${current.order_number} requires dispatcher review: ${body.data.exception}.${deadlineText}` : deadlinesChanged ? `${current.order_number} deadline was updated by dispatch.${originalText}${deadlineText}` : body.data.status ? `${current.order_number} is now ${body.data.status}.${deadlineText}` : `${current.order_number} was updated.${deadlineText}`;
   await logOperationalNotification({ orderId: current.id, event, message, phone: current.phone });
-  if (body.data.notifyCustomer && body.data.customerMessage?.trim()) await logCustomerNotification({ orderId: current.id, event: 'customer_exception_update', message: body.data.customerMessage.trim(), phone: current.phone });
+  if (body.data.notifyCustomer && body.data.customerMessage?.trim()) await logCustomerNotification({ orderId: current.id, event: 'customer_exception_update', message: body.data.customerMessage.trim(), phone: current.phone, customerUserId: current.customer_user_id });
+  else if (current.customer_user_id && (body.data.status || body.data.exception || body.data.resolveException || deadlinesChanged)) await logCustomerNotification({ orderId: current.id, event, message, phone: current.phone, customerUserId: current.customer_user_id });
   const routeSync = body.data.status ? await syncDraftRoutesAfterStatusChange(supabase, new Map([[current.id, dbStatus(body.data.status)]])) : { invalidated: 0, warning: null };
   return NextResponse.json({ order: data, persistence: 'supabase', routeSync: { invalidated: routeSync.invalidated }, ...(routeSync.warning ? { warning: routeSync.warning } : {}) });
 }

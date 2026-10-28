@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { getUserSafely } from '@/lib/supabase-auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { inngest } from '@/lib/inngest';
-import { logOperationalNotification } from '@/lib/notifications';
+import { logCustomerNotification, logOperationalNotification } from '@/lib/notifications';
 import { getDeadlineStatus, formatDeadlineDelta } from '@/lib/deadlines';
 import { pickupDeadlineError } from '@/lib/order-scheduling';
 import { serviceIsConfigured } from '@/lib/service-catalog';
@@ -106,6 +106,7 @@ export async function POST(request: Request) {
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   await logOperationalNotification({ orderId: data.id, event: 'order_created', message: `${data.order_number} was created and is ready for validation and processor matching. Deadline: ${new Date(data.due_at).toLocaleString()}.`, phone: data.phone });
+  if (profile.role === 'customer') await logCustomerNotification({ orderId: data.id, event: 'order_received', message: `We received order ${data.order_number}. We are reviewing the details and will begin matching it with a laundry partner.`, phone: data.phone, customerUserId: user.id });
   if (needsManualReview) return NextResponse.json({ order: data, persistence: 'supabase', reviewRequired: true }, { status: 201 });
   const defaultWeights = { capability: 30, capacity: 20, turnaround: 15, pricing: 10, performance: 5 };
   const configuredWeights = workspace?.matching_rules && typeof workspace.matching_rules === 'object' && !Array.isArray(workspace.matching_rules) ? workspace.matching_rules as Record<string, unknown> : {};

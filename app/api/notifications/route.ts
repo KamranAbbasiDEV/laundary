@@ -12,6 +12,16 @@ function roleCanSeeOperationalEvent(role: string, event: string) {
   return false;
 }
 
+function targetFor(role: string, event: string) {
+  if (role === 'customer') return 'Customer portal';
+  if (role === 'driver') return 'Driver app';
+  if (role === 'processor') return 'Processor portal';
+  if (event.includes('route')) return 'Routes';
+  if (event.includes('processor')) return 'Processors';
+  if (event.includes('exception') || event === 'order_created' || event === 'order_validated') return 'Dispatch';
+  return 'Orders';
+}
+
 async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireActiveUser>>, db: NonNullable<typeof supabaseAdmin>) {
   if ('error' in auth) return [] as string[];
   let orderIds: string[] | null = null;
@@ -23,7 +33,7 @@ async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireAct
   }
   if (auth.profile.role === 'customer') { const { data } = await db.from('orders').select('id').eq('customer_user_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
   let query = db.from('notification_log').select('id,event').eq('channel', 'in_app');
-  if (auth.profile.role === 'customer') query = query.eq('recipient', 'customer');
+  if (auth.profile.role === 'customer') query = query.or(`recipient.eq.customer,recipient.eq.customer:${auth.user.id}`);
   else if (auth.profile.role === 'processor' && auth.profile.processor_id) query = query.or(`recipient.eq.operations,recipient.eq.processor:${auth.profile.processor_id}`);
   else query = query.eq('recipient', 'operations');
   if (orderIds) { if (!orderIds.length) return []; query = query.in('order_id', orderIds); }
@@ -43,7 +53,7 @@ export async function GET() {
   if (auth.profile.role === 'customer') { const { data } = await db.from('orders').select('id').eq('customer_user_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
   if (orderIds && !orderIds.length) return NextResponse.json({ notifications: [] });
   let query = db.from('notification_log').select('id,order_id,channel,event,message,status,created_at,sent_at').eq('channel', 'in_app').order('created_at', { ascending: false }).limit(30);
-  if (auth.profile.role === 'customer') query = query.eq('recipient', 'customer');
+  if (auth.profile.role === 'customer') query = query.or(`recipient.eq.customer,recipient.eq.customer:${auth.user.id}`);
   else if (auth.profile.role === 'processor' && auth.profile.processor_id) query = query.or(`recipient.eq.operations,recipient.eq.processor:${auth.profile.processor_id}`);
   else query = query.eq('recipient', 'operations');
   if (orderIds) query = query.in('order_id', orderIds);
@@ -57,7 +67,7 @@ export async function GET() {
   ]);
   const readIds = new Set((reads ?? []).map(item => item.notification_id));
   const dismissedIds = new Set((dismissed ?? []).map(item => item.notification_id));
-  return NextResponse.json({ notifications: visibleData.filter(item => !dismissedIds.has(item.id)).map(item => ({ ...item, read: readIds.has(item.id) })) });
+  return NextResponse.json({ notifications: visibleData.filter(item => !dismissedIds.has(item.id)).map(item => ({ ...item, read: readIds.has(item.id), targetSection: targetFor(auth.profile.role, item.event) })) });
 }
 
 export async function PATCH(request: Request) {

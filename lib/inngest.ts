@@ -105,7 +105,7 @@ async function queueDeadlineNotifications() {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
   const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
   const timezone = workspace?.timezone || 'UTC';
-  const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,phone,due_at,status,has_exception').is('archived_at', null).not('due_at', 'is', null).not('status', 'in', '(delivered,processor_reviewed)');
+  const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,phone,customer_user_id,due_at,status,has_exception').is('archived_at', null).not('due_at', 'is', null).not('status', 'in', '(delivered,processor_reviewed)');
   if (error) throw new Error(error.message);
   let queued = 0;
   const now = new Date();
@@ -119,7 +119,7 @@ async function queueDeadlineNotifications() {
     const operationsMessage = `${order.order_number} is ${status.replaceAll('_', ' ')}. Current deadline: ${deadline}.`;
     await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: 'operations', channel: 'in_app', event, message: operationsMessage, status: 'sent', sent_at: now.toISOString() });
     const customerMessage = status === 'overdue' ? `Your order ${order.order_number} is delayed. We are reviewing the delivery timing and will share an updated expectation.` : status === 'due_today' ? `Your order ${order.order_number} is expected today. Current expected time: ${deadline}.` : `Your order ${order.order_number} is due within 24 hours. Current expected time: ${deadline}.`;
-    await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: 'customer', channel: 'in_app', event, message: customerMessage, status: 'sent', sent_at: now.toISOString() });
+    await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: order.customer_user_id ? `customer:${order.customer_user_id}` : 'customer', channel: 'in_app', event, message: customerMessage, status: 'sent', sent_at: now.toISOString() });
     if (order.phone && await isSmsAllowed(order.phone, event)) {
       const sms = await sendOrderNotification({ to: order.phone, message: customerMessage, channel: 'sms' });
       const attemptedAt = new Date().toISOString();

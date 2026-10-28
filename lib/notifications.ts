@@ -41,10 +41,10 @@ export async function logOperationalNotification(input: { orderId?: string; even
   await recordNotification({ order_id: input.orderId ?? null, recipient: input.phone, channel: 'sms', event: input.event, message: input.message, status: sms.delivered ? 'sent' : 'queued', attempt_count: 1, last_attempt_at: attemptedAt, provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? attemptedAt : null });
 }
 
-export async function logCustomerNotification(input: { orderId: string; event: string; message: string; phone?: string }) {
+export async function logCustomerNotification(input: { orderId: string; event: string; message: string; phone?: string; customerUserId?: string | null }) {
   if (!supabaseAdmin) return;
   const now = new Date().toISOString();
-  await recordNotification({ order_id: input.orderId, recipient: 'customer', channel: 'in_app', event: input.event, message: input.message, status: 'sent', sent_at: now });
+  await recordNotification({ order_id: input.orderId, recipient: input.customerUserId ? `customer:${input.customerUserId}` : 'customer', channel: 'in_app', event: input.event, message: input.message, status: 'sent', sent_at: now });
   if (!input.phone || !(await isSmsAllowed(input.phone, input.event))) return;
   const sms = await sendOrderNotification({ to: input.phone, message: input.message, channel: 'sms' });
   const attemptedAt = new Date().toISOString();

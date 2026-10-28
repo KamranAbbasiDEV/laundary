@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import AuthSessionGuard from '@/components/auth-session-guard';
 
 export const metadata: Metadata = {
   title: 'RinseLine Dispatch',
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return <html lang="en"><body><AuthSessionGuard />{children}</body></html>;
 }

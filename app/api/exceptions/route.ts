@@ -10,14 +10,18 @@ const createSchema = z.object({ orderId: z.string().uuid(), type: z.enum(['picku
 export async function POST(request: Request) {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher', 'processor'])) return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });
+  if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher', 'driver', 'processor'])) return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });
   const parsed = createSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'A valid exception description is required.' }, { status: 400 });
   const item = parsed.data;
-  const { data: order, error: orderError } = await auth.client.from('orders').select('id,order_number,phone,processor_id,due_at').eq('id', item.orderId).maybeSingle();
+  const { data: order, error: orderError } = await auth.client.from('orders').select('id,order_number,phone,customer_user_id,processor_id,due_at').eq('id', item.orderId).maybeSingle();
   if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
   if (!order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (auth.profile.role === 'processor' && order.processor_id !== auth.profile.processor_id) return NextResponse.json({ error: 'You can only report issues for your facility orders.' }, { status: 403 });
+  if (auth.profile.role === 'driver') {
+    const { data: assigned } = await auth.client.from('orders').select('id').eq('id', item.orderId).eq('assigned_driver_id', auth.user.id).maybeSingle();
+    if (!assigned) return NextResponse.json({ error: 'You can only report defects for orders assigned to you.' }, { status: 403 });
+  }
   const { data, error } = await auth.client.from('exceptions').insert({ order_id: item.orderId, type: item.type, stage: item.stage ?? null, description: item.description, severity: item.severity, deadline_impact: order.due_at ? 'at_risk' : 'none', deadline_before: order.due_at, opened_by: auth.user.id, status: 'open' }).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const { error: orderUpdateError } = await auth.client.from('orders').update({ has_exception: true, updated_at: new Date().toISOString() }).eq('id', item.orderId);
@@ -56,7 +60,7 @@ export async function PATCH(request: Request) {
   if (body.status === 'resolved' && !body.resolutionNotes?.trim()) return NextResponse.json({ error: 'A resolution note is required when resolving an exception.' }, { status: 400 });
   const { data: current, error: currentError } = await auth.client.from('exceptions').select('id,order_id,status,deadline_impact,deadline_before,deadline_after,deadline_reason,customer_message,customer_notified_at,customer_notified_by,resolution_notes').eq('id', body.id).single();
   if (currentError || !current) return NextResponse.json({ error: currentError?.message || 'Exception not found.' }, { status: currentError ? 500 : 404 });
-  const { data: order } = await auth.client.from('orders').select('id,order_number,phone,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('id', current.order_id).single();
+  const { data: order } = await auth.client.from('orders').select('id,order_number,phone,customer_user_id,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('id', current.order_id).single();
   if (!order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (body.assignedTo) {
     const { data: assignee, error: assigneeError } = await auth.client.from('profiles').select('id,role,status').eq('id', body.assignedTo).maybeSingle();
@@ -103,6 +107,6 @@ export async function PATCH(request: Request) {
   const deadline = body.revisedDueAt ?? order.due_at;
   const statusText = body.status === 'resolved' ? 'resolved' : body.status === 'in_review' ? 'assigned for review' : 'updated';
   await logOperationalNotification({ orderId: order.id, event: body.status === 'resolved' ? 'exception_resolved' : 'exception_updated', message: `${order.order_number} exception ${statusText}.${deadline ? ` Deadline: ${new Date(deadline).toLocaleString()}.` : ''}`, phone: order.phone });
-  if (body.notifyCustomer && body.customerMessage?.trim()) await logCustomerNotification({ orderId: order.id, event: 'customer_exception_update', message: body.customerMessage.trim(), phone: order.phone });
+  if (body.notifyCustomer && body.customerMessage?.trim()) await logCustomerNotification({ orderId: order.id, event: 'customer_exception_update', message: body.customerMessage.trim(), phone: order.phone, customerUserId: order.customer_user_id });
   return NextResponse.json({ exception: data });
 }
