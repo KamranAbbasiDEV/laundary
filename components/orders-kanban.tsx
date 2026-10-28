@@ -6,7 +6,7 @@ import type { Order, OrderStatus } from '@/lib/types';
 import { statusGroups, statusToneClass } from '@/lib/order-statuses';
 import DeadlineBadge from './deadline-badge';
 
-const actionFor = (order: Order) => order.exception ? 'Review exception' : order.customerNotificationPending ? 'Send customer update' : order.failedStop ? 'Recover failed stop' : ['Capacity confirmed', 'Ready for pickup'].includes(order.status) && !order.routeAssigned ? 'Plan route' : ['Created', 'Validated', 'Processor ranked'].includes(order.status) ? 'Assign processor' : null;
+const actionFor = (order: Order) => order.exception ? 'Review exception' : order.customerNotificationPending ? 'Send customer update' : order.failedStop ? 'Recover failed stop' : ['Capacity confirmed', 'Ready for pickup'].includes(order.status) && !order.routeAssigned ? 'Plan route' : order.status === 'Created' ? 'Open intake review' : order.status === 'Validated' ? 'Matching in progress' : order.status === 'Processor ranked' ? 'Awaiting processor response' : null;
 
 type Props = { orders: Order[]; selected: Set<string>; onToggle: (id: string) => void; onInspect: (order: Order) => void; canMove: boolean; canSelect: boolean; showEmpty: boolean; onMove: (orders: Order[], status: OrderStatus) => void };
 
