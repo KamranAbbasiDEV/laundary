@@ -87,7 +87,7 @@ function DriverDefectReporter({ orders, notify, onRefresh }: { orders: Order[]; 
   return <section className="panel driver-defect-reporter"><div className="panel-heading"><div><h2><AlertTriangle size={16}/> Report a defect</h2><p>Send damage, missing-item, discrepancy, or route issues directly to dispatch.</p></div></div><div className="panel-body form-grid"><label><span>Order</span><select className="form-control" value={orderId} onChange={event => setOrderId(event.target.value)}>{assigned.map(order => <option key={order.internalId} value={order.internalId}>{order.id} · {order.customer}</option>)}</select></label><label><span>Type</span><select className="form-control" value={type} onChange={event => setType(event.target.value as typeof type)}><option value="damaged_item">Damaged item</option><option value="pickup_discrepancy">Pickup discrepancy</option><option value="route_issue">Route or access issue</option></select></label><label><span>Severity</span><select className="form-control" value={severity} onChange={event => setSeverity(event.target.value as typeof severity)}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></label><label className="form-field full"><span>Description</span><textarea className="form-control" value={description} onChange={event => setDescription(event.target.value)} placeholder="Describe what happened and what dispatch needs to know." /></label><div className="form-field full"><Button type="button" onClick={() => void submit()} disabled={busy || !assigned.length}>{busy ? 'Submitting…' : 'Submit defect report'}</Button></div></div></section>;
 }
 
-type DriverPlan = { id: string; route_date: string; route_type: string; status: string; mapbox_route?: { coordinates?: [number, number][] } | null; route_stops: Array<{ id: string; sequence: number; status: string; address?: string | null; destination_name?: string | null; orders?: { order_number?: string } | Array<{ order_number?: string }> }> };
+type DriverPlan = { id: string; route_date: string; route_type: string; status: string; driver_location?: { latitude: number; longitude: number } | null; mapbox_route?: { coordinates?: [number, number][] } | null; route_stops: Array<{ id: string; sequence: number; status: string; address?: string | null; destination_name?: string | null; orders?: { order_number?: string } | Array<{ order_number?: string }> }> };
 
 function DriverRouteMapPanel() {
   const [plans, setPlans] = useState<DriverPlan[]>([]);
@@ -95,12 +95,14 @@ function DriverRouteMapPanel() {
   const [route, setRoute] = useState<{ coordinates: [number, number][]; stopCoordinates: [number, number][] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refreshTick, setRefreshTick] = useState(0);
   const selected = plans.find(plan => plan.id === selectedId) ?? plans[0];
+  useEffect(() => { const refresh = () => setRefreshTick(value => value + 1); window.addEventListener('rinseline:data-changed', refresh); return () => window.removeEventListener('rinseline:data-changed', refresh); }, []);
   useEffect(() => {
     let active = true;
     void fetch('/api/route-plans', { cache: 'no-store' }).then(async response => { const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to load your route.'); return body; }).then(body => { if (!active) return; const next = body.plans ?? []; setPlans(next); setSelectedId(next[0]?.id ?? ''); }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Unable to load your route.'); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [refreshTick]);
   useEffect(() => {
     if (!selected) { setRoute(null); return; }
     const addresses = selected.route_stops.map(stop => stop.address).filter((address): address is string => Boolean(address));

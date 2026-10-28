@@ -24,7 +24,8 @@ export async function GET() {
   if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher', 'driver'])) return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });
   const { data: workspace } = await auth.client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
   const today = getWorkspaceDate(new Date(), workspace?.timezone || 'UTC');
-  let planQuery = auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason,orders(order_number,customer_name,pickup_address,customer_delivery_address,processor_id,due_at,has_exception))').in('status', ['draft', 'approved', 'in_progress', 'failed']).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
+  const routeStatuses = auth.profile.role === 'driver' ? ['approved', 'in_progress', 'failed'] : ['draft', 'approved', 'in_progress', 'failed'];
+  let planQuery = auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason,orders(order_number,customer_name,pickup_address,customer_delivery_address,processor_id,due_at,has_exception))').in('status', routeStatuses).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
   if (auth.profile.role === 'driver') planQuery = planQuery.eq('driver_id', auth.user.id);
   const { data, error } = await planQuery;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
