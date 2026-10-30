@@ -12,7 +12,7 @@ export async function GET() {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) return NextResponse.json({ error: 'Dispatcher access required.' }, { status: 403 });
-  const { data, error } = await auth.client.from('orders').select('id,order_number,customer_name,phone,pickup_address,service_type,expected_bags,due_at_label,due_at,pickup_window_start_at,pickup_window_end_at,notes,created_at,validation_reason').or('validation_state.eq.manual_review,status.eq.created').is('archived_at', null).order('created_at');
+  const { data, error } = await auth.client.from('orders').select('id,order_number,customer_name,phone,pickup_address,service_type,expected_bags,due_at_label,due_at,pickup_window_start_at,pickup_window_end_at,notes,created_at,validation_reason').or('validation_state.eq.manual_review,status.eq.created').in('status', ['created', 'validated']).is('archived_at', null).order('created_at');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const orders = (data ?? []).map(order => ({ ...order, due_at_label: [order.due_at_label ?? '', order.due_at ? `deadline ${new Date(order.due_at).toLocaleString()}` : ''].filter(Boolean).join(' · ') }));
   return NextResponse.json({ orders });
@@ -25,7 +25,7 @@ export async function PATCH(request: Request) {
   const parsed = decisionSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid validation decision.' }, { status: 400 });
   const item = parsed.data;
-  const { data: order, error: orderError } = await auth.client.from('orders').select('id,service_type,status,validation_state').eq('id', item.orderId).or('validation_state.eq.manual_review,status.eq.created').maybeSingle();
+  const { data: order, error: orderError } = await auth.client.from('orders').select('id,service_type,status,validation_state').eq('id', item.orderId).or('validation_state.eq.manual_review,status.eq.created').in('status', ['created', 'validated']).maybeSingle();
   if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
   if (!order) return NextResponse.json({ error: 'This order is no longer awaiting validation.' }, { status: 409 });
   if (item.action === 'request_changes') {

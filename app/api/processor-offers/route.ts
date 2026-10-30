@@ -13,7 +13,7 @@ export async function GET() {
   let query = auth.client.from('processor_offers').select('*, orders(order_number,customer_name,service_type,expected_bags,due_at_label), processors(name,address)').order('offered_at', { ascending: false });
   if (auth.profile.role === 'processor') {
     if (!auth.profile.processor_id) return NextResponse.json({ offers: [] });
-    query = query.eq('processor_id', auth.profile.processor_id);
+    query = query.eq('processor_id', auth.profile.processor_id).eq('status', 'pending');
   } else if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher'])) return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

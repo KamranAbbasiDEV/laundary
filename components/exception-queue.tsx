@@ -20,9 +20,12 @@ export default function ExceptionQueue({ notify }: { notify: (message: string) =
   const [notifyCustomer, setNotifyCustomer] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState('');
   const [loading, setLoading] = useState(false);
-  const selected = useMemo(() => items.find(item => item.id === selectedId) ?? items[0], [items, selectedId]);
+  const selected = useMemo(() => items.find(item => item.id === selectedId) ?? null, [items, selectedId]);
   const load = useCallback(async () => { setLoading(true); try { const response = await fetch('/api/exceptions?status=active', { cache: 'no-store' }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Unable to load exceptions.'); setItems(body.exceptions ?? []); } catch (value) { notify(value instanceof Error ? value.message : 'Unable to load exceptions.'); } finally { setLoading(false); } }, []);
   useEffect(() => { void load(); const refresh = () => void load(); window.addEventListener('rinseline:data-changed', refresh); return () => window.removeEventListener('rinseline:data-changed', refresh); }, [load]);
+  useEffect(() => {
+    setSelectedId(current => items.some(item => item.id === current) ? current : items[0]?.id ?? '');
+  }, [items]);
   useEffect(() => { const focus = window.localStorage.getItem('rinseline:dispatch-focus'); if (!focus) return; const target = items.find(item => item.order_id === focus || item.orders?.order_number === focus); if (target) { setSelectedId(target.id); window.localStorage.removeItem('rinseline:dispatch-focus'); } }, [items]);
 
   async function update(item: Exception, status: 'in_review' | 'resolved') {

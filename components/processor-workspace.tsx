@@ -27,12 +27,16 @@ function LegacyProcessorWorkspace({ orders, notify, onStatusChange, onRefresh }:
   const [selected, setSelected] = useState<string[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const selectedOrder = queue.find(order => order.id === selectedId) ?? queue[0];
+  const selectedOrder = queue.find(order => order.id === selectedId) ?? null;
   const actionable = queue.filter(order => actionFor(order.status));
   const selectable = queue.filter(order => Boolean(order.internalId));
   const selectedAtProcessor = selected.filter(id => queue.some(order => order.id === id && order.status === 'At processor'));
   const selectedProcessing = selected.filter(id => queue.some(order => order.id === id && order.status === 'Processing'));
   const allSelected = selectable.length > 0 && selectable.every(order => selected.includes(order.id));
+  useEffect(() => {
+    setSelectedId(current => queue.some(order => order.id === current) ? current : queue[0]?.id ?? null);
+    setSelected(current => current.filter(id => queue.some(order => order.id === id)));
+  }, [queue]);
   useEffect(() => {
     const focus = window.localStorage.getItem('rinseline:global-order-focus');
     if (!focus) return;

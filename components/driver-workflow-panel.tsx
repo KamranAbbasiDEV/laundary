@@ -49,13 +49,13 @@ export default function DriverWorkflowPanel({ orders, notify, onStatusChange, on
     });
   }, [orders, plans]);
 
-  const selectedPlan = plans.find(plan => plan.id === selectedPlanId) ?? plans[0];
-  const selectedStop = selectedPlan?.route_stops.find(stop => stop.id === selectedStopId) ?? selectedPlan?.route_stops.find(stop => stop.status !== 'completed') ?? selectedPlan?.route_stops[0];
+  const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+  const selectedStop = selectedPlan?.route_stops.find(stop => stop.id === selectedStopId);
   const selectedStopOrder = selectedStop ? (Array.isArray(selectedStop.orders) ? selectedStop.orders[0] : selectedStop.orders) : undefined;
   const selectedStopOrderNumber = selectedStopOrder?.order_number;
   const activeOrder = selectedStopOrderNumber
     ? orders.find(order => order.id === selectedStopOrderNumber)
-    : orders.find(order => order.id === selectedOrderId) ?? activeStops[0];
+    : orders.find(order => order.id === selectedOrderId);
   const action = activeOrder ? stages[activeOrder.status] : undefined;
   const selectedStopBlockedMessage = selectedPlan?.status === 'failed'
     ? 'Dispatch must recover this failed route before the stop can be completed.'
@@ -73,6 +73,10 @@ export default function DriverWorkflowPanel({ orders, notify, onStatusChange, on
     window.localStorage.removeItem('rinseline:global-order-focus');
     if (target) setSelectedOrderId(target.id);
   }, [activeStops]);
+  useEffect(() => {
+    if (selectedPlan) return;
+    setSelectedOrderId(current => activeStops.some(order => order.id === current) ? current : activeStops[0]?.id ?? '');
+  }, [activeStops, selectedPlan]);
   useEffect(() => { setCount(''); setNote(''); setEvidenceAttached(false); }, [activeOrder?.id]);
   useEffect(() => {
     let active = true;

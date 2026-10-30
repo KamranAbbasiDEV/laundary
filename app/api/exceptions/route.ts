@@ -58,8 +58,9 @@ export async function PATCH(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'Invalid exception update.', details: parsed.error.flatten() }, { status: 400 });
   const body = parsed.data;
   if (body.status === 'resolved' && !body.resolutionNotes?.trim()) return NextResponse.json({ error: 'A resolution note is required when resolving an exception.' }, { status: 400 });
-  const { data: current, error: currentError } = await auth.client.from('exceptions').select('id,order_id,status,deadline_impact,deadline_before,deadline_after,deadline_reason,customer_message,customer_notified_at,customer_notified_by,resolution_notes').eq('id', body.id).single();
-  if (currentError || !current) return NextResponse.json({ error: currentError?.message || 'Exception not found.' }, { status: currentError ? 500 : 404 });
+  const { data: current, error: currentError } = await auth.client.from('exceptions').select('id,order_id,status,deadline_impact,deadline_before,deadline_after,deadline_reason,customer_message,customer_notified_at,customer_notified_by,resolution_notes').eq('id', body.id).neq('status', 'resolved').maybeSingle();
+  if (currentError) return NextResponse.json({ error: currentError.message }, { status: 500 });
+  if (!current) return NextResponse.json({ error: 'This exception has already been resolved. Refresh the queue to continue.' }, { status: 409 });
   const { data: order } = await auth.client.from('orders').select('id,order_number,phone,customer_user_id,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('id', current.order_id).single();
   if (!order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (body.assignedTo) {
@@ -78,8 +79,9 @@ export async function PATCH(request: Request) {
     customer_notified_at: body.notifyCustomer && body.customerMessage?.trim() ? new Date().toISOString() : current.customer_notified_at ?? null,
     customer_notified_by: body.notifyCustomer && body.customerMessage?.trim() ? auth.user.id : current.customer_notified_by ?? null,
     resolved_at: body.status === 'resolved' ? new Date().toISOString() : null, resolved_by: body.status === 'resolved' ? auth.user.id : null
-  }).eq('id', body.id).select('*').single();
+  }).eq('id', body.id).neq('status', 'resolved').select('*').maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: 'This exception was resolved by someone else. Refresh the queue to continue.' }, { status: 409 });
   if (body.status === 'resolved') {
     const { count } = await auth.client.from('exceptions').select('id', { count: 'exact', head: true }).eq('order_id', data.order_id).neq('status', 'resolved');
     if (!count) {

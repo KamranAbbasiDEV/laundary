@@ -58,6 +58,11 @@ export default function OrdersWorkspace({ orders, role, notify, onRefresh, onNav
 
   useEffect(() => { setPage(1); }, [query, stage, exact, records, sort, deadlineFilter, attentionFilter]);
   useEffect(() => { setPicked([]); setOpenId(null); }, [query, stage, exact, records, deadlineFilter, attentionFilter]);
+  useEffect(() => {
+    const available = new Set(displayOrders.map(order => order.internalId ?? order.id));
+    setPicked(current => current.filter(id => available.has(id)));
+    setOpenId(current => current && available.has(current) ? current : null);
+  }, [displayOrders]);
   useLayoutEffect(() => { setOpenId(null); }, [view]);
   useEffect(() => {
     const focus = window.localStorage.getItem('rinseline:orders-focus');

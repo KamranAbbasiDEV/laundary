@@ -18,6 +18,9 @@ export default function PaymentsPanel({ orders, notify }: { orders: Order[]; not
   const [status, setStatus] = useState('unpaid'); const [method, setMethod] = useState('cash'); const [formOpen, setFormOpen] = useState(false); const [busy, setBusy] = useState(false);
 
   useEffect(() => { const load = () => void fetch('/api/payments', { cache: 'no-store' }).then(response => response.json()).then(body => setPayments(body.payments ?? [])); load(); window.addEventListener('rinseline:data-changed', load); return () => window.removeEventListener('rinseline:data-changed', load); }, []);
+  useEffect(() => {
+    if (orderId && !orders.some(order => (order.internalId ?? order.id) === orderId || order.id === orderId)) setOrderId('');
+  }, [orderId, orders]);
   async function save() { if (!orderId) { notify('Choose an order first.'); return; } setBusy(true); const response = await fetch('/api/payments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId, amountDue: Number(amountDue || 0), amountPaid: Number(amountPaid || 0), status, method }) }); const body = await response.json(); setBusy(false); if (!response.ok) { notify(body.error || 'Unable to save payment.'); return; } setPayments(current => [body.payment, ...current.filter(item => item.order_id !== body.payment.order_id)]); setFormOpen(false); notifyDataChanged(); notify('Payment record saved.'); }
 
   return <>

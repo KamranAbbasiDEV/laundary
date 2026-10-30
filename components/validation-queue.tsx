@@ -13,7 +13,7 @@ export default function ValidationQueue({ notify, onRefresh }: { notify: (messag
   const [reason, setReason] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const selected = useMemo(() => orders.find(order => order.id === selectedId) ?? orders[0], [orders, selectedId]);
+  const selected = useMemo(() => orders.find(order => order.id === selectedId) ?? null, [orders, selectedId]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -29,6 +29,9 @@ export default function ValidationQueue({ notify, onRefresh }: { notify: (messag
   }, []);
 
   useEffect(() => { void load(); const refresh = () => void load(); window.addEventListener('rinseline:data-changed', refresh); return () => window.removeEventListener('rinseline:data-changed', refresh); }, [load]);
+  useEffect(() => {
+    setSelectedId(current => orders.some(order => order.id === current) ? current : orders[0]?.id ?? '');
+  }, [orders]);
   useEffect(() => {
     const focus = window.localStorage.getItem('rinseline:dispatch-focus');
     if (!focus) return;
