@@ -24,8 +24,8 @@ export async function GET() {
   if (!hasRole(auth.profile.role, ['super_admin', 'dispatcher', 'driver'])) return NextResponse.json({ error: 'Operations access required.' }, { status: 403 });
   const { data: workspace } = await auth.client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
   const today = getWorkspaceDate(new Date(), workspace?.timezone || 'UTC');
-  const routeStatuses = auth.profile.role === 'driver' ? ['approved', 'in_progress', 'failed'] : ['draft', 'approved', 'in_progress', 'failed'];
-  let planQuery = auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,latitude,longitude,checked_in_at,completed_at,failure_reason,orders(order_number,customer_name,pickup_address,customer_delivery_address,processor_id,due_at,has_exception))').in('status', routeStatuses).or(`route_date.gte.${today},status.in.(approved,in_progress,failed)`).order('route_date', { ascending: true }).limit(50);
+  const routeStatuses = auth.profile.role === 'driver' ? ['approved', 'in_progress'] : ['draft', 'approved', 'in_progress', 'failed'];
+  let planQuery = auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,latitude,longitude,checked_in_at,completed_at,failure_reason,orders(order_number,customer_name,pickup_address,customer_delivery_address,processor_id,assigned_driver_id,status,due_at,has_exception))').in('status', routeStatuses).or(`route_date.gte.${today},status.in.(approved,in_progress,failed)`).order('route_date', { ascending: true }).limit(50);
   if (auth.profile.role === 'driver') planQuery = planQuery.eq('driver_id', auth.user.id);
   const { data, error } = await planQuery;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -51,7 +51,12 @@ export async function GET() {
     });
     return { ...plan, route_stops: routeStops, progress: stops.length ? Math.round(((stops.length - pending.length) / stops.length) * 100) : 0, failed_stops: failed, urgent_stops: urgent, urgency, driver_location: latestLocations.get(plan.id) ?? null };
   });
-  return NextResponse.json({ plans });
+  const driverStatusByRouteType: Record<string, string> = { pickup: 'pickup_scheduled', processor_dropoff: 'picked_up', processor_pickup: 'ready_for_pickup', delivery: 'out_for_delivery' };
+  const visiblePlans = auth.profile.role === 'driver' ? plans.filter(plan => plan.route_stops.some(stop => {
+    const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders;
+    return ['planned', 'arrived'].includes(stop.status) && order?.assigned_driver_id === auth.user.id && order?.status === driverStatusByRouteType[plan.route_type];
+  })) : plans;
+  return NextResponse.json({ plans: visiblePlans });
 }
 
 export async function POST(request: Request) {

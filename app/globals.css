@@ -813,6 +813,8 @@ main.main:has(.orders-experimental-shell) .content { width: 100%; max-width: non
 .driver-route-map { min-height: 390px; border-radius: 0; }
 .driver-route-stops { max-height: 270px; overflow: auto; border-top: 1px solid var(--line); }
 .driver-route-stop { min-height: 58px; }
+.driver-route-stop.is-completed { cursor: default; opacity: .58; }
+.driver-route-stop.is-completed .route-index { background: var(--green-soft); color: var(--green); }
 .driver-task-header { align-items: flex-start; padding: 20px; }
 .driver-task-header > .button { margin-left: auto; }
 .driver-task-helper { margin: -8px 20px 16px; color: var(--muted); font-size: 11px; line-height: 1.5; }
