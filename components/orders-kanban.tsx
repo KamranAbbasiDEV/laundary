@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, CheckSquare, GripVertical, Square, TriangleAlert } from 'lucide-react';
+import { CalendarDays, CheckSquare, ChevronRight, GripVertical, Package2, Square, TriangleAlert, UserRound } from 'lucide-react';
 import { useState, type CSSProperties } from 'react';
 import type { Order, OrderStatus } from '@/lib/types';
 import { statusGroups, statusToneClass } from '@/lib/order-statuses';
@@ -24,16 +24,20 @@ export default function OrdersKanban({ orders, selected, onToggle, onInspect, on
           {items.length ? items.map(order => {
             const key = order.internalId ?? order.id;
             const isSelected = selected.has(key);
+            const nextAction = actionFor(order);
             return <article className={`order-card ${order.exception ? 'has-attention' : ''} ${isSelected ? 'is-selected' : ''}`} key={key} draggable={canMove} onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', key); const sourceGroup = statusGroups.find(source => source.statuses.includes(order.status)); const dragIds = isSelected && sourceGroup ? orders.filter(item => selected.has(item.internalId ?? item.id) && sourceGroup.statuses.includes(item.status)).map(item => item.internalId ?? item.id) : [key]; event.dataTransfer.setData('application/x-rinseline-orders', JSON.stringify(dragIds)); setDraggedId(key); }} onDragEnd={() => setDraggedId(null)}>
-              <div className="order-card-top"><span className="order-card-drag-handle" title={canMove ? 'Drag to another stage' : undefined}><GripVertical size={14}/></span><span className={`status-pill ${statusToneClass(order.status)}`}>{order.status}</span>{canSelect && <button className="order-card-check" type="button" aria-label={`${isSelected ? 'Deselect' : 'Select'} ${order.id}`} onClick={() => onToggle(key)}>{isSelected ? <CheckSquare size={15}/> : <Square size={15}/>}</button>}</div>
-              <button className="order-card-title" type="button" onClick={() => onInspect(order)}>{order.id}</button>
-              <strong className="order-card-customer">{order.customer}</strong>
-              <div className="order-card-meta">{order.service} · {order.bags} bag{order.bags === 1 ? '' : 's'}</div>
-              <div className="order-card-meta"><CalendarDays size={12}/> {order.due || 'No due window'}</div>
-              <DeadlineBadge order={order}/>
-              {actionFor(order) && <button className="order-card-action is-primary" type="button" onClick={() => onAction(order)}>{actionFor(order)}</button>}
-              <div className="order-card-footer"><span>{order.processor || 'Unassigned'}</span>{order.exception && <span className="attention-label"><TriangleAlert size={12}/> Attention</span>}</div>
-              {!actionFor(order) && <button className="order-card-action" type="button" onClick={() => onInspect(order)}>View details</button>}
+              <div className="order-card-top">
+                <div className="order-card-identity"><span className="order-card-drag-handle" title={canMove ? 'Drag to another stage' : undefined}><GripVertical size={14}/></span><button className="order-card-title" type="button" onClick={() => onInspect(order)}>{order.id}</button></div>
+                {canSelect && <button className="order-card-check" type="button" aria-label={`${isSelected ? 'Deselect' : 'Select'} ${order.id}`} onClick={() => onToggle(key)}>{isSelected ? <CheckSquare size={16}/> : <Square size={16}/>}</button>}
+              </div>
+              <div className="order-card-primary"><strong className="order-card-customer">{order.customer}</strong><span><Package2 size={12}/>{order.service} · {order.bags} bag{order.bags === 1 ? '' : 's'}</span></div>
+              <div className="order-card-badges"><span className={`status-pill ${statusToneClass(order.status)}`}>{order.status}</span><DeadlineBadge order={order}/></div>
+              <div className="order-card-facts">
+                <div><CalendarDays size={13}/><span><small>Due</small><strong>{order.due || 'Not scheduled'}</strong></span></div>
+                <div><UserRound size={13}/><span><small>Assigned</small><strong>{order.processor || 'Unassigned'}</strong></span></div>
+              </div>
+              {order.exception && <div className="order-card-attention"><TriangleAlert size={13}/><span>Needs attention</span></div>}
+              <button className={`order-card-action ${nextAction ? 'is-primary' : ''}`} type="button" onClick={() => nextAction ? onAction(order) : onInspect(order)}><span>{nextAction || 'View details'}</span><ChevronRight size={14}/></button>
             </article>;
           }) : <div className="kanban-empty">No orders in this stage</div>}
         </div>
