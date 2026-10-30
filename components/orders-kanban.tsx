@@ -6,11 +6,11 @@ import type { Order, OrderStatus } from '@/lib/types';
 import { statusGroups, statusToneClass } from '@/lib/order-statuses';
 import DeadlineBadge from './deadline-badge';
 
-const actionFor = (order: Order) => order.exception ? 'Review exception' : order.customerNotificationPending ? 'Send customer update' : order.failedStop ? 'Recover failed stop' : ['Capacity confirmed', 'Ready for pickup'].includes(order.status) && !order.routeAssigned ? 'Plan route' : order.status === 'Created' ? 'Open intake review' : order.status === 'Validated' ? 'Matching in progress' : order.status === 'Processor ranked' ? 'Awaiting processor response' : null;
+const actionFor = (order: Order) => order.exception ? 'Review exception' : order.customerNotificationPending ? 'Send customer update' : order.failedStop ? 'Recover failed stop' : ['Capacity confirmed', 'Ready for pickup', 'Out for delivery'].includes(order.status) && !order.routeAssigned ? order.routeDrafted ? 'Continue draft' : 'Plan route' : order.requiresValidation ? 'Review intake' : null;
 
-type Props = { orders: Order[]; selected: Set<string>; onToggle: (id: string) => void; onInspect: (order: Order) => void; onNavigate?: (section: string) => void; canMove: boolean; canSelect: boolean; showEmpty: boolean; onMove: (orders: Order[], status: OrderStatus) => void };
+type Props = { orders: Order[]; selected: Set<string>; onToggle: (id: string) => void; onInspect: (order: Order) => void; onAction: (order: Order) => void; canMove: boolean; canSelect: boolean; showEmpty: boolean; onMove: (orders: Order[], status: OrderStatus) => void };
 
-export default function OrdersKanban({ orders, selected, onToggle, onInspect, onNavigate, canMove, canSelect, showEmpty, onMove }: Props) {
+export default function OrdersKanban({ orders, selected, onToggle, onInspect, onAction, canMove, canSelect, showEmpty, onMove }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const visibleGroups = statusGroups.filter(group => showEmpty || orders.some(order => group.statuses.includes(order.status)));
   return <div className="orders-kanban" aria-label="Orders board" style={{ '--kanban-columns': visibleGroups.length } as CSSProperties}>
@@ -31,9 +31,9 @@ export default function OrdersKanban({ orders, selected, onToggle, onInspect, on
               <div className="order-card-meta">{order.service} · {order.bags} bag{order.bags === 1 ? '' : 's'}</div>
               <div className="order-card-meta"><CalendarDays size={12}/> {order.due || 'No due window'}</div>
               <DeadlineBadge order={order}/>
-              {actionFor(order) && <button className="order-card-action" type="button" onClick={() => order.status === 'Created' ? onNavigate?.('Dispatch') : onInspect(order)}>{actionFor(order)}</button>}
+              {actionFor(order) && <button className="order-card-action is-primary" type="button" onClick={() => onAction(order)}>{actionFor(order)}</button>}
               <div className="order-card-footer"><span>{order.processor || 'Unassigned'}</span>{order.exception && <span className="attention-label"><TriangleAlert size={12}/> Attention</span>}</div>
-              <button className="order-card-action" type="button" onClick={() => onInspect(order)}>Open order details</button>
+              {!actionFor(order) && <button className="order-card-action" type="button" onClick={() => onInspect(order)}>View details</button>}
             </article>;
           }) : <div className="kanban-empty">No orders in this stage</div>}
         </div>

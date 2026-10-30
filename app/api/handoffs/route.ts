@@ -6,7 +6,8 @@ import { logOperationalNotification } from '@/lib/notifications';
 const handoffSchema = z.object({ orderId: z.string().uuid(), stage: z.enum(['customer_pickup','processor_dropoff','processor_pickup','customer_delivery']), actualBags: z.number().int().nonnegative(), discrepancy: z.string().max(1000).optional(), notes: z.string().max(1000).optional() });
 const photoKindByStage = { customer_pickup: 'customer-pickup', processor_dropoff: 'processor-dropoff', processor_pickup: 'processor-pickup', customer_delivery: 'customer-delivery' } as const;
 const exceptionTypeByStage = { customer_pickup: 'pickup_discrepancy', processor_dropoff: 'processor_discrepancy', processor_pickup: 'processor_discrepancy', customer_delivery: 'quality_issue' } as const;
-const routeTypeByStage = { customer_pickup: 'pickup', processor_dropoff: null, processor_pickup: 'processor_pickup', customer_delivery: 'delivery' } as const;
+const routeTypeByStage = { customer_pickup: 'pickup', processor_dropoff: 'processor_dropoff', processor_pickup: 'processor_pickup', customer_delivery: 'delivery' } as const;
+const orderStatusByStage = { customer_pickup: 'pickup_scheduled', processor_dropoff: 'picked_up', processor_pickup: 'ready_for_pickup', customer_delivery: 'out_for_delivery' } as const;
 
 export async function GET(request: Request) {
   const auth = await requireActiveUser();
@@ -40,9 +41,16 @@ export async function POST(request: Request) {
   const parsed = handoffSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'Invalid handoff data.', details: parsed.error.flatten() }, { status: 400 });
   const item = parsed.data;
-  const { data: order, error: orderError } = await auth.client.from('orders').select('id,order_number,phone,expected_bags,assigned_driver_id,has_exception,due_at').eq('id', item.orderId).single();
+  const { data: order, error: orderError } = await auth.client.from('orders').select('id,order_number,phone,expected_bags,assigned_driver_id,has_exception,due_at,status').eq('id', item.orderId).single();
   if (orderError || !order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (auth.profile.role === 'driver' && order.assigned_driver_id !== auth.user.id) return NextResponse.json({ error: 'You can only record handoffs for orders assigned to you.' }, { status: 403 });
+  if (order.status !== orderStatusByStage[item.stage]) return NextResponse.json({ error: `This handoff is not available while the order is ${order.status.replaceAll('_', ' ')}. Refresh the route and complete the current stage first.` }, { status: 409 });
+  const routeType = routeTypeByStage[item.stage];
+  let stopQuery = auth.client.from('route_stops').select('id,route_id,route_plans!inner(status)').eq('order_id', item.orderId).eq('route_type', routeType).in('status', ['planned', 'arrived']).in('route_plans.status', ['approved', 'in_progress']).order('route_date', { ascending: false }).limit(1);
+  if (auth.profile.role === 'driver') stopQuery = stopQuery.eq('driver_id', auth.user.id);
+  const { data: stop, error: assignedStopError } = await stopQuery.maybeSingle();
+  if (assignedStopError) return NextResponse.json({ error: assignedStopError.message }, { status: 500 });
+  if (!stop) return NextResponse.json({ error: 'No active route stop exists for this handoff. Ask dispatch to approve or recover the route first.' }, { status: 409 });
   // Every physical transfer needs evidence. This is enforced here, not only in the UI.
   const { count: photoCount, error: photoError } = await auth.client.from('order_photos').select('id', { count: 'exact', head: true }).eq('order_id', item.orderId).eq('kind', photoKindByStage[item.stage]);
   if (photoError) return NextResponse.json({ error: photoError.message }, { status: 500 });
@@ -65,20 +73,10 @@ export async function POST(request: Request) {
         }).select('*').single();
     if (exceptionError) return NextResponse.json({ error: exceptionError.message }, { status: 500 });
     exception = insertedException;
-    await logOperationalNotification({ orderId: item.orderId, event: 'exception_recorded', message: `${order.order_number} has a ${item.stage.replaceAll('_', ' ')} discrepancy requiring review: ${item.discrepancy}.${order.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''}`, phone: order.phone });
+    await logOperationalNotification({ orderId: item.orderId, event: 'exception_recorded', message: `${order.order_number} has a ${item.stage.replaceAll('_', ' ')} discrepancy requiring review: ${item.discrepancy}.${order.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''}`, phone: order.phone }, auth.client);
   }
-  const routeType = routeTypeByStage[item.stage];
-  let stop: { id: string; route_id: string | null } | null = null;
-  if (routeType) {
-    const { data: assignedStop } = await auth.client.from('route_stops').select('id,route_id').eq('order_id', item.orderId).eq('driver_id', auth.user.id).eq('route_type', routeType).order('route_date', { ascending: false }).limit(1).maybeSingle();
-    stop = assignedStop;
-  }
-  if (stop) {
-    await auth.client.from('route_stops').update({ status: 'completed', completed_at: new Date().toISOString(), completed_by: auth.user.id }).eq('id', stop.id);
-    if (stop.route_id) {
-      const { count } = await auth.client.from('route_stops').select('id', { count: 'exact', head: true }).eq('route_id', stop.route_id).neq('status', 'completed');
-      if (!count) await auth.client.from('route_plans').update({ status: 'complete' }).eq('id', stop.route_id);
-    }
-  }
+  // The matching order transition completes this stop atomically through
+  // advance_driver_order_stage. Keeping the stop open here makes a failed
+  // transition safely retryable instead of hiding unfinished work.
   return NextResponse.json({ handoff: data, exception }, { status: 201 });
 }

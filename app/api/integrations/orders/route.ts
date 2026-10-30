@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { pickupDeadlineError } from '@/lib/order-scheduling';
 import { serviceIsConfigured } from '@/lib/service-catalog';
+import { rankEligibleProcessors } from '@/lib/processor-matching';
+import { inngest, notifyPendingProcessorOffers } from '@/lib/inngest';
 
 const payloadSchema = z.object({
   externalId: z.string().min(1).max(160), customer: z.string().min(2), phone: z.string().min(7), address: z.string().min(5),
@@ -23,29 +25,50 @@ export async function POST(request: Request) {
   if (!serviceIsConfigured(item.service, workspace?.services)) return NextResponse.json({ error: 'Choose a service from the active workspace service catalog.' }, { status: 400 });
   const { data: existing, error: lookupError } = await supabaseAdmin.from('orders').select('id,order_number,status').eq('intake_source', item.source).eq('external_id', item.externalId).maybeSingle();
   if (lookupError) return NextResponse.json({ error: lookupError.message }, { status: 500 });
-  if (existing) return NextResponse.json({ order: existing, idempotent: true });
-  const { data: order, error } = await supabaseAdmin.from('orders').insert({ customer_name: item.customer, phone: item.phone, pickup_address: item.address, service_type: item.service, expected_bags: item.bags, due_at_label: item.due, due_at: item.dueAt, original_due_at: item.dueAt, pickup_window_start_at: item.pickupWindowStartAt ?? null, pickup_window_end_at: item.pickupWindowEndAt ?? null, notes: item.notes ?? null, status: 'validated', intake_source: item.source, external_id: item.externalId }).select('id,order_number,status').single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (existing && existing.status !== 'validated') return NextResponse.json({ order: existing, idempotent: true });
+  let order = existing;
+  let idempotent = Boolean(existing);
+  if (!order) {
+    const { data: insertedOrder, error } = await supabaseAdmin.from('orders').insert({ customer_name: item.customer, phone: item.phone, pickup_address: item.address, service_type: item.service, expected_bags: item.bags, due_at_label: item.due, due_at: item.dueAt, original_due_at: item.dueAt, pickup_window_start_at: item.pickupWindowStartAt ?? null, pickup_window_end_at: item.pickupWindowEndAt ?? null, notes: item.notes ?? null, status: 'validated', intake_source: item.source, external_id: item.externalId }).select('id,order_number,status').single();
+    if (error && error.code !== '23505') return NextResponse.json({ error: error.message }, { status: 500 });
+    if (insertedOrder) order = insertedOrder;
+    else {
+      const { data: concurrentOrder, error: concurrentLookupError } = await supabaseAdmin.from('orders').select('id,order_number,status').eq('intake_source', item.source).eq('external_id', item.externalId).maybeSingle();
+      if (concurrentLookupError || !concurrentOrder) return NextResponse.json({ error: concurrentLookupError?.message ?? 'The duplicate order could not be recovered.' }, { status: 500 });
+      if (concurrentOrder.status !== 'validated') return NextResponse.json({ order: concurrentOrder, idempotent: true });
+      order = concurrentOrder;
+      idempotent = true;
+    }
+  }
+  const { data: existingOffers, error: existingOffersError } = await supabaseAdmin.from('processor_offers').select('id').eq('order_id', order.id).limit(1);
+  if (existingOffersError) return NextResponse.json({ error: existingOffersError.message, order, retryable: true }, { status: 503 });
+  if (existingOffers?.length) {
+    const { error: resumeError } = await supabaseAdmin.from('orders').update({ status: 'processor_ranked', validation_state: 'resolved', validation_reason: null, updated_at: new Date().toISOString() }).eq('id', order.id).eq('status', 'validated');
+    if (resumeError) return NextResponse.json({ error: `Existing processor offers could not be resumed: ${resumeError.message}`, order, retryable: true }, { status: 503 });
+    try {
+      if (process.env.INNGEST_EVENT_KEY) await inngest.send({ name: 'rinseline/order.validated', data: { orderId: order.id } });
+      else await notifyPendingProcessorOffers(order.id);
+    } catch { /* The processor queue remains visible and notification retries are safe. */ }
+    return NextResponse.json({ order: { ...order, status: 'processor_ranked' }, idempotent: true, resumed: true });
+  }
   const { data: processors } = await supabaseAdmin.from('processors').select('id,capabilities,capacity_limit,capacity_percent,turnaround_hours,pricing,performance_score').eq('active', true);
-  const defaults = { capability: 30, location: 20, capacity: 20, turnaround: 15, pricing: 10, performance: 5 };
-  const configured = workspace?.matching_rules && typeof workspace.matching_rules === 'object' && !Array.isArray(workspace.matching_rules) ? workspace.matching_rules as Record<string, unknown> : {};
-  const weights = { ...defaults, ...Object.fromEntries(Object.entries(configured).filter(([, value]) => typeof value === 'number' && value >= 0)) } as Record<string, number>;
-  const service = item.service.toLowerCase();
-  const ranked = (processors ?? []).map((processor) => {
-    const capabilities = Array.isArray(processor.capabilities) ? processor.capabilities.map((value) => String(value).toLowerCase()) : [];
-    const capability = capabilities.some((value) => service.includes(value) || value.includes(service)) ? weights.capability : 0;
-    const capacity = Number(processor.capacity_limit) > 0 && Number(processor.capacity_percent) < 100 ? weights.capacity : 0;
-    const turnaroundHours = Number(processor.turnaround_hours ?? 0);
-    const turnaround = turnaroundHours > 0 ? Math.max(0, weights.turnaround * (1 - Math.min(turnaroundHours, 96) / 96)) : 0;
-    const pricing = processor.pricing ? weights.pricing : 0;
-    const performance = Math.max(0, Math.min(100, Number(processor.performance_score ?? 0))) / 100 * weights.performance;
-    return { id: processor.id, score: capability + capacity + turnaround + pricing + performance, turnaround: turnaroundHours || 999 };
-  }).sort((a, b) => b.score - a.score || a.turnaround - b.turnaround);
+  const ranked = rankEligibleProcessors(processors ?? [], item.service, workspace?.matching_rules);
   if (ranked.length) {
     const expiry = new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString();
-    const { error: offerError } = await supabaseAdmin.from('processor_offers').insert(ranked.map((processor, index) => ({ order_id: order.id, processor_id: processor.id, rank: index + 1, score: processor.score, status: index === 0 ? 'pending' : 'withdrawn', expires_at: expiry })));
-    if (!offerError) await supabaseAdmin.from('orders').update({ status: 'processor_ranked', updated_at: new Date().toISOString() }).eq('id', order.id);
+    const { error: offerError } = await supabaseAdmin.from('processor_offers').insert(ranked.map((processor, index) => ({ order_id: order.id, processor_id: processor.id, rank: index + 1, score: processor.score, score_breakdown: processor.breakdown, status: index === 0 ? 'pending' : 'withdrawn', expires_at: expiry })));
+    if (offerError) return NextResponse.json({ error: `Order was created, but processor matching failed: ${offerError.message}`, order, retryable: true }, { status: 503 });
+    const { error: statusError } = await supabaseAdmin.from('orders').update({ status: 'processor_ranked', validation_state: 'resolved', validation_reason: null, updated_at: new Date().toISOString() }).eq('id', order.id);
+    if (statusError) return NextResponse.json({ error: `Processor offers were created, but the order queue could not be updated: ${statusError.message}`, order, retryable: true }, { status: 503 });
+    try {
+      if (process.env.INNGEST_EVENT_KEY) await inngest.send({ name: 'rinseline/order.validated', data: { orderId: order.id } });
+      else await notifyPendingProcessorOffers(order.id);
+    } catch (notificationError) {
+      return NextResponse.json({ order: { ...order, status: 'processor_ranked' }, idempotent, warning: notificationError instanceof Error ? `Order matched, but processor notification must be retried: ${notificationError.message}` : 'Order matched, but processor notification must be retried.' }, { status: 202 });
+    }
+  } else {
+    const { error: reviewError } = await supabaseAdmin.from('orders').update({ validation_state: 'manual_review', validation_reason: `No active processor currently supports ${item.service} with available capacity.`, updated_at: new Date().toISOString() }).eq('id', order.id);
+    if (reviewError) return NextResponse.json({ error: `The order was created, but dispatcher review could not be queued: ${reviewError.message}`, order, retryable: true }, { status: 503 });
   }
   // The order is committed before downstream matching so an integration can safely retry.
-  return NextResponse.json({ order: { ...order, status: ranked.length ? 'processor_ranked' : order.status }, idempotent: false }, { status: 201 });
+  return NextResponse.json({ order: { ...order, status: ranked.length ? 'processor_ranked' : order.status }, idempotent }, { status: idempotent ? 200 : 201 });
 }

@@ -5,7 +5,7 @@ import { getDeadlineStatus } from '@/lib/deadlines';
 
 export const inngest = new Inngest({ id: 'rinseline-dispatch' });
 
-async function notifyPendingProcessorOffers(orderId: string) {
+export async function notifyPendingProcessorOffers(orderId: string) {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
   const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('company_name').eq('id', 'default').maybeSingle();
   const companyName = workspace?.company_name?.trim() || 'RinseLine';
@@ -16,13 +16,14 @@ async function notifyPendingProcessorOffers(orderId: string) {
     const processor = Array.isArray(offer.processors) ? offer.processors[0] : offer.processors;
     const order = Array.isArray(offer.orders) ? offer.orders[0] : offer.orders;
     const recipient = processor?.phone;
-    if (!recipient || !order) continue;
+    if (!order) continue;
     const message = `New ${companyName} capacity request for ${order.order_number}.`;
     const { data: inAppAlreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', `processor:${offer.processor_id}`).eq('event', 'processor_offer').limit(1);
     if (!inAppAlreadyLogged?.length) {
       const { error: inAppError } = await supabaseAdmin.from('notification_log').insert({ order_id: orderId, recipient: `processor:${offer.processor_id}`, channel: 'in_app', event: 'processor_offer', message, status: 'sent', sent_at: new Date().toISOString() });
       if (inAppError) throw new Error(inAppError.message);
     }
+    if (!recipient) continue;
     if (!(await isSmsAllowed(recipient, 'processor_offer'))) continue;
     const { data: alreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', recipient).eq('event', 'processor_offer').limit(1);
     if (alreadyLogged?.length) continue;

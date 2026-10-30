@@ -18,7 +18,10 @@ export type Order = {
   deadlineDelta?: string;
   actualCompletionAt?: string;
   routeAssigned?: boolean;
+  routeDrafted?: boolean;
   failedStop?: boolean;
+  requiresValidation?: boolean;
+  validationState?: 'validated' | 'manual_review' | 'resolved';
   customerNotificationPending?: boolean;
   status: OrderStatus;
   processor: string;

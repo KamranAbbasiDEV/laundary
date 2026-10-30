@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const { error: orderUpdateError } = await auth.client.from('orders').update({ has_exception: true, updated_at: new Date().toISOString() }).eq('id', item.orderId);
   if (orderUpdateError) return NextResponse.json({ error: orderUpdateError.message }, { status: 500 });
-  await logOperationalNotification({ orderId: item.orderId, event: 'exception_recorded', message: `${order.order_number} requires review: ${item.description}.${order.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''}`, phone: order.phone });
+  await logOperationalNotification({ orderId: item.orderId, event: 'exception_recorded', message: `${order.order_number} requires review: ${item.description}.${order.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''}`, phone: order.phone }, auth.client);
   return NextResponse.json({ exception: data }, { status: 201 });
 }
 
@@ -106,7 +106,7 @@ export async function PATCH(request: Request) {
   }
   const deadline = body.revisedDueAt ?? order.due_at;
   const statusText = body.status === 'resolved' ? 'resolved' : body.status === 'in_review' ? 'assigned for review' : 'updated';
-  await logOperationalNotification({ orderId: order.id, event: body.status === 'resolved' ? 'exception_resolved' : 'exception_updated', message: `${order.order_number} exception ${statusText}.${deadline ? ` Deadline: ${new Date(deadline).toLocaleString()}.` : ''}`, phone: order.phone });
-  if (body.notifyCustomer && body.customerMessage?.trim()) await logCustomerNotification({ orderId: order.id, event: 'customer_exception_update', message: body.customerMessage.trim(), phone: order.phone, customerUserId: order.customer_user_id });
+  await logOperationalNotification({ orderId: order.id, event: body.status === 'resolved' ? 'exception_resolved' : 'exception_updated', message: `${order.order_number} exception ${statusText}.${deadline ? ` Deadline: ${new Date(deadline).toLocaleString()}.` : ''}`, phone: order.phone }, auth.client);
+  if (body.notifyCustomer && body.customerMessage?.trim()) await logCustomerNotification({ orderId: order.id, event: 'customer_exception_update', message: body.customerMessage.trim(), phone: order.phone, customerUserId: order.customer_user_id }, auth.client);
   return NextResponse.json({ exception: data });
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireActiveUser } from '@/lib/api-auth';
-import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const idSchema = z.string().uuid();
 
@@ -15,21 +14,33 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (!order) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   if (auth.profile.role === 'driver' && order.assigned_driver_id !== auth.user.id) return NextResponse.json({ error: 'You can only inspect orders assigned to you.' }, { status: 403 });
   if (auth.profile.role === 'processor' && order.processor_id !== auth.profile.processor_id) return NextResponse.json({ error: 'You can only inspect orders assigned to your facility.' }, { status: 403 });
-  const detailClient = supabaseAdmin ?? auth.client;
+  const detailClient = auth.client;
   const [events, handoffs, photos, exceptions, offers, stops, deadlineRevisions] = await Promise.all([
     auth.client.from('order_events').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('order_handoffs').select('*').eq('order_id', id).order('confirmed_at', { ascending: false }),
     detailClient.from('order_photos').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     detailClient.from('exceptions').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('processor_offers').select('id,rank,score,score_breakdown,status,rejection_reason,offered_at,responded_at,processors(name)').eq('order_id', id).order('rank'),
-    auth.client.from('route_stops').select('id,route_id,route_date,route_type,sequence,status,checked_in_at,completed_at,failure_reason,dispatcher_note').eq('order_id', id).order('route_date', { ascending: false }),
+    auth.client.from('route_stops').select('id,route_id,route_date,route_type,sequence,status,driver_id,checked_in_at,completed_at,failure_reason,dispatcher_note,route_plans(id,status,route_type,route_date,driver_id)').eq('order_id', id).order('route_date', { ascending: false }),
     auth.profile.role === 'customer' ? Promise.resolve({ data: [], error: null }) : auth.client.from('deadline_revisions').select('id,previous_original_due_at,original_due_at,previous_committed_due_at,committed_due_at,reason,changed_at').eq('order_id', id).order('changed_at', { ascending: false })
   ]);
   const failed = [events, handoffs, photos, exceptions, offers, stops, deadlineRevisions].find((result) => result.error);
   if (failed?.error) return NextResponse.json({ error: failed.error.message }, { status: 500 });
+  const routeStops = stops.data ?? [];
+  const driverIds = [...new Set(routeStops.flatMap(stop => {
+    const plan = Array.isArray(stop.route_plans) ? stop.route_plans[0] : stop.route_plans;
+    return [stop.driver_id, plan?.driver_id].filter((driverId): driverId is string => Boolean(driverId));
+  }))];
+  const { data: drivers, error: driversError } = driverIds.length ? await detailClient.from('profiles').select('id,full_name').in('id', driverIds) : { data: [], error: null };
+  if (driversError) return NextResponse.json({ error: driversError.message }, { status: 500 });
+  const driverNames = new Map((drivers ?? []).map(driver => [driver.id, driver.full_name]));
+  const routeStopsWithDrivers = routeStops.map(stop => {
+    const plan = Array.isArray(stop.route_plans) ? stop.route_plans[0] : stop.route_plans;
+    const driverId = stop.driver_id ?? plan?.driver_id;
+    return { ...stop, driver_name: driverId ? driverNames.get(driverId) ?? 'Assigned driver' : null };
+  });
   const photosWithUrls = auth.profile.role === 'customer' ? [] : await Promise.all((photos.data ?? []).map(async (photo) => {
-    if (!supabaseAdmin) return photo;
-    const { data } = await supabaseAdmin.storage.from('order-photos').createSignedUrl(photo.storage_path, 3600);
+    const { data } = await auth.client.storage.from('order-photos').createSignedUrl(photo.storage_path, 3600);
     return { ...photo, url: data?.signedUrl ?? null };
   }));
   const visibleExceptions = auth.profile.role === 'customer'
@@ -43,5 +54,5 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const safeEvents = auth.profile.role === 'customer'
     ? (events.data ?? []).map(item => ({ id: item.id, order_id: item.order_id, from_status: item.from_status, to_status: item.to_status, created_at: item.created_at }))
     : events.data ?? [];
-  return NextResponse.json({ order: safeOrder, events: safeEvents, handoffs: auth.profile.role === 'customer' ? [] : handoffs.data ?? [], photos: photosWithUrls, exceptions: visibleExceptions, offers: ['super_admin', 'dispatcher'].includes(auth.profile.role) ? offers.data ?? [] : [], routeStops: ['super_admin', 'dispatcher', 'driver'].includes(auth.profile.role) ? stops.data ?? [] : [], deadlineRevisions: ['super_admin', 'dispatcher'].includes(auth.profile.role) ? deadlineRevisions.data ?? [] : [] });
+  return NextResponse.json({ order: safeOrder, events: safeEvents, handoffs: auth.profile.role === 'customer' ? [] : handoffs.data ?? [], photos: photosWithUrls, exceptions: visibleExceptions, offers: ['super_admin', 'dispatcher'].includes(auth.profile.role) ? offers.data ?? [] : [], routeStops: ['super_admin', 'dispatcher', 'driver'].includes(auth.profile.role) ? routeStopsWithDrivers : [], deadlineRevisions: ['super_admin', 'dispatcher'].includes(auth.profile.role) ? deadlineRevisions.data ?? [] : [] });
 }

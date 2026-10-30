@@ -61,7 +61,7 @@ export default function ProcessorOffersPanel({ notify }: { notify: (message: str
       setOffers(current => current.map(item => item.id === offer.id ? body.offer : item));
       setRejecting('');
       notifyDataChanged();
-      notify(decision === 'accepted' ? 'Order accepted. Dispatch can now plan its pickup.' : 'Order rejected and returned to matching.');
+      notify(body.offer?.warning || (decision === 'accepted' ? 'Order accepted. Dispatch can now plan its pickup.' : 'Order rejected and sent to the next eligible processor or dispatcher review.'));
     } catch (value) {
       notify(value instanceof Error ? value.message : 'Unable to update processor offer.');
     } finally {

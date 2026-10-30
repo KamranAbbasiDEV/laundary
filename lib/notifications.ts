@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type NotificationChannel = 'sms' | 'email';
 
@@ -25,28 +26,26 @@ export async function sendOrderNotification(input: { to: string; message: string
   return { delivered: true, sid: result.sid as string, to: input.to };
 }
 
-async function recordNotification(entry: Record<string, unknown>) {
-  if (!supabaseAdmin) return;
-  const { error } = await supabaseAdmin.from('notification_log').insert(entry);
-  if (error) console.error('Unable to persist notification log entry:', error.message);
+async function recordNotification(entry: Record<string, unknown>, client?: SupabaseClient) {
+  const databases = [client, supabaseAdmin].filter((database, index, values): database is SupabaseClient => Boolean(database) && values.indexOf(database) === index);
+  let lastError: string | null = null;
+  for (const database of databases) {
+    const { error } = await database.from('notification_log').insert(entry);
+    if (!error) return;
+    lastError = error.message;
+  }
+  if (lastError) console.error('Unable to persist notification log entry:', lastError);
 }
 
-export async function logOperationalNotification(input: { orderId?: string; event: string; message: string; phone?: string }) {
-  if (!supabaseAdmin) return;
-  await recordNotification({ order_id: input.orderId ?? null, recipient: 'operations', channel: 'in_app', event: input.event, message: input.message, status: 'sent', sent_at: new Date().toISOString() });
-  if (!input.phone) return;
-  if (!(await isSmsAllowed(input.phone, input.event))) return;
-  const sms = await sendOrderNotification({ to: input.phone, message: input.message, channel: 'sms' });
-  const attemptedAt = new Date().toISOString();
-  await recordNotification({ order_id: input.orderId ?? null, recipient: input.phone, channel: 'sms', event: input.event, message: input.message, status: sms.delivered ? 'sent' : 'queued', attempt_count: 1, last_attempt_at: attemptedAt, provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? attemptedAt : null });
+export async function logOperationalNotification(input: { orderId?: string; event: string; message: string; phone?: string }, client?: SupabaseClient) {
+  await recordNotification({ order_id: input.orderId ?? null, recipient: 'operations', channel: 'in_app', event: input.event, message: input.message, status: 'sent', sent_at: new Date().toISOString() }, client);
 }
 
-export async function logCustomerNotification(input: { orderId: string; event: string; message: string; phone?: string; customerUserId?: string | null }) {
-  if (!supabaseAdmin) return;
+export async function logCustomerNotification(input: { orderId: string; event: string; message: string; phone?: string; customerUserId?: string | null }, client?: SupabaseClient) {
   const now = new Date().toISOString();
-  await recordNotification({ order_id: input.orderId, recipient: input.customerUserId ? `customer:${input.customerUserId}` : 'customer', channel: 'in_app', event: input.event, message: input.message, status: 'sent', sent_at: now });
+  await recordNotification({ order_id: input.orderId, recipient: input.customerUserId ? `customer:${input.customerUserId}` : 'customer', channel: 'in_app', event: input.event, message: input.message, status: 'sent', sent_at: now }, client);
   if (!input.phone || !(await isSmsAllowed(input.phone, input.event))) return;
   const sms = await sendOrderNotification({ to: input.phone, message: input.message, channel: 'sms' });
   const attemptedAt = new Date().toISOString();
-  await recordNotification({ order_id: input.orderId, recipient: input.phone, channel: 'sms', event: input.event, message: input.message, status: sms.delivered ? 'sent' : 'queued', attempt_count: 1, last_attempt_at: attemptedAt, provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? attemptedAt : null });
+  await recordNotification({ order_id: input.orderId, recipient: input.phone, channel: 'sms', event: input.event, message: input.message, status: sms.delivered ? 'sent' : 'queued', attempt_count: 1, last_attempt_at: attemptedAt, provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? attemptedAt : null }, client);
 }

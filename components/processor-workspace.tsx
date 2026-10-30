@@ -7,7 +7,6 @@ import { Button } from './ui/button';
 import ProcessorIssueForm from './processor-issue-form';
 import type { Order, OrderStatus } from '@/lib/types';
 import { notifyDataChanged } from '@/lib/live-updates';
-import DeadlineRolePanel from './deadline-role-panel';
 
 type Props = {
   orders: Order[];
@@ -55,6 +54,8 @@ function LegacyProcessorWorkspace({ orders, notify, onStatusChange, onRefresh }:
       await onStatusChange(order.id, action.next, action.note);
       setSelected(current => current.filter(id => id !== order.id));
       notify(action.next === 'Ready for pickup' ? 'Order released to the dispatch pickup queue.' : 'Intake confirmed; production can begin.');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Unable to update this order.');
     } finally {
       setBusyId(null);
     }
@@ -97,8 +98,10 @@ function LegacyProcessorWorkspace({ orders, notify, onStatusChange, onRefresh }:
         <div><div className="eyebrow">Processor workspace</div><h1>Production queue</h1><p>Accept capacity, confirm intake, process to QC, then release completed work.</p></div>
         <div className="row-actions"><span className="status status-amber">{actionable.length} to work</span><Button size="sm" variant="outline" onClick={() => void refreshQueue()} disabled={refreshing || busyId !== null}><RefreshCw className={refreshing ? 'spin' : ''} size={14} />Refresh</Button></div>
       </div>
-      <DeadlineRolePanel role="processor" orders={orders} />
-      <ProcessorOffersPanel notify={notify} />
+      <details className="panel processor-offers-disclosure">
+        <summary><span><ClipboardCheck size={16}/>Capacity offers</span><small>Review new work before it enters production</small></summary>
+        <ProcessorOffersPanel notify={notify} />
+      </details>
       <div className="orders-layout processor-orders-layout">
         <section className="orders-table-wrap panel">
           <div className="panel-heading processor-queue-heading">

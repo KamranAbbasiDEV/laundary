@@ -25,7 +25,7 @@ export async function GET() {
   const { data: workspace } = await auth.client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
   const today = getWorkspaceDate(new Date(), workspace?.timezone || 'UTC');
   const routeStatuses = auth.profile.role === 'driver' ? ['approved', 'in_progress', 'failed'] : ['draft', 'approved', 'in_progress', 'failed'];
-  let planQuery = auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,checked_in_at,completed_at,failure_reason,orders(order_number,customer_name,pickup_address,customer_delivery_address,processor_id,due_at,has_exception))').in('status', routeStatuses).gte('route_date', today).order('route_date', { ascending: true }).limit(20);
+  let planQuery = auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route,created_at,route_stops(id,order_id,sequence,status,latitude,longitude,checked_in_at,completed_at,failure_reason,orders(order_number,customer_name,pickup_address,customer_delivery_address,processor_id,due_at,has_exception))').in('status', routeStatuses).or(`route_date.gte.${today},status.in.(approved,in_progress,failed)`).order('route_date', { ascending: true }).limit(50);
   if (auth.profile.role === 'driver') planQuery = planQuery.eq('driver_id', auth.user.id);
   const { data, error } = await planQuery;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -43,7 +43,7 @@ export async function GET() {
     const failed = stops.filter((stop) => stop.status === 'failed').length;
     const urgent = pending.filter((stop) => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return Boolean(order?.has_exception) || Boolean(order?.due_at && new Date(order.due_at).getTime() - Date.now() <= 24 * 60 * 60 * 1000); }).length;
     const urgency = failed || pending.some((stop) => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return Boolean(order?.due_at && new Date(order.due_at).getTime() < Date.now()); }) ? 'overdue' : urgent ? 'due_soon' : 'on_track';
-    const routeStops = (plan.route_stops ?? []).map(stop => {
+    const routeStops = [...(plan.route_stops ?? [])].sort((a, b) => a.sequence - b.sequence).map(stop => {
       const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders;
       const processor = order?.processor_id ? processorById.get(order.processor_id) : undefined;
       const address = ['processor_dropoff', 'processor_pickup'].includes(plan.route_type) ? processor?.address : plan.route_type === 'delivery' ? order?.customer_delivery_address ?? order?.pickup_address : order?.pickup_address;
@@ -67,9 +67,12 @@ export async function POST(request: Request) {
     const workspaceTimezone = workspace?.timezone || 'UTC';
     const { data: orders, error: orderError } = await auth.client.from('orders').select('id,order_number,pickup_address,customer_delivery_address,processor_id,status,phone,pickup_window_start_at').in('id', parsed.data.orderIds);
     if (orderError || !orders?.length || orders.length !== parsed.data.orderIds.length) return NextResponse.json({ error: 'One or more route orders could not be found.' }, { status: 404 });
-    const expectedStatus = parsed.data.routeType === 'pickup' ? 'capacity_confirmed' : parsed.data.routeType === 'processor_dropoff' ? 'picked_up' : parsed.data.routeType === 'processor_pickup' ? 'ready_for_pickup' : 'picked_up_from_processor';
+    const expectedStatus = parsed.data.routeType === 'pickup' ? 'capacity_confirmed' : parsed.data.routeType === 'processor_dropoff' ? 'picked_up' : parsed.data.routeType === 'processor_pickup' ? 'ready_for_pickup' : 'out_for_delivery';
     if (orders.some(order => order.status !== expectedStatus)) return NextResponse.json({ error: 'One or more orders are not eligible for this route type.' }, { status: 409 });
     if (parsed.data.routeType === 'pickup' && orders.some(order => order.pickup_window_start_at && calendarDateInTimezone(order.pickup_window_start_at, workspaceTimezone) !== parsed.data.routeDate)) return NextResponse.json({ error: 'Customer pickup routes must use each order\'s pickup window date.' }, { status: 409 });
+    const { data: existingStops, error: existingStopsError } = await auth.client.from('route_stops').select('order_id,route_plans!inner(id,status,route_type)').in('order_id', parsed.data.orderIds).eq('route_plans.route_type', parsed.data.routeType).in('route_plans.status', ['draft', 'approved', 'in_progress', 'failed']);
+    if (existingStopsError) return NextResponse.json({ error: existingStopsError.message }, { status: 500 });
+    if ((existingStops ?? []).length) return NextResponse.json({ error: 'One or more selected orders already belong to a draft, approved, active, or failed route of this type. Open that route instead of creating a duplicate.' }, { status: 409 });
     const processorIds = [...new Set(orders.map(order => order.processor_id).filter((id): id is string => typeof id === 'string'))];
     const { data: processors, error: processorError } = processorIds.length ? await auth.client.from('processors').select('id,address').in('id', processorIds) : { data: [], error: null };
     if (processorError) return NextResponse.json({ error: processorError.message }, { status: 500 });
@@ -79,15 +82,21 @@ export async function POST(request: Request) {
     const geocoded = await Promise.all((addresses as string[]).map(geocodeAddress));
     const coordinates = geocoded.map(item => item.coordinates);
     const route = await calculateRoute(coordinates);
-    const { data: plan, error: planError } = await auth.client.from('route_plans').insert({ route_date: parsed.data.routeDate, route_type: parsed.data.routeType, driver_id: parsed.data.driverId, status: 'draft', mapbox_route: route, created_by: auth.user.id }).select('*').single();
-    if (planError) return NextResponse.json({ error: planError.message }, { status: 500 });
-    const stops = parsed.data.orderIds.map((orderId, index) => ({ route_id: plan.id, route_date: parsed.data.routeDate, route_type: parsed.data.routeType, order_id: orderId, sequence: index + 1 }));
-    const { data: createdStops, error: stopError } = await auth.client.from('route_stops').insert(stops).select('id,order_id,sequence');
-    if (stopError) {
-      // Do not leave an unusable draft plan behind if its selected orders cannot be attached.
-      await auth.client.from('route_plans').delete().eq('id', plan.id);
-      return NextResponse.json({ error: stopError.message }, { status: 500 });
-    }
+    const { data: planId, error: planError } = await auth.client.rpc('create_route_plan', {
+      p_route_date: parsed.data.routeDate,
+      p_route_type: parsed.data.routeType,
+      p_order_ids: parsed.data.orderIds,
+      p_driver_id: parsed.data.driverId,
+      p_mapbox_route: route,
+      p_longitudes: geocoded.map(item => item.coordinates[0]),
+      p_latitudes: geocoded.map(item => item.coordinates[1])
+    });
+    if (planError || !planId) return NextResponse.json({ error: planError?.message ?? 'Route plan could not be created.' }, { status: 409 });
+    const [{ data: plan, error: readPlanError }, { data: createdStops, error: readStopsError }] = await Promise.all([
+      auth.client.from('route_plans').select('*').eq('id', planId).single(),
+      auth.client.from('route_stops').select('id,order_id,sequence').eq('route_id', planId).order('sequence')
+    ]);
+    if (readPlanError || readStopsError) return NextResponse.json({ error: readPlanError?.message ?? readStopsError?.message }, { status: 500 });
     return NextResponse.json({ plan, stops: createdStops ?? [], geocoded, route }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Route planning failed' }, { status: 502 }); }
 }
@@ -104,15 +113,23 @@ export async function PATCH(request: Request) {
     const { data: plan, error: planError } = await auth.client.from('route_plans').select('id,status').eq('id', reorder.data.planId).maybeSingle();
     if (planError || !plan) return NextResponse.json({ error: 'Route plan not found.' }, { status: 404 });
     if (plan.status !== 'draft') return NextResponse.json({ error: 'Only draft routes can be reordered.' }, { status: 409 });
-    const { data: existing, error: stopsError } = await auth.client.from('route_stops').select('id').eq('route_id', plan.id);
+    const { data: existing, error: stopsError } = await auth.client.from('route_stops').select('id,latitude,longitude').eq('route_id', plan.id);
     if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
     if ((existing ?? []).length !== reorder.data.stopIds.length || !reorder.data.stopIds.every((id) => (existing ?? []).some((stop) => stop.id === id))) return NextResponse.json({ error: 'Route stops no longer match this draft. Refresh and try again.' }, { status: 409 });
-    for (const [index, stopId] of reorder.data.stopIds.entries()) {
-      const { error } = await auth.client.from('route_stops').update({ sequence: -(index + 1) }).eq('id', stopId).eq('route_id', plan.id);
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const stopById = new Map((existing ?? []).map(stop => [stop.id, stop]));
+    const stopCoordinates = reorder.data.stopIds.flatMap(stopId => {
+      const stop = stopById.get(stopId);
+      return typeof stop?.longitude === 'number' && typeof stop?.latitude === 'number' ? [[stop.longitude, stop.latitude] as [number, number]] : [];
+    });
+    if (stopCoordinates.length !== reorder.data.stopIds.length) return NextResponse.json({ error: 'One or more route stops are missing map coordinates. Cancel and regenerate this draft.' }, { status: 409 });
+    try {
+      const route = await calculateRoute(stopCoordinates);
+      const { error: routeError } = await auth.client.rpc('reorder_route_plan', { p_plan_id: plan.id, p_stop_ids: reorder.data.stopIds, p_mapbox_route: route });
+      if (routeError) return NextResponse.json({ error: routeError.message }, { status: 500 });
+      return NextResponse.json({ reordered: true, route, stopCoordinates });
+    } catch (error) {
+      return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to recalculate the route.' }, { status: 502 });
     }
-    for (const [index, stopId] of reorder.data.stopIds.entries()) await auth.client.from('route_stops').update({ sequence: index + 1 }).eq('id', stopId).eq('route_id', plan.id);
-    return NextResponse.json({ reordered: true });
   }
   if (cancel.success) {
     const { data: plan, error: planError } = await auth.client.from('route_plans').select('id,status').eq('id', cancel.data.planId).maybeSingle();
@@ -123,56 +140,23 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ cancelled: true, reason: cancel.data.reason });
   }
   if (recover.success) {
-    const { data: plan, error: planError } = await auth.client.from('route_plans').select('id,status,mapbox_route').eq('id', recover.data.planId).maybeSingle();
-    if (planError || !plan) return NextResponse.json({ error: 'Route plan not found.' }, { status: 404 });
-    if (plan.status !== 'failed') return NextResponse.json({ error: 'Only failed routes can be reopened.' }, { status: 409 });
-    const { error: stopError } = await auth.client.from('route_stops').update({ status: 'planned', failure_reason: null, checked_in_at: null }).eq('route_id', plan.id).eq('status', 'failed');
-    if (stopError) return NextResponse.json({ error: stopError.message }, { status: 500 });
-    const { data, error } = await auth.client.from('route_plans').update({ status: 'draft', approved_at: null, approved_by: null }).eq('id', plan.id).eq('status', 'failed').select('id,route_date,route_type,status,driver_id,mapbox_route').single();
+    const { error: recoveryError } = await auth.client.rpc('recover_route_plan', { p_plan_id: recover.data.planId });
+    if (recoveryError) return NextResponse.json({ error: recoveryError.message }, { status: 409 });
+    const { data, error } = await auth.client.from('route_plans').select('id,route_date,route_type,status,driver_id,mapbox_route').eq('id', recover.data.planId).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('id,order_id,sequence,status').eq('route_id', plan.id).order('sequence');
+    const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('id,order_id,sequence,status').eq('route_id', recover.data.planId).order('sequence');
     if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
     return NextResponse.json({ plan: data, stops: stops ?? [] });
   }
   const parsed = approveSchema.safeParse(input);
   if (!parsed.success) return NextResponse.json({ error: 'A valid route plan is required.' }, { status: 400 });
-  const { data: plan, error: readError } = await auth.client.from('route_plans').select('id,status,route_type,driver_id').eq('id', parsed.data.planId).maybeSingle();
-  if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
-  if (!plan) return NextResponse.json({ error: 'Route plan not found.' }, { status: 404 });
-  if (plan.status !== 'draft') return NextResponse.json({ error: 'Only draft routes can be approved.' }, { status: 409 });
-  const { data: stops, error: stopsError } = await auth.client.from('route_stops').select('order_id,status,driver_id,orders(order_number,phone,due_at,status,assigned_driver_id)').eq('route_id', plan.id);
-  if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
-  const pendingStops = (stops ?? []).filter(stop => stop.status !== 'completed');
-    const orderIds = pendingStops.map(stop => stop.order_id);
-  if (orderIds.length && plan.driver_id) {
-    const nextOrderState = plan.route_type === 'pickup' ? 'pickup_scheduled' : undefined;
-    let orderUpdate = auth.client.from('orders').update({ assigned_driver_id: plan.driver_id, ...(nextOrderState ? { status: nextOrderState } : {}), updated_at: new Date().toISOString() }).in('id', orderIds);
-    if (nextOrderState) orderUpdate = orderUpdate.eq('status', 'capacity_confirmed');
-    const { data: updatedOrders, error: orderUpdateError } = await orderUpdate.select('id');
-    if (orderUpdateError) return NextResponse.json({ error: orderUpdateError.message }, { status: 500 });
-    if (updatedOrders?.length !== orderIds.length) return NextResponse.json({ error: 'One or more orders changed before this route could be approved. Refresh the queue and create a new route.' }, { status: 409 });
-    const { error: stopUpdateError } = await auth.client.from('route_stops').update({ driver_id: plan.driver_id }).eq('route_id', plan.id);
-    if (stopUpdateError) {
-      await Promise.all(pendingStops.map(async stop => {
-        const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders;
-        await auth.client.from('orders').update({ assigned_driver_id: order?.assigned_driver_id ?? null, ...(nextOrderState ? { status: order?.status } : {}), updated_at: new Date().toISOString() }).eq('id', stop.order_id);
-      }));
-      return NextResponse.json({ error: stopUpdateError.message }, { status: 500 });
-    }
-    const events = pendingStops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; return { order_id: stop.order_id, from_status: order?.status ?? null, to_status: nextOrderState ?? order?.status ?? null, actor_id: auth.user.id, note: `Route approved for ${plan.route_type.replaceAll('_', ' ')}.` }; });
-     const { error: eventError } = await auth.client.from('order_events').insert(events);
-     if (eventError) {
-       await Promise.all(pendingStops.map(stop => auth.client.from('route_stops').update({ driver_id: stop.driver_id ?? null }).eq('route_id', plan.id).eq('order_id', stop.order_id)));
-       await Promise.all(pendingStops.map(async stop => {
-         const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders;
-         await auth.client.from('orders').update({ assigned_driver_id: order?.assigned_driver_id ?? null, ...(nextOrderState ? { status: order?.status } : {}), updated_at: new Date().toISOString() }).eq('id', stop.order_id);
-       }));
-       return NextResponse.json({ error: `Route approval rolled back because order history could not be recorded: ${eventError.message}` }, { status: 500 });
-     }
-  }
-  const { data, error } = await auth.client.from('route_plans').update({ status: 'approved', approved_by: auth.user.id, approved_at: new Date().toISOString() }).eq('id', plan.id).eq('status', 'draft').select('*').single();
+  const { error: approvalError } = await auth.client.rpc('approve_route_plan', { p_plan_id: parsed.data.planId });
+  if (approvalError) return NextResponse.json({ error: approvalError.message }, { status: 409 });
+  const { data, error } = await auth.client.from('route_plans').select('*').eq('id', parsed.data.planId).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  await Promise.all(pendingStops.map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; const deadline = order?.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${plan.route_type.replace('_', ' ')} route.${deadline}`, phone: order?.phone ?? undefined }); }));
+  const { data: pendingStops, error: stopsError } = await auth.client.from('route_stops').select('order_id,orders(order_number,phone,due_at)').eq('route_id', parsed.data.planId).neq('status', 'completed');
+  if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
+  await Promise.all((pendingStops ?? []).map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; const deadline = order?.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${data.route_type.replace('_', ' ')} route.${deadline}`, phone: order?.phone ?? undefined }, auth.client); }));
   return NextResponse.json({ plan: data });
 }
 

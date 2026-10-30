@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { hasRole, requireActiveUser } from '@/lib/api-auth';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireActiveUser } from '@/lib/api-auth';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 const updateSchema = z.object({ action: z.enum(['mark_read', 'mark_all_read', 'clear_all']), notificationId: z.string().uuid().optional() });
@@ -17,12 +17,11 @@ function targetFor(role: string, event: string) {
   if (role === 'driver') return 'Driver app';
   if (role === 'processor') return 'Processor portal';
   if (event.includes('route')) return 'Routes';
-  if (event.includes('processor')) return 'Processors';
-  if (event.includes('exception') || event === 'order_created' || event === 'order_validated') return 'Dispatch';
+  if (event.includes('processor') || event.includes('exception') || event === 'order_created' || event === 'order_validated') return 'Dispatch';
   return 'Orders';
 }
 
-async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireActiveUser>>, db: NonNullable<typeof supabaseAdmin>) {
+async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireActiveUser>>, db: SupabaseClient) {
   if ('error' in auth) return [] as string[];
   let orderIds: string[] | null = null;
   if (auth.profile.role === 'driver') { const { data } = await db.from('orders').select('id').eq('assigned_driver_id', auth.user.id); orderIds = (data ?? []).map(order => order.id); }
@@ -44,7 +43,7 @@ async function visibleNotificationIds(auth: Awaited<ReturnType<typeof requireAct
 export async function GET() {
   const auth = await requireActiveUser();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const db = supabaseAdmin ?? auth.client;
+  const db = auth.client;
   const { data: preferences } = await auth.client.from('notification_preferences').select('in_app_enabled').eq('user_id', auth.user.id).maybeSingle();
   if (preferences?.in_app_enabled === false) return NextResponse.json({ notifications: [] });
   let orderIds: string[] | null = null;
@@ -75,7 +74,7 @@ export async function PATCH(request: Request) {
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const parsed = updateSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'A valid notification action is required.' }, { status: 400 });
-  const db = supabaseAdmin ?? auth.client;
+  const db = auth.client;
   const visibleIds = await visibleNotificationIds(auth, db);
   const ids = parsed.data.action === 'mark_read' ? (parsed.data.notificationId && visibleIds.includes(parsed.data.notificationId) ? [parsed.data.notificationId] : []) : visibleIds;
   if (ids.length) {

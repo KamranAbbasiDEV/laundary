@@ -13,7 +13,7 @@ const routeStatusForOrder = (routeType: string) => ({
   pickup: 'capacity_confirmed',
   processor_dropoff: 'picked_up',
   processor_pickup: 'ready_for_pickup',
-  delivery: 'picked_up_from_processor'
+  delivery: 'out_for_delivery'
 } as Record<string, string>)[routeType];
 
 const planRecord = (stop: RouteStop) => Array.isArray(stop.route_plans) ? stop.route_plans[0] : stop.route_plans;
@@ -26,7 +26,7 @@ export async function blockActiveRouteStatusChange(client: RouteClient, orderIds
     .in('order_id', orderIds)
     .in('route_plans.status', ['approved', 'in_progress']);
   if (error) return { error: error.message, status: 500 as const };
-  if ((data ?? []).length) return { error: 'One or more selected orders belong to an approved or active route. Complete or cancel that route before changing the order stage.', status: 409 as const };
+  if ((data ?? []).length) return { error: 'One or more selected orders belong to an approved or active route. Complete the route or recover its failed stop before changing the order stage.', status: 409 as const };
   return null;
 }
 
@@ -53,6 +53,11 @@ export async function syncDraftRoutesAfterStatusChange(client: RouteClient, orde
   for (const routeId of routeIds) {
     const { data: remaining, error: remainingError } = await client.from('route_stops').select('id').eq('route_id', routeId).order('sequence', { ascending: true });
     if (remainingError) return { invalidated: affected.length, warning: `Order updated, but draft route sequencing failed: ${remainingError.message}` };
+    if (!(remaining ?? []).length) {
+      const { error: deletePlanError } = await client.from('route_plans').delete().eq('id', routeId).eq('status', 'draft');
+      if (deletePlanError) return { invalidated: affected.length, warning: `Order updated, but its empty draft route could not be removed: ${deletePlanError.message}` };
+      continue;
+    }
     for (const [index, stop] of (remaining ?? []).entries()) {
       const { error: temporaryError } = await client.from('route_stops').update({ sequence: -(index + 1) }).eq('id', stop.id);
       if (temporaryError) return { invalidated: affected.length, warning: `Order updated, but draft route sequencing failed: ${temporaryError.message}` };

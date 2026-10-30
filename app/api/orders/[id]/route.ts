@@ -17,6 +17,7 @@ const displayStatus = (value: string): OrderStatus => ({
 const dbStatus = (value: string) => ({
   'Created':'created','Validated':'validated','Processor ranked':'processor_ranked','Capacity confirmed':'capacity_confirmed','Pickup scheduled':'pickup_scheduled','Picked up':'picked_up','At processor':'at_processor','Processing':'processing','Ready for pickup':'ready_for_pickup','Picked up from processor':'picked_up_from_processor','QC / Reconciliation':'qc_reconciliation','Out for delivery':'out_for_delivery','Delivered':'delivered','Processor reviewed':'processor_reviewed'
 } as Record<string, string>)[value] ?? value.toLowerCase().replaceAll(' ', '_');
+const physicalDriverStatuses = new Set<OrderStatus>(['Picked up', 'At processor', 'Picked up from processor', 'Delivered']);
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
@@ -96,8 +97,22 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (body.data.originalDueAt !== undefined) update.original_due_at = body.data.originalDueAt;
   if (body.data.dueAt !== undefined && body.data.dueAt !== current.due_at) { if (body.data.originalDueAt === undefined) update.original_due_at = current.original_due_at ?? current.due_at; update.deadline_revised_at = new Date().toISOString(); update.deadline_revised_by = user.id; update.deadline_revision_reason = body.data.note ?? body.data.exception ?? null; }
   if (body.data.originalDueAt !== undefined || (body.data.dueAt !== undefined && body.data.dueAt !== current.due_at)) update.deadline_revision_reason = body.data.deadlineReason ?? body.data.note ?? body.data.exception ?? null;
-  const { data, error } = await supabase.from('orders').update(update).eq('id', current.id).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  let data;
+  if (actor.role === 'driver' && body.data.status && physicalDriverStatuses.has(body.data.status)) {
+    const { error: transitionError } = await supabase.rpc('advance_driver_order_stage', { p_order_id: current.id, p_target_status: dbStatus(body.data.status) });
+    if (transitionError) return NextResponse.json({ error: transitionError.message }, { status: 409 });
+    delete update.status;
+    const hasSecondaryUpdate = Object.keys(update).some(key => key !== 'updated_at');
+    const result = hasSecondaryUpdate
+      ? await supabase.from('orders').update(update).eq('id', current.id).select().single()
+      : await supabase.from('orders').select('*').eq('id', current.id).single();
+    if (result.error) return NextResponse.json({ error: result.error.message }, { status: 500 });
+    data = result.data;
+  } else {
+    const result = await supabase.from('orders').update(update).eq('id', current.id).select().single();
+    if (result.error) return NextResponse.json({ error: result.error.message }, { status: 500 });
+    data = result.data;
+  }
   if (body.data.originalDueAt !== undefined || (body.data.dueAt !== undefined && body.data.dueAt !== current.due_at)) {
     const { error: historyError } = await supabase.from('deadline_revisions').insert({
       order_id: current.id,
@@ -128,9 +143,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const originalDeadline = body.data.originalDueAt !== undefined ? body.data.originalDueAt : current.original_due_at;
   const originalText = originalDeadline ? ` Original commitment: ${new Date(originalDeadline).toLocaleString()}.` : '';
   const message = body.data.resolveException ? `${current.order_number} exception resolved by dispatch.${deadlineText}` : body.data.exception ? `${current.order_number} requires dispatcher review: ${body.data.exception}.${deadlineText}` : deadlinesChanged ? `${current.order_number} deadline was updated by dispatch.${originalText}${deadlineText}` : body.data.status ? `${current.order_number} is now ${body.data.status}.${deadlineText}` : `${current.order_number} was updated.${deadlineText}`;
-  await logOperationalNotification({ orderId: current.id, event, message, phone: current.phone });
-  if (body.data.notifyCustomer && body.data.customerMessage?.trim()) await logCustomerNotification({ orderId: current.id, event: 'customer_exception_update', message: body.data.customerMessage.trim(), phone: current.phone, customerUserId: current.customer_user_id });
-  else if (current.customer_user_id && (body.data.status || body.data.exception || body.data.resolveException || deadlinesChanged)) await logCustomerNotification({ orderId: current.id, event, message, phone: current.phone, customerUserId: current.customer_user_id });
+  await logOperationalNotification({ orderId: current.id, event, message, phone: current.phone }, supabase);
+  if (body.data.notifyCustomer && body.data.customerMessage?.trim()) await logCustomerNotification({ orderId: current.id, event: 'customer_exception_update', message: body.data.customerMessage.trim(), phone: current.phone, customerUserId: current.customer_user_id }, supabase);
+  else if (current.customer_user_id && (body.data.status || body.data.exception || body.data.resolveException || deadlinesChanged)) await logCustomerNotification({ orderId: current.id, event, message, phone: current.phone, customerUserId: current.customer_user_id }, supabase);
   const routeSync = body.data.status ? await syncDraftRoutesAfterStatusChange(supabase, new Map([[current.id, dbStatus(body.data.status)]])) : { invalidated: 0, warning: null };
   return NextResponse.json({ order: data, persistence: 'supabase', routeSync: { invalidated: routeSync.invalidated }, ...(routeSync.warning ? { warning: routeSync.warning } : {}) });
 }

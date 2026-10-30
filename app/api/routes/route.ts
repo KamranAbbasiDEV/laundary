@@ -4,7 +4,8 @@ import { calculateRoute, geocodeAddress } from '@/lib/mapbox';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { getUserSafely } from '@/lib/supabase-auth';
 
-const routeSchema = z.object({ addresses: z.array(z.string().min(3)).min(1) });
+const coordinateSchema = z.tuple([z.number().finite().min(-180).max(180), z.number().finite().min(-90).max(90)]);
+const routeSchema = z.object({ addresses: z.array(z.string().min(3)).min(1), origin: coordinateSchema.optional() });
 
 export async function POST(request: Request) {
   const authClient = await createSupabaseServerClient();
@@ -17,7 +18,8 @@ export async function POST(request: Request) {
   if (!body.success) return NextResponse.json({ error: 'At least one valid address is required' }, { status: 400 });
   try {
     const geocoded = await Promise.all(body.data.addresses.map(geocodeAddress));
-    const coordinates = geocoded.flatMap(item => item.coordinates ? [item.coordinates] : []) as [number, number][];
+    const destinationCoordinates = geocoded.flatMap(item => item.coordinates ? [item.coordinates] : []) as [number, number][];
+    const coordinates = body.data.origin ? [body.data.origin, ...destinationCoordinates] : destinationCoordinates;
     const route = await calculateRoute(coordinates);
     return NextResponse.json({ geocoded, route });
   } catch (error) {

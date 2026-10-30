@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
 import { humanize } from '@/lib/presentation';
+import { notifyDataChanged } from '@/lib/live-updates';
 
 type Plan = { id: string; route_date: string; route_type: string; status: string; route_stops: Array<{ id: string; order_id: string; sequence: number; status: string; failure_reason?: string | null }> };
 
@@ -17,7 +18,8 @@ export default function RouteRecoveryPanel({ notify }: { notify: (message: strin
       const response = await fetch('/api/route-plans', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(recover ? { action: 'recover', planId: plan.id } : { planId: plan.id }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Unable to update the route.');
-      if (recover) { setReopened(plan.id); notify('Failed stops reopened as a draft. Review the stop list, then approve the recovery route.'); } else { setReopened(''); notify('Recovery route approved and reassigned.'); }
+      if (recover) { setReopened(plan.id); window.localStorage.setItem('rinseline:route-plan-focus', plan.id); notify('Failed stops reopened as a draft. Review the stop list, then approve the recovery route.'); } else { setReopened(''); notify('Recovery route approved and reassigned.'); }
+      notifyDataChanged();
       await load();
     } catch (error) { notify(error instanceof Error ? error.message : 'Unable to update the route.'); } finally { setBusy(''); }
   }
