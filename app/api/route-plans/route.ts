@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { calculateRoute, geocodeAddress } from '@/lib/mapbox';
 import { hasRole, requireActiveUser } from '@/lib/api-auth';
-import { logOperationalNotification } from '@/lib/notifications';
+import { logOperationalNotification, logSmsNotification } from '@/lib/notifications';
 import { getWorkspaceDate } from '@/lib/deadlines';
 
 const planSchema = z.object({ routeDate: z.string().date(), routeType: z.enum(['pickup','processor_dropoff','processor_pickup','delivery']), orderIds: z.array(z.string().uuid()).min(1), driverId: z.string().uuid() });
@@ -162,6 +162,12 @@ export async function PATCH(request: Request) {
   const { data: pendingStops, error: stopsError } = await auth.client.from('route_stops').select('order_id,orders(order_number,phone,due_at)').eq('route_id', parsed.data.planId).neq('status', 'completed');
   if (stopsError) return NextResponse.json({ error: stopsError.message }, { status: 500 });
   await Promise.all((pendingStops ?? []).map(stop => { const order = Array.isArray(stop.orders) ? stop.orders[0] : stop.orders; const deadline = order?.due_at ? ` Deadline: ${new Date(order.due_at).toLocaleString()}.` : ''; return logOperationalNotification({ orderId: stop.order_id, event: 'route_approved', message: `${order?.order_number ?? 'Order'} has an approved ${data.route_type.replace('_', ' ')} route.${deadline}`, phone: order?.phone ?? undefined }, auth.client); }));
+  const firstStop = pendingStops?.[0];
+  if (firstStop && data.driver_id) {
+    const { data: driver, error: driverError } = await auth.client.from('profiles').select('id,phone').eq('id', data.driver_id).eq('role', 'driver').eq('status', 'active').maybeSingle();
+    if (driverError) console.error('Unable to load the route driver for SMS notification:', driverError.message);
+    else await logSmsNotification({ orderId: firstStop.order_id, event: 'route_approved', message: `Your ${data.route_type.replaceAll('_', ' ')} route for ${data.route_date} is approved with ${pendingStops?.length ?? 0} stop${pendingStops?.length === 1 ? '' : 's'}. Sign in to review the route.`, phone: driver?.phone, userId: driver?.id }, auth.client);
+  }
   return NextResponse.json({ plan: data });
 }
 

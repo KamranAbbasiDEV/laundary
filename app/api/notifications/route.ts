@@ -7,8 +7,8 @@ const updateSchema = z.object({ action: z.enum(['mark_read', 'mark_all_read', 'c
 
 function roleCanSeeOperationalEvent(role: string, event: string) {
   if (role === 'super_admin' || role === 'dispatcher') return true;
-  if (role === 'driver') return ['route_approved', 'exception_recorded', 'order_pickup_scheduled', 'order_picked_up', 'order_picked_up_from_processor', 'order_out_for_delivery', 'order_delivered'].includes(event);
-  if (role === 'processor') return event === 'processor_offer' || event === 'processor_offer_accepted' || event === 'processor_offer_rejected' || event === 'exception_recorded' || event === 'order_at_processor' || event === 'order_processing' || event === 'order_ready_for_pickup';
+  if (role === 'driver') return event.startsWith('route_') || event.startsWith('exception_') || event.startsWith('deadline_') || ['order_pickup_scheduled', 'order_picked_up', 'order_ready_for_pickup', 'order_picked_up_from_processor', 'order_out_for_delivery', 'order_delivered'].includes(event);
+  if (role === 'processor') return ['processor_offer', 'processor_offer_accepted', 'processor_offer_rejected'].includes(event) || event.startsWith('route_') || event.startsWith('exception_') || event.startsWith('deadline_') || ['order_picked_up', 'order_at_processor', 'order_processing', 'order_ready_for_pickup', 'order_picked_up_from_processor'].includes(event);
   return false;
 }
 
@@ -17,6 +17,7 @@ function targetFor(role: string, event: string) {
   if (role === 'driver') return 'Driver app';
   if (role === 'processor') return 'Processor portal';
   if (event.includes('route')) return 'Routes';
+  if (event === 'processor_review_due') return 'Reports';
   if (event.includes('processor') || event.includes('exception') || event === 'order_created' || event === 'order_validated') return 'Dispatch';
   return 'Orders';
 }

@@ -1,6 +1,6 @@
 import { Inngest } from 'inngest';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { isSmsAllowed, sendOrderNotification } from '@/lib/notifications';
+import { isSmsAllowed, logSmsNotification, sendOrderNotification } from '@/lib/notifications';
 import { getDeadlineStatus } from '@/lib/deadlines';
 
 export const inngest = new Inngest({ id: 'rinseline-dispatch' });
@@ -15,7 +15,6 @@ export async function notifyPendingProcessorOffers(orderId: string) {
   for (const offer of offers ?? []) {
     const processor = Array.isArray(offer.processors) ? offer.processors[0] : offer.processors;
     const order = Array.isArray(offer.orders) ? offer.orders[0] : offer.orders;
-    const recipient = processor?.phone;
     if (!order) continue;
     const message = `New ${companyName} capacity request for ${order.order_number}.`;
     const { data: inAppAlreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', `processor:${offer.processor_id}`).eq('event', 'processor_offer').limit(1);
@@ -23,16 +22,19 @@ export async function notifyPendingProcessorOffers(orderId: string) {
       const { error: inAppError } = await supabaseAdmin.from('notification_log').insert({ order_id: orderId, recipient: `processor:${offer.processor_id}`, channel: 'in_app', event: 'processor_offer', message, status: 'sent', sent_at: new Date().toISOString() });
       if (inAppError) throw new Error(inAppError.message);
     }
-    if (!recipient) continue;
-    if (!(await isSmsAllowed(recipient, 'processor_offer'))) continue;
-    const { data: alreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', recipient).eq('event', 'processor_offer').limit(1);
-    if (alreadyLogged?.length) continue;
     const deadline = order.due_at ? `, deadline ${new Date(order.due_at).toLocaleString()}` : '';
     const smsMessage = `New ${companyName} capacity request: ${order.order_number} - ${order.service_type}, ${order.expected_bags} bag(s), due ${order.due_at_label || 'as scheduled'}${deadline}. Sign in to accept or decline.`;
-    const result = await sendOrderNotification({ to: recipient, message: smsMessage, channel: 'sms' });
-    const { error: logError } = await supabaseAdmin.from('notification_log').insert({ order_id: orderId, recipient, channel: 'sms', event: 'processor_offer', message: smsMessage, status: result.delivered ? 'sent' : 'queued', provider_id: result.delivered ? result.sid : null, error_message: result.delivered ? null : result.reason ?? null, sent_at: result.delivered ? new Date().toISOString() : null });
-    if (logError) throw new Error(logError.message);
-    notified += 1;
+    const { data: accountRecipients, error: accountError } = await supabaseAdmin.from('profiles').select('id,phone').eq('processor_id', offer.processor_id).eq('role', 'processor').eq('status', 'active').not('phone', 'is', null);
+    if (accountError) throw new Error(accountError.message);
+    const recipients = accountRecipients?.length
+      ? accountRecipients.flatMap(account => account.phone ? [{ userId: account.id, phone: account.phone }] : [])
+      : processor?.phone ? [{ userId: null, phone: processor.phone }] : [];
+    for (const recipient of recipients) {
+      const { data: alreadyLogged } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', orderId).eq('recipient', recipient.phone).eq('event', 'processor_offer').limit(1);
+      if (alreadyLogged?.length) continue;
+      const result = await logSmsNotification({ orderId, event: 'processor_offer', message: smsMessage, phone: recipient.phone, userId: recipient.userId }, supabaseAdmin);
+      if (!result.skipped) notified += 1;
+    }
   }
   return { notified };
 }
@@ -75,10 +77,15 @@ async function queueProcessorReviews() {
 
 async function retryQueuedNotifications() {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
-  const { data: queued, error } = await supabaseAdmin.from('notification_log').select('id,recipient,message,attempt_count,max_attempts').eq('channel', 'sms').eq('status', 'queued').lt('attempt_count', 5).order('created_at').limit(50);
+  const { data: queued, error } = await supabaseAdmin.from('notification_log').select('id,recipient,event,message,attempt_count,max_attempts').eq('channel', 'sms').eq('status', 'queued').lt('attempt_count', 5).order('created_at').limit(50);
   if (error) throw new Error(error.message);
   let sent = 0;
   for (const item of queued ?? []) {
+    if (!(await isSmsAllowed(item.recipient, item.event))) {
+      const { error: optOutError } = await supabaseAdmin.from('notification_log').update({ status: 'failed', error_message: 'disabled-by-recipient' }).eq('id', item.id);
+      if (optOutError) throw new Error(optOutError.message);
+      continue;
+    }
     const result = await sendOrderNotification({ to: item.recipient, message: item.message, channel: 'sms' });
     const attemptCount = (item.attempt_count ?? 0) + 1;
     const attemptedAt = new Date().toISOString();
@@ -114,19 +121,19 @@ async function queueDeadlineNotifications() {
     const status = getDeadlineStatus({ deadline: order.due_at, orderStatus: order.status, atRisk: Boolean(order.has_exception), now, timezone });
     const event = status === 'overdue' ? 'deadline_overdue' : status === 'due_today' ? 'deadline_due_today' : status === 'due_soon' ? 'deadline_due_soon' : null;
     if (!event) continue;
-    const { data: existing } = await supabaseAdmin.from('notification_log').select('id').eq('order_id', order.id).eq('event', event).limit(1);
-    if (existing?.length) continue;
+    const customerRecipient = order.customer_user_id ? `customer:${order.customer_user_id}` : 'customer';
+    const { data: existing, error: existingError } = await supabaseAdmin.from('notification_log').select('recipient,channel').eq('order_id', order.id).eq('event', event);
+    if (existingError) throw new Error(existingError.message);
+    const hasOperationsNotice = (existing ?? []).some(item => item.channel === 'in_app' && item.recipient === 'operations');
+    const hasCustomerNotice = (existing ?? []).some(item => item.channel === 'in_app' && item.recipient === customerRecipient);
+    const hasCustomerSms = Boolean(order.phone && (existing ?? []).some(item => item.channel === 'sms' && item.recipient === order.phone));
     const deadline = new Intl.DateTimeFormat('en-US', { timeZone: timezone, dateStyle: 'medium', timeStyle: 'short' }).format(new Date(order.due_at));
     const operationsMessage = `${order.order_number} is ${status.replaceAll('_', ' ')}. Current deadline: ${deadline}.`;
-    await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: 'operations', channel: 'in_app', event, message: operationsMessage, status: 'sent', sent_at: now.toISOString() });
+    if (!hasOperationsNotice) await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: 'operations', channel: 'in_app', event, message: operationsMessage, status: 'sent', sent_at: now.toISOString() });
     const customerMessage = status === 'overdue' ? `Your order ${order.order_number} is delayed. We are reviewing the delivery timing and will share an updated expectation.` : status === 'due_today' ? `Your order ${order.order_number} is expected today. Current expected time: ${deadline}.` : `Your order ${order.order_number} is due within 24 hours. Current expected time: ${deadline}.`;
-    await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: order.customer_user_id ? `customer:${order.customer_user_id}` : 'customer', channel: 'in_app', event, message: customerMessage, status: 'sent', sent_at: now.toISOString() });
-    if (order.phone && await isSmsAllowed(order.phone, event)) {
-      const sms = await sendOrderNotification({ to: order.phone, message: customerMessage, channel: 'sms' });
-      const attemptedAt = new Date().toISOString();
-      await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: order.phone, channel: 'sms', event, message: customerMessage, status: sms.delivered ? 'sent' : 'queued', attempt_count: 1, last_attempt_at: attemptedAt, provider_id: sms.delivered ? sms.sid : null, error_message: sms.delivered ? null : sms.reason ?? null, sent_at: sms.delivered ? attemptedAt : null });
-    }
-    queued += 1;
+    if (!hasCustomerNotice) await supabaseAdmin.from('notification_log').insert({ order_id: order.id, recipient: customerRecipient, channel: 'in_app', event, message: customerMessage, status: 'sent', sent_at: now.toISOString() });
+    if (order.phone && !hasCustomerSms) await logSmsNotification({ orderId: order.id, event, message: customerMessage, phone: order.phone, userId: order.customer_user_id }, supabaseAdmin);
+    if (!hasOperationsNotice || !hasCustomerNotice || Boolean(order.phone && !hasCustomerSms)) queued += 1;
   }
   return { queued };
 }
