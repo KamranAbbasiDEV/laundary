@@ -316,9 +316,6 @@ select[multiple] option:checked{background:var(--teal);color:#fff;font-weight:70
 .processor-portal-shell > .deadline-role-panel .status,.driver-portal-shell > .deadline-role-panel .status{font-size:9px;white-space:nowrap}
 .driver-portal-shell{display:flex;flex-direction:column;gap:16px}
 .driver-legacy-shell{display:contents}
-.driver-portal-shell > .page-heading{order:1}
-.driver-portal-shell > .deadline-role-panel{order:2}
-.driver-portal-shell > .driver-workspace{order:3}
 @media(max-width:620px){.processor-portal-shell > .deadline-role-panel .panel-heading,.driver-portal-shell > .deadline-role-panel .panel-heading{padding:13px 12px 9px}.processor-portal-shell > .deadline-role-panel .route-list,.driver-portal-shell > .deadline-role-panel .route-list{padding:0 12px 12px}.processor-portal-shell > .deadline-role-panel .deadline-role-row,.driver-portal-shell > .deadline-role-panel .deadline-role-row{grid-template-columns:24px minmax(0,1fr)}.processor-portal-shell > .deadline-role-panel .deadline-role-row>.status,.driver-portal-shell > .deadline-role-panel .deadline-role-row>.status{grid-column:2;justify-self:start}}
 
 /* Processor assigned work follows the same table rhythm as the Orders list. */
