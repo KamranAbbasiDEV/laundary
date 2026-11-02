@@ -41,9 +41,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     const driverId = stop.driver_id ?? plan?.driver_id;
     return { ...stop, driver_name: driverId ? driverNames.get(driverId) ?? 'Assigned driver' : null };
   });
-  const photosWithUrls = auth.profile.role === 'customer' ? [] : await Promise.all((photos.data ?? []).map(async (photo) => {
-    const { data, error: signedUrlError } = await photoClient.storage.from('order-photos').createSignedUrl(photo.storage_path, 3600);
-    return { ...photo, url: data?.signedUrl ?? null, previewError: signedUrlError?.message ?? null };
+  const photosWithUrls = auth.profile.role === 'customer' ? [] : (photos.data ?? []).map((photo) => ({
+    ...photo,
+    // Keep the storage path private. The authenticated image endpoint streams it
+    // after checking the same order access rules as this detail endpoint.
+    url: `/api/photos/${photo.id}`,
+    previewError: null
   }));
   const visibleExceptions = auth.profile.role === 'customer'
     ? (exceptions.data ?? []).filter(item => item.customer_message || item.status !== 'resolved').map(item => ({ id: item.id, status: item.status, deadline_impact: item.deadline_impact, deadline_after: item.deadline_after, customer_message: item.customer_message, customer_notified_at: item.customer_notified_at, created_at: item.created_at }))
