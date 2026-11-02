@@ -403,7 +403,8 @@ body:has(.orders-workspace) .evidence-photo-unavailable strong,
 body:has(.orders-workspace) .evidence-photo-unavailable small { display: block; }
 body:has(.orders-workspace) .evidence-photo-unavailable strong { color: var(--ref-text); font-size: 13px; }
 body:has(.orders-workspace) .evidence-photo-unavailable small { margin-top: 4px; color: var(--ref-muted); font-size: 12px; overflow-wrap: anywhere; }
-body:has(.orders-workspace) .evidence-disclosure .evidence-photos { display: none; }
+/* Keep uploaded evidence visible when Operational history is expanded. */
+body:has(.orders-workspace) .evidence-disclosure .evidence-photos { display: grid; }
 
 @media (max-width: 640px) {
   body:has(.orders-workspace) .orders-kanban.is-compact { grid-template-columns: repeat(var(--kanban-columns,1), 300px) !important; }
