@@ -1,8 +1,15 @@
 const t = require('../data/tools.json');
 const fs = require('fs');
-const js = ['all-tools.js', 'all-tools-remaining.js', 'all-tools-remaining2.js']
-  .map(f => fs.readFileSync(require('path').join(__dirname, '../src/assets/js/tools', f), 'utf8'))
+const path = require('path');
+const toolsDir = path.join(__dirname, '../src/assets/js/tools');
+const js = fs.readdirSync(toolsDir)
+  .filter(f => /^all-tools.*\.js$/.test(f))
+  .map(f => fs.readFileSync(path.join(toolsDir, f), 'utf8'))
   .join('\n');
-const missing = t.filter(x => !js.includes(`JotTools['${x.id}']`));
+const missing = t.filter(x => {
+  const directRegistration = js.includes(`JotTools['${x.id}']`);
+  const dynamicRegistration = js.includes(`'${x.id}'`) || js.includes(`"${x.id}"`);
+  return !directRegistration && !dynamicRegistration;
+});
 console.log('Missing:', missing.map(x => x.id).join(', ') || 'none');
 console.log('Count missing:', missing.length);

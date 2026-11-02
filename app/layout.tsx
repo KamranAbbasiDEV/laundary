@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './orders-reference.css';
+import './client-theme.css';
 import AuthSessionGuard from '@/components/auth-session-guard';
 
 export const metadata: Metadata = {

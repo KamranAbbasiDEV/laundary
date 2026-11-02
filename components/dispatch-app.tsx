@@ -19,7 +19,7 @@ import { defaultServiceCatalog, normalizeServiceCatalog, type ServiceCatalogItem
 type Profile = { full_name: string; role: UserRole; status: AccountStatus; phone?: string; address?: string; processor_id?: string; driver_id?: string; onboarding_complete?: boolean };
 
 const roleLabels: Record<UserRole, string> = { super_admin: 'Super Admin', dispatcher: 'Dispatcher', driver: 'Driver', processor: 'Processor', customer: 'Customer' };
-const nav: Record<UserRole, string[]> = { super_admin: ['Dashboard', 'Orders', 'Dispatch', 'Processors', 'Routes', 'Team', 'Reports', 'Payments'], dispatcher: ['Orders', 'Dispatch', 'Processors', 'Routes', 'Reports', 'Payments'], driver: ['Driver app', 'Settings'], processor: ['Processor portal', 'Settings'], customer: ['Customer portal', 'Settings'] };
+const nav: Record<UserRole, string[]> = { super_admin: ['Dashboard', 'Orders', 'Routes', 'Dispatch', 'Processors', 'Team', 'Reports', 'Payments'], dispatcher: ['Orders', 'Routes', 'Dispatch', 'Processors', 'Reports', 'Payments'], driver: ['Driver app', 'Settings'], processor: ['Processor portal', 'Settings'], customer: ['Customer portal', 'Settings'] };
 const isSuperAdmin = (role: UserRole): boolean => role === 'super_admin';
 
 async function readApiJson(response: Response, label: string) {

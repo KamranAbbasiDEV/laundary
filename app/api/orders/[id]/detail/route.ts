@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireActiveUser } from '@/lib/api-auth';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const idSchema = z.string().uuid();
 
@@ -15,10 +16,11 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (auth.profile.role === 'driver' && order.assigned_driver_id !== auth.user.id) return NextResponse.json({ error: 'You can only inspect orders assigned to you.' }, { status: 403 });
   if (auth.profile.role === 'processor' && order.processor_id !== auth.profile.processor_id) return NextResponse.json({ error: 'You can only inspect orders assigned to your facility.' }, { status: 403 });
   const detailClient = auth.client;
+  const photoClient = supabaseAdmin ?? auth.client;
   const [events, handoffs, photos, exceptions, offers, stops, deadlineRevisions] = await Promise.all([
     auth.client.from('order_events').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('order_handoffs').select('*').eq('order_id', id).order('confirmed_at', { ascending: false }),
-    detailClient.from('order_photos').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+    photoClient.from('order_photos').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     detailClient.from('exceptions').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('processor_offers').select('id,rank,score,score_breakdown,status,rejection_reason,offered_at,responded_at,processors(name)').eq('order_id', id).order('rank'),
     auth.client.from('route_stops').select('id,route_id,route_date,route_type,sequence,status,driver_id,checked_in_at,completed_at,failure_reason,dispatcher_note,route_plans(id,status,route_type,route_date,driver_id)').eq('order_id', id).order('route_date', { ascending: false }),
@@ -40,8 +42,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     return { ...stop, driver_name: driverId ? driverNames.get(driverId) ?? 'Assigned driver' : null };
   });
   const photosWithUrls = auth.profile.role === 'customer' ? [] : await Promise.all((photos.data ?? []).map(async (photo) => {
-    const { data } = await auth.client.storage.from('order-photos').createSignedUrl(photo.storage_path, 3600);
-    return { ...photo, url: data?.signedUrl ?? null };
+    const { data, error: signedUrlError } = await photoClient.storage.from('order-photos').createSignedUrl(photo.storage_path, 3600);
+    return { ...photo, url: data?.signedUrl ?? null, previewError: signedUrlError?.message ?? null };
   }));
   const visibleExceptions = auth.profile.role === 'customer'
     ? (exceptions.data ?? []).filter(item => item.customer_message || item.status !== 'resolved').map(item => ({ id: item.id, status: item.status, deadline_impact: item.deadline_impact, deadline_after: item.deadline_after, customer_message: item.customer_message, customer_notified_at: item.customer_notified_at, created_at: item.created_at }))

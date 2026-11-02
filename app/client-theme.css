@@ -1,0 +1,449 @@
+/* Shared client theme. Loaded last so every workspace uses one visual system. */
+:root {
+  --navy: #080a0b;
+  --navy-2: #1a2028;
+  --navy-3: #2d3540;
+  --ink: #1d1d1d;
+  --muted: #666b70;
+  --subtle: #8b9197;
+  --line: rgba(8,10,11,.10);
+  --line-strong: rgba(8,10,11,.18);
+  --surface: #fff;
+  --canvas: #f5f5f7;
+  --teal: #255deb;
+  --teal-dark: #1748c7;
+  --teal-soft: #eef3ff;
+  --blue: #255deb;
+  --blue-soft: #eef3ff;
+  --shadow-xs: 0 1px 3px rgba(8,10,11,.06);
+  --shadow-sm: 0 8px 24px rgba(8,10,11,.07);
+}
+
+html { font-size: 16px; }
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.55;
+  letter-spacing: .01em;
+}
+button, input, select, textarea { font-family: var(--font-display); }
+
+/* White application chrome on every role page. */
+body:has(.app-shell) .workspace-header-bar {
+  border-bottom: 1px solid var(--line);
+  background: rgba(255,255,255,.97);
+  color: var(--ink);
+  box-shadow: 0 2px 12px rgba(8,10,11,.035);
+  backdrop-filter: blur(16px);
+}
+body:has(.app-shell) .workspace-top-row {
+  min-height: 72px;
+  padding-right: 32px;
+  padding-left: 32px;
+  background: #fff;
+  color: var(--ink);
+}
+body:has(.app-shell) .workspace-brand .brand { color: var(--ink); }
+body:has(.app-shell) .workspace-brand .brand-mark,
+body:has(.app-shell) .workspace-brand .brand-compact .brand-mark {
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+body:has(.app-shell) .workspace-brand .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+body:has(.app-shell) .workspace-link {
+  border-bottom-color: transparent;
+  color: rgba(8,10,11,.62);
+  font-size: 15px;
+  font-weight: 500;
+}
+body:has(.app-shell) .workspace-link:hover,
+body:has(.app-shell) .workspace-link.active { border-bottom-color: var(--ink); color: var(--ink); }
+body:has(.app-shell) .workspace-top-row > .global-search {
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 22px;
+  background: rgba(8,10,11,.08);
+  color: var(--muted);
+  box-shadow: none;
+}
+body:has(.app-shell) .workspace-top-row > .global-search input { color: var(--ink); font-size: 15px; }
+body:has(.app-shell) .workspace-top-row > .global-search input::placeholder { color: var(--subtle); }
+body:has(.app-shell) .workspace-top-row > .global-search:focus-within { border-color: rgba(37,93,235,.35); background: #fff; box-shadow: 0 0 0 3px rgba(37,93,235,.1); }
+body:has(.app-shell) .workspace-icon-button,
+body:has(.app-shell) .workspace-header-actions .notification-trigger { color: var(--ink); }
+body:has(.app-shell) .workspace-new-order {
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 20px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+body:has(.app-shell) .workspace-new-order:hover { background: #30343a; }
+body:has(.app-shell) .workspace-nav {
+  min-height: 54px;
+  gap: 22px;
+  padding-right: 32px;
+  padding-left: 32px;
+  border-top: 1px solid rgba(8,10,11,.04);
+  border-bottom: 0;
+  background: #fff;
+}
+body:has(.app-shell) .workspace-nav-item {
+  min-height: 54px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(8,10,11,.62);
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+body:has(.app-shell) .workspace-nav-item:hover { border-bottom-color: rgba(8,10,11,.32); background: transparent; color: var(--ink); }
+body:has(.app-shell) .workspace-nav-item.active { border-color: transparent; border-bottom-color: var(--ink); background: transparent; color: var(--ink); box-shadow: none; }
+
+/* Shared page canvas and readable hierarchy. */
+body:has(.app-shell) .main { background: var(--canvas); }
+body:has(.app-shell) .content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 38px clamp(24px,3vw,48px) 68px;
+}
+body:has(.app-shell) h1 { color: var(--ink); font-size: clamp(34px,3vw,46px); font-weight: 600; line-height: 1.08; letter-spacing: -.035em; }
+body:has(.app-shell) .page-heading p,
+body:has(.app-shell) .workspace-header p { max-width: 760px; color: var(--muted); font-size: 15px; line-height: 1.65; }
+body:has(.app-shell) .eyebrow { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .1em; }
+
+/* Shared surfaces, tables and forms. */
+body:has(.app-shell) .panel,
+body:has(.app-shell) .kpi,
+body:has(.app-shell) .orders-table-wrap,
+body:has(.app-shell) .order-drawer {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+body:has(.app-shell) .panel-heading { min-height: 76px; padding: 20px 22px; }
+body:has(.app-shell) .panel-heading h2 { color: var(--ink); font-size: 18px; font-weight: 600; }
+body:has(.app-shell) .panel-heading p { color: var(--muted); font-size: 13px; line-height: 1.55; }
+body:has(.app-shell) .panel-body { padding: 22px; font-size: 14px; }
+body:has(.app-shell) .kpi-top { font-size: 13px; }
+body:has(.app-shell) .kpi-value { color: var(--ink); font-size: 30px; }
+body:has(.app-shell) th { padding: 14px 18px; background: #f7f7f8; color: var(--muted); font-size: 12px; }
+body:has(.app-shell) td { padding: 16px 18px; color: #4c535a; font-size: 14px; }
+body:has(.app-shell) .customer-name { color: var(--ink); font-size: 14px; }
+body:has(.app-shell) .customer-location { font-size: 13px; }
+body:has(.app-shell) .form-field label,
+body:has(.app-shell) .drawer-section label { color: var(--ink); font-size: 12px; }
+body:has(.app-shell) .form-control,
+body:has(.app-shell) .order-filters input,
+body:has(.app-shell) .order-filters select,
+body:has(.app-shell) .drawer-section input,
+body:has(.app-shell) .drawer-section select,
+body:has(.app-shell) .drawer-section textarea {
+  min-height: 42px;
+  border-color: var(--line-strong);
+  border-radius: 10px;
+  font-size: 14px;
+}
+body:has(.app-shell) .form-control:focus,
+body:has(.app-shell) input:focus,
+body:has(.app-shell) select:focus,
+body:has(.app-shell) textarea:focus { border-color: rgba(37,93,235,.55); box-shadow: 0 0 0 3px rgba(37,93,235,.1); }
+body:has(.app-shell) .button { min-height: 40px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+body:has(.app-shell) .button-primary,
+body:has(.app-shell) .button.primary { background: var(--ink); color: #fff; }
+body:has(.app-shell) .button-secondary,
+body:has(.app-shell) .button.secondary { border-color: var(--line-strong); background: #fff; color: var(--ink); }
+body:has(.app-shell) .status,
+body:has(.app-shell) .status-pill { font-size: 12px; font-weight: 600; }
+
+/* Larger centered details, shared by Kanban and order workflows. */
+body:has(.app-shell) .order-detail-overlay { z-index: 220; padding: 28px; background: rgba(8,10,11,.42); backdrop-filter: blur(5px); }
+body:has(.app-shell) .order-detail-dialog {
+  width: min(960px, calc(100vw - 56px));
+  max-height: calc(100dvh - 56px);
+  border: 1px solid rgba(8,10,11,.14);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 32px 90px rgba(8,10,11,.24);
+}
+body:has(.app-shell) .order-detail-dialog .drawer-composite { max-height: calc(100dvh - 56px); }
+body:has(.app-shell) .order-detail-dialog .drawer-hero { padding: 26px 28px 22px; }
+body:has(.app-shell) .order-detail-dialog .drawer-heading h2 { font-size: 28px; }
+body:has(.app-shell) .order-detail-dialog .drawer-overview,
+body:has(.app-shell) .order-detail-dialog .drawer-location,
+body:has(.app-shell) .order-detail-dialog .drawer-section { padding: 22px 28px; }
+body:has(.app-shell) .order-detail-dialog .drawer-content,
+body:has(.app-shell) .order-detail-dialog .drawer-content p,
+body:has(.app-shell) .order-detail-dialog .drawer-content dd { font-size: 14px; line-height: 1.6; }
+
+@media (max-width: 900px) {
+  body:has(.app-shell) .workspace-top-row,
+  body:has(.app-shell) .workspace-nav { padding-right: 18px; padding-left: 18px; }
+  body:has(.app-shell) .content { padding-right: 20px; padding-left: 20px; }
+}
+
+@media (max-width: 640px) {
+  body:has(.app-shell) .workspace-top-row { padding-top: 10px; padding-bottom: 10px; }
+  body:has(.app-shell) .workspace-nav { min-height: 48px; padding-right: 12px; padding-left: 12px; }
+  body:has(.app-shell) .workspace-nav-item { min-height: 48px; }
+  body:has(.app-shell) .content { padding: 26px 14px 48px; }
+  body:has(.app-shell) h1 { font-size: 34px; }
+  body:has(.app-shell) .order-detail-overlay { padding: 10px; }
+  body:has(.app-shell) .order-detail-dialog { width: 100%; max-height: calc(100dvh - 20px); border-radius: 18px; }
+  body:has(.app-shell) .order-detail-dialog .drawer-hero,
+  body:has(.app-shell) .order-detail-dialog .drawer-overview,
+  body:has(.app-shell) .order-detail-dialog .drawer-location,
+  body:has(.app-shell) .order-detail-dialog .drawer-section { padding-right: 18px; padding-left: 18px; }
+}
+
+/* Orders uses the full viewport while retaining the shared application theme. */
+body:has(.orders-workspace) .main { background: #fff; }
+body:has(.orders-workspace) .content { padding: 0 !important; background: #fff; }
+body:has(.orders-workspace) .orders-clean-toolbar { top: 126px; }
+body:has(.orders-workspace) .orders-board-layout { width: 100%; }
+body:has(.orders-workspace) .orders-kanban {
+  grid-template-columns: repeat(var(--kanban-columns,6), minmax(300px,1fr)) !important;
+  width: 100%;
+  max-width: none;
+}
+body:has(.orders-workspace) .kanban-column { min-width: 300px !important; }
+body:has(.orders-workspace) .orders-workspace.is-table { padding: 0 32px 64px; }
+body:has(.orders-workspace) .orders-workspace.is-table .orders-clean-toolbar { margin-right: -32px; margin-left: -32px; }
+body:has(.orders-workspace) .orders-workspace.is-table .orders-layout { width: 100%; grid-template-columns: minmax(0,1fr) minmax(420px,.42fr); }
+body:has(.orders-workspace) .orders-workspace.is-table .orders-table-wrap { width: 100%; }
+body:has(.orders-workspace) .orders-workspace.is-table .orders-table { width: 100%; min-width: 980px; }
+body:has(.orders-workspace) .orders-workspace.is-table .orders-layout:has(.drawer-empty) { grid-template-columns: 1fr; }
+
+@media (max-width: 1100px) {
+  body:has(.orders-workspace) .orders-kanban { grid-template-columns: repeat(var(--kanban-columns,6), minmax(290px,1fr)) !important; }
+  body:has(.orders-workspace) .orders-workspace.is-table .orders-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  body:has(.orders-workspace) .orders-clean-toolbar { top: auto; }
+  body:has(.orders-workspace) .orders-kanban { grid-template-columns: repeat(var(--kanban-columns,6), 300px) !important; }
+  body:has(.orders-workspace) .orders-workspace.is-table { padding-right: 12px; padding-left: 12px; }
+  body:has(.orders-workspace) .orders-workspace.is-table .orders-clean-toolbar { margin-right: -12px; margin-left: -12px; }
+}
+
+/* Keep filtered boards balanced: one to three remaining stages use reference-sized lanes. */
+body:has(.orders-workspace) .orders-kanban.is-compact {
+  grid-template-columns: repeat(var(--kanban-columns,1), minmax(320px,380px)) !important;
+  justify-content: start;
+}
+
+/* Deadline labels retain distinct operational colors while stage labels stay neutral. */
+body:has(.orders-workspace) .deadline-badge .status { min-height: 24px; padding: 4px 9px; font-size: 12px; font-weight: 600; }
+body:has(.orders-workspace) .deadline-badge .status-green { border-color: rgba(22,133,91,.22); background: #eaf7f1; color: #126b4a; }
+body:has(.orders-workspace) .deadline-badge .status-amber { border-color: rgba(199,123,19,.25); background: #fff4df; color: #92570b; }
+body:has(.orders-workspace) .deadline-badge .status-red { border-color: rgba(207,46,46,.24); background: #ffeded; color: #b62121; }
+body:has(.orders-workspace) .deadline-badge small { color: var(--muted); font-size: 12px; line-height: 1.35; }
+body:has(.orders-workspace) .order-card-customer-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+body:has(.orders-workspace) .order-card-customer-line > span:first-child {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body:has(.orders-workspace) .order-card-customer-line .deadline-badge { display: inline-flex; flex: 0 0 auto; }
+body:has(.orders-workspace) .order-card-customer-line .deadline-badge .status {
+  min-height: 20px;
+  padding: 2px 7px;
+  border: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+body:has(.orders-workspace) .order-card-customer-line .deadline-badge .status::before {
+  content: "";
+  display: block;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+body:has(.orders-workspace) .order-card-customer-line .deadline-badge small { display: none; }
+body:has(.orders-workspace) .order-card-reference-footer .order-card-badges {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+body:has(.orders-workspace) .order-card-reference-footer .status-pill {
+  width: max-content;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+/* Readability pass for list view and shared order controls. */
+body:has(.orders-workspace) .list-summary { padding: 14px 18px; font-size: 14px; font-weight: 500; }
+body:has(.orders-workspace) .orders-table th { font-size: 14px; font-weight: 600; }
+body:has(.orders-workspace) .orders-table td { font-size: 16px; line-height: 1.5; }
+body:has(.orders-workspace) .orders-table td > strong { color: var(--ink); font-size: 16px; }
+body:has(.orders-workspace) .orders-table small { margin-top: 5px; font-size: 13px; line-height: 1.45; }
+body:has(.orders-workspace) .orders-table .status-pill { max-width: 190px; padding: 5px 9px; font-size: 12px; font-weight: 600; }
+body:has(.orders-workspace) .orders-table .text-button,
+body:has(.orders-workspace) .orders-table .table-action-button { font-size: 14px; font-weight: 600; }
+
+/* List view mirrors the neutral Kanban surface; deadline health is the only color signal. */
+body:has(.orders-workspace) .orders-table-wrap { border-color: var(--ref-black-10); border-radius: 18px; box-shadow: none; }
+body:has(.orders-workspace) .orders-table thead th { background: var(--ref-black-4); color: rgba(8,10,11,.62); }
+body:has(.orders-workspace) .orders-table tbody tr { background: #fff; transition: background .16s ease; }
+body:has(.orders-workspace) .orders-table tbody tr:hover,
+body:has(.orders-workspace) .orders-table tbody tr.is-active { background: var(--ref-black-4); }
+body:has(.orders-workspace) .orders-table tbody td { border-bottom-color: var(--ref-black-10); color: rgba(8,10,11,.72); }
+body:has(.orders-workspace) .orders-table .status-pill { border-color: transparent; background: var(--ref-black-10); color: var(--ref-black); }
+body:has(.orders-workspace) .orders-table .deadline-badge .status-green { border-color: rgba(22,133,91,.22); background: #eaf7f1; color: #126b4a; }
+body:has(.orders-workspace) .orders-table .deadline-badge .status-amber { border-color: rgba(199,123,19,.25); background: #fff4df; color: #92570b; }
+body:has(.orders-workspace) .orders-table .deadline-badge .status-red { border-color: rgba(207,46,46,.24); background: #ffeded; color: #b62121; }
+body:has(.orders-workspace) .orders-table .deadline-badge { display: grid; justify-items: start; gap: 4px; min-width: 132px; }
+
+/* Reference notification tray icon and interaction treatment. */
+body:has(.app-shell) .workspace-header-actions .notification-trigger {
+  width: 40px;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: var(--ref-black-4, rgba(8,10,11,.04));
+  opacity: 1;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+body:has(.app-shell) .workspace-header-actions .notification-trigger:hover {
+  border-color: rgba(8,10,11,.10);
+  background: rgba(8,10,11,.10);
+  transform: translateY(-1px);
+}
+body:has(.app-shell) .notification-trigger-icon { display: block; width: 23px; height: 23px; object-fit: contain; opacity: .82; }
+body:has(.app-shell) .notification-trigger:hover .notification-trigger-icon { opacity: 1; }
+body:has(.app-shell) .notification-badge { top: -4px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px; font-size: 12px; }
+
+/* Reference-style stage menu; avoids the unstyled operating-system select panel. */
+body:has(.orders-workspace) .orders-stage-menu { position: relative; }
+body:has(.orders-workspace) button.orders-stage-select {
+  min-width: 176px;
+  min-height: 38px;
+  padding: 0 11px;
+  justify-content: flex-start;
+  border: 1px solid var(--ref-black-10);
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(8,10,11,.05);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+body:has(.orders-workspace) button.orders-stage-select > span { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body:has(.orders-workspace) .orders-stage-chevron { width: 13px; height: 13px; margin-left: 5px; opacity: .58; transition: transform .16s ease; }
+body:has(.orders-workspace) button.orders-stage-select.is-open .orders-stage-chevron { transform: rotate(180deg); }
+body:has(.orders-workspace) .orders-stage-popover {
+  top: 44px;
+  left: 0;
+  gap: 3px;
+  width: 238px;
+  padding: 8px;
+  border-color: var(--ref-black-10);
+  border-radius: 14px;
+  box-shadow: 0 18px 46px rgba(8,10,11,.16);
+}
+body:has(.orders-workspace) .orders-stage-popover > strong { padding: 6px 8px 8px; color: var(--ref-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+body:has(.orders-workspace) .orders-stage-popover > button {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ref-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+body:has(.orders-workspace) .orders-stage-popover > button:hover { background: var(--ref-black-4); }
+body:has(.orders-workspace) .orders-stage-popover > button.active { background: var(--ref-black); color: #fff; }
+
+/* Uploaded evidence is visible without opening Operational history. */
+body:has(.orders-workspace) .drawer-photo-evidence {
+  display: grid;
+  gap: 14px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+body:has(.orders-workspace) .drawer-photo-evidence-heading { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; align-items: center; gap: 10px; }
+body:has(.orders-workspace) .drawer-photo-evidence-heading > span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--ref-black-4); color: var(--ref-black); }
+body:has(.orders-workspace) .drawer-photo-evidence-heading strong,
+body:has(.orders-workspace) .drawer-photo-evidence-heading small { display: block; }
+body:has(.orders-workspace) .drawer-photo-evidence-heading strong { color: var(--ref-text); font-size: 15px; font-weight: 600; }
+body:has(.orders-workspace) .drawer-photo-evidence-heading small { margin-top: 2px; color: var(--ref-muted); font-size: 12px; }
+body:has(.orders-workspace) .drawer-photo-evidence-heading em { display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; background: var(--ref-black-10); color: var(--ref-black); font-size: 12px; font-style: normal; font-weight: 600; }
+body:has(.orders-workspace) .evidence-photos-prominent { display: grid; grid-template-columns: repeat(auto-fill,minmax(118px,1fr)); gap: 10px; }
+body:has(.orders-workspace) .evidence-photos-prominent a { overflow: hidden; border: 1px solid var(--ref-black-10); border-radius: 14px; background: var(--ref-black-4); color: var(--ref-text); }
+body:has(.orders-workspace) .evidence-photos-prominent img { display: block; width: 100%; height: 106px; border: 0; border-radius: 0; background: var(--ref-black-4); object-fit: cover; }
+body:has(.orders-workspace) .evidence-photos-prominent a > span { padding: 8px 10px 9px; font-size: 12px; font-weight: 500; }
+body:has(.orders-workspace) .evidence-photo-message { padding: 12px 14px; border-radius: 10px; background: var(--ref-black-4); color: var(--ref-muted); font-size: 13px; }
+body:has(.orders-workspace) .evidence-photo-message.is-error { background: #ffeded; color: #a92323; }
+body:has(.orders-workspace) .evidence-photo-unavailable { min-height: 106px; align-content: center; padding: 12px; border: 1px dashed var(--ref-black-16); border-radius: 14px; background: var(--ref-black-4); }
+body:has(.orders-workspace) .evidence-photo-unavailable strong,
+body:has(.orders-workspace) .evidence-photo-unavailable small { display: block; }
+body:has(.orders-workspace) .evidence-photo-unavailable strong { color: var(--ref-text); font-size: 13px; }
+body:has(.orders-workspace) .evidence-photo-unavailable small { margin-top: 4px; color: var(--ref-muted); font-size: 12px; overflow-wrap: anywhere; }
+body:has(.orders-workspace) .evidence-disclosure .evidence-photos { display: none; }
+
+@media (max-width: 640px) {
+  body:has(.orders-workspace) .orders-kanban.is-compact { grid-template-columns: repeat(var(--kanban-columns,1), 300px) !important; }
+}
+
+/* Keep the two persistent board actions aligned for every Orders role. */
+body:has(.orders-workspace) .orders-kanban-footer {
+  right: auto;
+  bottom: 44px;
+  left: 32px;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100vw - 64px);
+}
+body:has(.orders-workspace) .orders-kanban-footer-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+body:has(.orders-workspace) .orders-kanban-footer-button svg { display: block; flex: 0 0 auto; }
+body:has(.orders-workspace) .orders-kanban-footer-button strong { display: grid; place-items: center; min-width: 20px; height: 20px; }
+
+@media (max-width: 640px) {
+  body:has(.orders-workspace) .orders-kanban-footer {
+    right: 12px;
+    bottom: 20px;
+    left: 12px;
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+}

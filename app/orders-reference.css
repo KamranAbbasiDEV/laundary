@@ -1,0 +1,401 @@
+/* Orders page parity layer. The reference project is the visual source of truth;
+   application state and behavior continue to come from the React components. */
+
+body:has(.orders-workspace) {
+  --ref-black: #080a0b;
+  --ref-text: #1d1d1d;
+  --ref-muted: #757575;
+  --ref-black-4: rgba(8, 10, 11, .04);
+  --ref-black-10: rgba(8, 10, 11, .10);
+  --ref-black-16: rgba(8, 10, 11, .16);
+  --ref-black-32: rgba(8, 10, 11, .32);
+  --ref-danger: #df0509;
+  background: #fff;
+  color: var(--ref-text);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: .12px;
+}
+
+body:has(.orders-workspace) button,
+body:has(.orders-workspace) input,
+body:has(.orders-workspace) select,
+body:has(.orders-workspace) textarea { font-family: var(--font-display); }
+
+/* Reference navigation: black utility bar, white workspace tabs. */
+body:has(.orders-workspace) .workspace-header-bar {
+  border: 0;
+  background: #fff;
+  backdrop-filter: none;
+}
+body:has(.orders-workspace) .workspace-top-row {
+  min-height: 72px;
+  padding: 0 32px;
+  background: var(--ref-black);
+  color: #fff;
+}
+body:has(.orders-workspace) .workspace-brand .brand { color: #fff; }
+body:has(.orders-workspace) .workspace-brand .brand-mark,
+body:has(.orders-workspace) .workspace-brand .brand-compact .brand-mark {
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+body:has(.orders-workspace) .workspace-brand .brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+body:has(.orders-workspace) .workspace-link {
+  border-bottom-color: transparent;
+  color: rgba(255,255,255,.64);
+  font-size: 14px;
+  font-weight: 500;
+}
+body:has(.orders-workspace) .workspace-link:hover,
+body:has(.orders-workspace) .workspace-link.active { border-bottom-color: #fff; color: #fff; }
+body:has(.orders-workspace) .workspace-top-row > .global-search {
+  min-height: 40px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px;
+  background: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.72);
+  box-shadow: none;
+}
+body:has(.orders-workspace) .workspace-top-row > .global-search input { color: #fff; font-size: 14px; }
+body:has(.orders-workspace) .workspace-top-row > .global-search input::placeholder { color: rgba(255,255,255,.58); }
+body:has(.orders-workspace) .workspace-top-row > .global-search:focus-within { border-color: rgba(255,255,255,.32); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+body:has(.orders-workspace) .workspace-icon-button,
+body:has(.orders-workspace) .workspace-header-actions .notification-trigger { color: #fff; }
+body:has(.orders-workspace) .workspace-new-order {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 20px;
+  background: #fff;
+  color: var(--ref-black);
+  font-size: 14px;
+  font-weight: 500;
+}
+body:has(.orders-workspace) .workspace-new-order:hover { background: rgba(255,255,255,.84); }
+body:has(.orders-workspace) .workspace-nav {
+  min-height: 52px;
+  gap: 24px;
+  padding: 0 32px;
+  border: 0;
+  border-bottom: 1px solid var(--ref-black-10);
+  background: #fff;
+}
+body:has(.orders-workspace) .workspace-nav-item {
+  min-height: 52px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(8,10,11,.64);
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+body:has(.orders-workspace) .workspace-nav-item:hover { border-bottom-color: var(--ref-black); background: transparent; color: var(--ref-black); }
+body:has(.orders-workspace) .workspace-nav-item.active { border-color: transparent; border-bottom-color: var(--ref-black); background: transparent; color: var(--ref-black); box-shadow: none; }
+
+/* The reference starts directly with filters; Orders is already identified in nav. */
+body:has(.orders-workspace) .content { width: 100%; max-width: none; padding: 0 !important; background: #fff; }
+body:has(.orders-workspace) .orders-workspace { display: grid; gap: 0; width: 100%; font-family: var(--font-display); }
+body:has(.orders-workspace) .orders-workspace > .workspace-header,
+body:has(.orders-workspace) .orders-view-toolbar { display: none !important; }
+body:has(.orders-workspace) .inline-notice { margin: 16px 32px 0; }
+
+/* 72px utility nav + 52px workspace nav. */
+body:has(.orders-workspace) .orders-clean-toolbar {
+  position: sticky;
+  top: 124px;
+  z-index: 90;
+  min-height: 69px;
+  margin: 0;
+  padding: 16px 32px;
+  border: 0;
+  border-bottom: 1px solid var(--ref-black-10);
+  background: rgba(255,255,255,.96);
+  box-shadow: none;
+  backdrop-filter: blur(14px);
+}
+body:has(.orders-workspace) .orders-clean-toolbar-left,
+body:has(.orders-workspace) .orders-clean-toolbar-right { gap: 8px; }
+body:has(.orders-workspace) .view-toggle {
+  height: 36px;
+  gap: 2px;
+  padding: 4px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--ref-black-10);
+}
+body:has(.orders-workspace) .view-toggle button {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  border-radius: 14px;
+  color: rgba(8,10,11,.56);
+}
+body:has(.orders-workspace) .view-toggle button.active { background: #fff; color: var(--ref-black); box-shadow: 0 1px 4px rgba(8,10,11,.12); }
+body:has(.orders-workspace) .orders-stage-select,
+body:has(.orders-workspace) .orders-toolbar-button,
+body:has(.orders-workspace) .orders-search-control {
+  min-height: 36px;
+  border: 2px solid rgba(8,10,11,.12);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--ref-black);
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+body:has(.orders-workspace) .orders-stage-select { padding-left: 10px; }
+body:has(.orders-workspace) .orders-stage-select select { min-height: 32px; padding: 0 28px 0 0; }
+body:has(.orders-workspace) .orders-toolbar-button { padding: 0 12px; }
+body:has(.orders-workspace) .orders-toolbar-button:hover,
+body:has(.orders-workspace) .orders-stage-select:hover,
+body:has(.orders-workspace) .orders-search-control:focus-within { border-color: var(--ref-black-16); background: var(--ref-black-4); }
+body:has(.orders-workspace) .orders-search-control { flex-basis: 250px; padding: 0 12px; }
+body:has(.orders-workspace) .orders-search-control input { font-size: 14px; }
+body:has(.orders-workspace) .orders-clean-toolbar-right .button {
+  min-height: 36px;
+  border: 2px solid rgba(8,10,11,.12);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--ref-black);
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Horizontal 20rem reference lanes. */
+body:has(.orders-workspace) .orders-board-layout { order: 5; width: 100%; padding: 24px 0 104px; }
+body:has(.orders-workspace) .orders-kanban {
+  display: grid;
+  grid-template-columns: repeat(var(--kanban-columns, 6), 320px) !important;
+  align-items: start;
+  gap: 8px;
+  width: 100%;
+  max-width: none;
+  padding: 0 32px 16px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+body:has(.orders-workspace) .kanban-column { min-width: 320px !important; border: 0; background: transparent; box-shadow: none; }
+body:has(.orders-workspace) .kanban-column-header {
+  min-height: 52px;
+  align-items: center;
+  padding: 0 8px 16px;
+  border: 0;
+  background: transparent;
+}
+body:has(.orders-workspace) .kanban-column-header > div:first-child { flex-wrap: nowrap; gap: 10px; }
+body:has(.orders-workspace) .kanban-stage-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(8,10,11,.48);
+  border-radius: 6px;
+  color: var(--ref-black);
+  font-family: "DM Sans Client", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+body:has(.orders-workspace) .kanban-column-header > div:first-child > span:nth-child(2) {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  color: var(--ref-text);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 20px;
+}
+body:has(.orders-workspace) .kanban-column-header > div:first-child > span:nth-child(2) small {
+  overflow: hidden;
+  color: rgba(8,10,11,.64);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body:has(.orders-workspace) .kanban-column-header strong {
+  min-width: 22px;
+  height: 22px;
+  margin-left: auto;
+  border: 0;
+  background: var(--ref-black-10);
+  color: var(--ref-black);
+  box-shadow: none;
+  font-size: 12px;
+}
+body:has(.orders-workspace) .kanban-column-body { min-height: 320px; gap: 10px; padding: 0; background: transparent; }
+
+/* Reference accordion card. */
+body:has(.orders-workspace) .order-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: 76px 0 58px;
+  gap: 0;
+  width: 100%;
+  height: 134px;
+  min-height: 134px;
+  padding: 0 12px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 24px;
+  background: var(--ref-black-10);
+  box-shadow: none;
+  transition: height .2s cubic-bezier(.165,.84,.44,1), background .18s ease, transform .18s ease;
+}
+body:has(.orders-workspace) .order-card::before { display: none; }
+body:has(.orders-workspace) .order-card:hover { border: 0; background: var(--ref-black-16); box-shadow: none; transform: translateY(-1px); }
+body:has(.orders-workspace) .order-card.is-expanded { grid-template-rows: 76px auto 58px; height: auto; min-height: 248px; }
+body:has(.orders-workspace) .order-card-reference-head {
+  min-height: 76px;
+  padding: 14px 8px 12px;
+  border-bottom: 1px solid var(--ref-black-10);
+}
+body:has(.orders-workspace) .order-card-reference-title { gap: 7px; }
+body:has(.orders-workspace) .order-card-reference-title > strong { color: var(--ref-text); font-size: 16px; font-weight: 500; line-height: 20px; }
+body:has(.orders-workspace) .order-card-reference-title > span { gap: 8px; color: rgba(8,10,11,.64); font-size: 14px; line-height: 18px; }
+body:has(.orders-workspace) .order-card-reference-title > span > button { color: rgba(8,10,11,.64); font-size: 14px; font-weight: 400; }
+body:has(.orders-workspace) .order-card-reference-title i { height: 18px; background: var(--ref-black-16); }
+body:has(.orders-workspace) .order-card-reference-controls { gap: 4px; }
+body:has(.orders-workspace) .order-card-reference-controls > span,
+body:has(.orders-workspace) .order-card-reference-controls > button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ref-black-10);
+  border-radius: 8px;
+  background: rgba(255,255,255,.72);
+  color: var(--ref-black);
+}
+body:has(.orders-workspace) .order-card-reference-controls > button:hover { border-color: var(--ref-black-16); background: #fff; }
+body:has(.orders-workspace) .order-card-reference-controls img { width: 14px; height: 14px; opacity: .72; }
+body:has(.orders-workspace) .order-card-expand.is-expanded img { transform: rotate(180deg); }
+body:has(.orders-workspace) .order-card-reference-list {
+  display: grid;
+  max-height: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: rgba(255,255,255,.92);
+  opacity: 0;
+  visibility: hidden;
+  transition: max-height .2s ease, opacity .15s ease;
+}
+body:has(.orders-workspace) .order-card.is-expanded .order-card-reference-list { max-height: 190px; margin: 0; opacity: 1; visibility: visible; }
+body:has(.orders-workspace) .order-card-reference-list > div { min-height: 58px; padding: 10px 12px; border-bottom: 1px solid var(--ref-black-10); }
+body:has(.orders-workspace) .order-card-reference-list > div:last-child { border-bottom: 0; }
+body:has(.orders-workspace) .order-card-reference-list strong { color: var(--ref-text); font-size: 14px; font-weight: 500; line-height: 18px; }
+body:has(.orders-workspace) .order-card-reference-list small { color: rgba(8,10,11,.64); font-size: 12px; line-height: 16px; }
+body:has(.orders-workspace) .order-card-reference-list em {
+  min-width: 42px;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 12px;
+  background: var(--ref-black-10);
+  color: var(--ref-black);
+  box-shadow: none;
+  font-size: 12px;
+}
+body:has(.orders-workspace) .order-card-reference-footer {
+  min-height: 58px;
+  margin: 0;
+  padding: 10px 8px 12px;
+  border: 0;
+  background: transparent;
+}
+body:has(.orders-workspace) .order-card-badges .status-pill,
+body:has(.orders-workspace) .order-card-badges .status {
+  border-color: transparent;
+  background: var(--ref-black-10);
+  color: var(--ref-black);
+  font-size: 12px;
+  font-weight: 500;
+}
+body:has(.orders-workspace) .order-card-badges .status-red { background: var(--ref-danger); color: #fff; }
+body:has(.orders-workspace) .order-card-action,
+body:has(.orders-workspace) .order-card-action:not(.is-primary) {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  background: transparent;
+  box-shadow: none;
+  opacity: .64;
+}
+body:has(.orders-workspace) .order-card-action:hover { border-color: transparent; background: var(--ref-black-16); box-shadow: none; opacity: 1; transform: none; }
+body:has(.orders-workspace) .order-card-action img { width: 16px; height: 16px; opacity: 1; }
+body:has(.orders-workspace) .kanban-empty { min-height: 160px; border: 1px dashed var(--ref-black-16); border-radius: 24px; background: var(--ref-black-4); color: var(--ref-muted); }
+
+/* Fixed reference actions at bottom left. */
+body:has(.orders-workspace) .orders-kanban-footer {
+  position: fixed;
+  z-index: 140;
+  right: auto;
+  bottom: 32px;
+  left: 32px;
+  display: flex;
+  gap: 8px;
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+body:has(.orders-workspace) .orders-kanban-footer-button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--ref-black-10);
+  color: var(--ref-black);
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+body:has(.orders-workspace) .orders-kanban-footer-button:hover,
+body:has(.orders-workspace) .orders-kanban-footer-button.is-active { background: var(--ref-black-16); color: var(--ref-black); }
+body:has(.orders-workspace) .orders-kanban-footer-button.attention,
+body:has(.orders-workspace) .orders-kanban-footer-button.attention:hover,
+body:has(.orders-workspace) .orders-kanban-footer-button.attention.is-active { background: var(--ref-danger); color: #fff; }
+
+@media (max-width: 900px) {
+  body:has(.orders-workspace) .workspace-top-row,
+  body:has(.orders-workspace) .workspace-nav,
+  body:has(.orders-workspace) .orders-clean-toolbar { padding-right: 18px; padding-left: 18px; }
+  body:has(.orders-workspace) .orders-kanban { padding-right: 18px; padding-left: 18px; }
+  body:has(.orders-workspace) .orders-kanban-footer { left: 18px; }
+}
+
+@media (max-width: 640px) {
+  body:has(.orders-workspace) .workspace-top-row { padding-top: 10px; padding-bottom: 10px; }
+  body:has(.orders-workspace) .workspace-top-row > .global-search { background: rgba(255,255,255,.10); }
+  body:has(.orders-workspace) .orders-clean-toolbar { position: relative; top: auto; padding: 12px; }
+  body:has(.orders-workspace) .orders-clean-toolbar-left,
+  body:has(.orders-workspace) .orders-clean-toolbar-right { width: 100%; }
+  body:has(.orders-workspace) .orders-search-control { flex: 1 1 180px; }
+  body:has(.orders-workspace) .orders-kanban { grid-template-columns: repeat(var(--kanban-columns,6), 300px) !important; padding-right: 12px; padding-left: 12px; }
+  body:has(.orders-workspace) .kanban-column { min-width: 300px !important; }
+  body:has(.orders-workspace) .orders-kanban-footer { right: 12px; bottom: 12px; left: 12px; justify-content: space-between; }
+}

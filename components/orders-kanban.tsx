@@ -1,43 +1,46 @@
 'use client';
 
-import { CalendarDays, CheckSquare, ChevronRight, GripVertical, Package2, Square, TriangleAlert, UserRound } from 'lucide-react';
 import { useState, type CSSProperties } from 'react';
 import type { Order, OrderStatus } from '@/lib/types';
 import { statusGroups, statusToneClass } from '@/lib/order-statuses';
 import DeadlineBadge from './deadline-badge';
 
-const actionFor = (order: Order) => order.exception ? 'Review exception' : order.customerNotificationPending ? 'Send customer update' : order.failedStop ? 'Recover failed stop' : ['Capacity confirmed', 'Ready for pickup', 'Out for delivery'].includes(order.status) && !order.routeAssigned ? order.routeDrafted ? 'Continue draft' : 'Plan route' : order.requiresValidation ? 'Review intake' : null;
+type Props = {
+  orders: Order[];
+  onInspect: (order: Order) => void;
+  canMove: boolean;
+  showEmpty: boolean;
+  onMove: (orders: Order[], status: OrderStatus) => void;
+};
 
-type Props = { orders: Order[]; selected: Set<string>; onToggle: (id: string) => void; onInspect: (order: Order) => void; onAction: (order: Order) => void; canMove: boolean; canSelect: boolean; showEmpty: boolean; onMove: (orders: Order[], status: OrderStatus) => void };
-
-export default function OrdersKanban({ orders, selected, onToggle, onInspect, onAction, canMove, canSelect, showEmpty, onMove }: Props) {
+export default function OrdersKanban({ orders, onInspect, canMove, showEmpty, onMove }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const visibleGroups = statusGroups.filter(group => showEmpty || orders.some(order => group.statuses.includes(order.status)));
-  return <div className="orders-kanban" aria-label="Orders board" style={{ '--kanban-columns': visibleGroups.length } as CSSProperties}>
+  const compactLayout = visibleGroups.length <= 3;
+
+  return <div className={`orders-kanban ${compactLayout ? 'is-compact' : ''}`} aria-label="Orders board" style={{ '--kanban-columns': visibleGroups.length } as CSSProperties}>
     {visibleGroups.map(group => {
       const items = orders.filter(order => group.statuses.includes(order.status));
-      const groupKeys = items.map(order => order.internalId ?? order.id);
-      const allSelected = groupKeys.length > 0 && groupKeys.every(key => selected.has(key));
       return <section className="kanban-column" key={group.id}>
-        <header className="kanban-column-header"><div><span>{group.label}</span><strong>{items.length}</strong></div><div className="kanban-column-tools">{canSelect && <button className="kanban-select-button" type="button" disabled={!groupKeys.length} onClick={() => groupKeys.forEach(key => { if (allSelected) { if (selected.has(key)) onToggle(key); } else if (!selected.has(key)) onToggle(key); })}>{allSelected ? 'Clear' : 'Select all'}</button>}<small>{group.statuses.length} stage{group.statuses.length === 1 ? '' : 's'}</small></div></header>
-        <div className={`kanban-column-body ${draggedId ? 'is-drop-target' : ''}`} onDragOver={event => { if (canMove) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } }} onDrop={event => { event.preventDefault(); const sourceId = event.dataTransfer.getData('text/plain') || draggedId || ''; const payload = event.dataTransfer.getData('application/x-rinseline-orders'); let payloadIds: string[] = []; if (payload) { try { const parsed = JSON.parse(payload); if (Array.isArray(parsed) && parsed.every(value => typeof value === 'string')) payloadIds = parsed; } catch { payloadIds = []; } } const order = orders.find(item => (item.internalId ?? item.id) === sourceId); const sourceGroup = order && statusGroups.find(source => source.statuses.includes(order.status)); if (order && canMove && !group.statuses.includes(order.status)) { const moving = payloadIds.length > 0 ? orders.filter(item => payloadIds.includes(item.internalId ?? item.id)) : selected.has(sourceId) ? orders.filter(item => selected.has(item.internalId ?? item.id) && sourceGroup?.statuses.includes(item.status)) : [order]; onMove(moving.length ? moving : [order], group.statuses[0]); } setDraggedId(null); }}>
+        <header className="kanban-column-header"><div><span className="kanban-stage-mark">##</span><span><small>{group.statuses.join(' → ')}</small>{group.label}</span><strong>{items.length}</strong></div></header>
+        <div className={`kanban-column-body ${draggedId ? 'is-drop-target' : ''}`} onDragOver={event => { if (canMove) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } }} onDrop={event => { event.preventDefault(); const sourceId = event.dataTransfer.getData('text/plain') || draggedId || ''; const order = orders.find(item => (item.internalId ?? item.id) === sourceId); if (order && canMove && !group.statuses.includes(order.status)) onMove([order], group.statuses[0]); setDraggedId(null); }}>
           {items.length ? items.map(order => {
             const key = order.internalId ?? order.id;
-            const isSelected = selected.has(key);
-            const nextAction = actionFor(order);
-            return <article className={`order-card ${order.exception ? 'has-attention' : ''} ${isSelected ? 'is-selected' : ''}`} key={key} draggable={canMove} onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', key); const sourceGroup = statusGroups.find(source => source.statuses.includes(order.status)); const dragIds = isSelected && sourceGroup ? orders.filter(item => selected.has(item.internalId ?? item.id) && sourceGroup.statuses.includes(item.status)).map(item => item.internalId ?? item.id) : [key]; event.dataTransfer.setData('application/x-rinseline-orders', JSON.stringify(dragIds)); setDraggedId(key); }} onDragEnd={() => setDraggedId(null)}>
-              <div className="order-card-top">
-                <div className="order-card-identity"><span className="order-card-drag-handle" title={canMove ? 'Drag to another stage' : undefined}><GripVertical size={14}/></span><button className="order-card-title" type="button" onClick={() => onInspect(order)}>{order.id}</button></div>
-                {canSelect && <button className="order-card-check" type="button" aria-label={`${isSelected ? 'Deselect' : 'Select'} ${order.id}`} onClick={() => onToggle(key)}>{isSelected ? <CheckSquare size={16}/> : <Square size={16}/>}</button>}
+            const isExpanded = expandedIds.has(key);
+            const requirementRows = [
+              { label: order.service, detail: order.notes?.trim() || 'Standard handling', count: order.bags },
+              ...(order.items?.trim() && order.items.trim().toLowerCase() !== order.service.trim().toLowerCase() ? [{ label: 'Items', detail: order.items.trim(), count: order.actualBags ?? order.bags }] : [])
+            ].slice(0, 3);
+            return <article className={`order-card ${isExpanded ? 'is-expanded' : ''} ${order.exception ? 'has-attention' : ''}`} data-tone={statusToneClass(order.status).replace('status-', '')} data-deadline={order.deadlineStatus ?? 'no_deadline'} key={key} draggable={canMove} onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', key); event.dataTransfer.setData('application/x-rinseline-orders', JSON.stringify([key])); setDraggedId(key); }} onDragEnd={() => setDraggedId(null)}>
+              <div className="order-card-reference-head">
+                <div className="order-card-reference-title"><strong className="order-card-customer-line"><span>{order.customer}</span>{order.deadlineStatus && order.deadlineStatus !== 'no_deadline' && <DeadlineBadge order={order}/>}</strong><span><button type="button" onClick={() => onInspect(order)}>{order.id}</button><i/><span>{order.bags} bag{order.bags === 1 ? '' : 's'}</span><span>{order.service}</span></span></div>
+                <div className="order-card-reference-controls">{order.exception && <span className="order-card-alert" title="Needs attention"><img src="/icons/client/alert-triangle2-filled-48x48-1.webp" alt=""/></span>}<button className={`order-card-expand ${isExpanded ? 'is-expanded' : ''}`} type="button" aria-label={`${isExpanded ? 'Collapse' : 'Expand'} services for ${order.id}`} aria-expanded={isExpanded} onClick={() => setExpandedIds(current => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })}><img src="/icons/client/chevron-down-filled-128x128-1.webp" alt=""/></button></div>
               </div>
-              <div className="order-card-primary"><strong className="order-card-customer">{order.customer}</strong><span><Package2 size={12}/>{order.service} · {order.bags} bag{order.bags === 1 ? '' : 's'}</span></div>
-              <div className="order-card-badges"><span className={`status-pill ${statusToneClass(order.status)}`}>{order.status}</span><DeadlineBadge order={order}/></div>
-              <div className="order-card-facts">
-                <div><CalendarDays size={13}/><span><small>Due</small><strong>{order.due || 'Not scheduled'}</strong></span></div>
-                <div><UserRound size={13}/><span><small>Assigned</small><strong>{order.processor || 'Unassigned'}</strong></span></div>
+              <div className="order-card-reference-list">
+                {requirementRows.map((row, index) => <div key={`${key}-requirement-${index}`}><span><strong>{row.label}</strong><small>{row.detail}</small></span><em><img src="/icons/client/bag2-filled-48x48-1.webp" alt=""/>{row.count}</em></div>)}
               </div>
-              {order.exception && <div className="order-card-attention"><TriangleAlert size={13}/><span>Needs attention</span></div>}
-              <button className={`order-card-action ${nextAction ? 'is-primary' : ''}`} type="button" onClick={() => nextAction ? onAction(order) : onInspect(order)}><span>{nextAction || 'View details'}</span><ChevronRight size={14}/></button>
+              <div className="order-card-reference-footer"><div className="order-card-badges"><span className={`status-pill ${statusToneClass(order.status)}`}>{order.status}</span></div><button className="order-card-action" type="button" title="View details" aria-label={`View details for ${order.id}`} onClick={() => onInspect(order)}><img src="/icons/client/eye-open-filled-128x128-1.webp" alt=""/></button></div>
             </article>;
           }) : <div className="kanban-empty">No orders in this stage</div>}
         </div>
