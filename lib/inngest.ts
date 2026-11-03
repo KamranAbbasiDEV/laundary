@@ -2,7 +2,7 @@ import { Inngest } from 'inngest';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { isSmsAllowed, logSmsNotification, sendOrderNotification } from '@/lib/notifications';
 import { getDeadlineStatus } from '@/lib/deadlines';
-import { reportDateRange } from '@/lib/timezone';
+import { reportDateRange, validTimeZoneOrUtc } from '@/lib/timezone';
 
 export const inngest = new Inngest({ id: 'rinseline-dispatch' });
 
@@ -43,7 +43,7 @@ export async function notifyPendingProcessorOffers(orderId: string) {
 async function queueProcessorReviews() {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
   const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
-  const timezone = workspace?.timezone || 'UTC';
+  const timezone = validTimeZoneOrUtc(workspace?.timezone);
   const reviewCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,processor_id,updated_at,due_at,has_exception').eq('status', 'delivered').lte('updated_at', reviewCutoff).not('processor_id', 'is', null);
   if (error) throw new Error(error.message);
@@ -121,7 +121,7 @@ async function advanceExpiredProcessorOffers() {
 async function queueDeadlineNotifications() {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
   const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
-  const timezone = workspace?.timezone || 'UTC';
+  const timezone = validTimeZoneOrUtc(workspace?.timezone);
   const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,phone,customer_user_id,due_at,status,has_exception').is('archived_at', null).not('due_at', 'is', null).not('status', 'in', '(delivered,processor_reviewed)');
   if (error) throw new Error(error.message);
   let queued = 0;

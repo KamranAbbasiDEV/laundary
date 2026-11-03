@@ -1,5 +1,18 @@
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
+export function isValidTimeZone(timeZone: string) {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone }).format();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function validTimeZoneOrUtc(timeZone?: string | null) {
+  return timeZone && isValidTimeZone(timeZone) ? timeZone : 'UTC';
+}
+
 function zonedTimeToUtc(date: string, endExclusive: boolean, timeZone: string) {
   if (!datePattern.test(date)) throw new Error('Invalid report date.');
   const [year, month, day] = date.split('-').map(Number);
@@ -15,5 +28,6 @@ function zonedTimeToUtc(date: string, endExclusive: boolean, timeZone: string) {
 }
 
 export function reportDateRange(periodStart: string, periodEnd: string, timeZone = 'UTC') {
-  return { start: zonedTimeToUtc(periodStart, false, timeZone), endExclusive: zonedTimeToUtc(periodEnd, true, timeZone) };
+  const safeTimeZone = validTimeZoneOrUtc(timeZone);
+  return { start: zonedTimeToUtc(periodStart, false, safeTimeZone), endExclusive: zonedTimeToUtc(periodEnd, true, safeTimeZone) };
 }

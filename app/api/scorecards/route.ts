@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { hasRole, requireActiveUser } from '@/lib/api-auth';
-import { reportDateRange } from '@/lib/timezone';
+import { reportDateRange, validTimeZoneOrUtc } from '@/lib/timezone';
 
 const scorecardSchema = z.object({
   processorId: z.string().uuid(), periodStart: z.string().date(), periodEnd: z.string().date(), notes: z.string().max(2000).optional()
@@ -21,7 +21,8 @@ export async function GET(request: Request) {
   if (!processorIds.length) return NextResponse.json({ scorecards: [] });
   const { data: workspace, error: workspaceError } = await auth.client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
   if (workspaceError) return NextResponse.json({ error: workspaceError.message }, { status: 500 });
-  const range = reportDateRange(periodStart, periodEnd, workspace?.timezone || 'UTC');
+  const timezone = validTimeZoneOrUtc(workspace?.timezone);
+  const range = reportDateRange(periodStart, periodEnd, timezone);
   const [orderResult, deliveryResult] = await Promise.all([
     auth.client.from('orders').select('id,order_number,processor_id,due_at,original_due_at,deadline_revision_reason,pickup_window_start_at,pickup_window_end_at').in('processor_id', processorIds),
     auth.client.from('order_events').select('order_id,created_at').eq('to_status', 'delivered').gte('created_at', range.start).lt('created_at', range.endExclusive).order('created_at', { ascending: true })
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
   const issuesByOrder = new Map<string, Array<{ description?: string | null; created_at: string }>>();
   for (const exception of exceptions ?? []) issuesByOrder.set(exception.order_id, [...(issuesByOrder.get(exception.order_id) ?? []), exception]);
   const enriched = (data ?? []).map(card => ({ ...card, details: (deliveries ?? []).filter(event => orderById.get(event.order_id)?.processor_id === card.processor_id).reduce<Array<{ order_number: string; delivered_at: string; due_at?: string | null; original_due_at?: string | null; deadline_revision_reason?: string | null; pickup_window_start_at?: string | null; pickup_window_end_at?: string | null; committed_on_time?: boolean; original_on_time?: boolean; issue?: string }>>((items, event) => { if (items.some(item => item.order_number === orderById.get(event.order_id)?.order_number)) return items; const order = orderById.get(event.order_id); if (!order) return items; const issue = (issuesByOrder.get(event.order_id) ?? []).map(row => row.description).filter(Boolean).join('; '); const deliveredAt = new Date(event.created_at).getTime(); const committedDue = order.due_at ? new Date(order.due_at).getTime() : NaN; const originalDue = order.original_due_at ? new Date(order.original_due_at).getTime() : NaN; items.push({ order_number: order.order_number, delivered_at: event.created_at, due_at: order.due_at, original_due_at: order.original_due_at, deadline_revision_reason: order.deadline_revision_reason, pickup_window_start_at: order.pickup_window_start_at, pickup_window_end_at: order.pickup_window_end_at, committed_on_time: Number.isFinite(committedDue) ? deliveredAt <= committedDue : undefined, original_on_time: Number.isFinite(originalDue) ? deliveredAt <= originalDue : undefined, issue: issue || undefined }); return items; }, []) }));
-  return NextResponse.json({ scorecards: enriched, period: { start: periodStart, end: periodEnd, timezone: workspace?.timezone || 'UTC' } });
+  return NextResponse.json({ scorecards: enriched, period: { start: periodStart, end: periodEnd, timezone } });
 }
 
 export async function POST(request: Request) {
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
 
   const item = parsed.data;
   const { data: workspace } = await auth.client.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
-  const range = reportDateRange(item.periodStart, item.periodEnd, workspace?.timezone || 'UTC');
+  const range = reportDateRange(item.periodStart, item.periodEnd, validTimeZoneOrUtc(workspace?.timezone));
   const { data: processor, error: processorError } = await auth.client.from('processors').select('id').eq('id', item.processorId).maybeSingle();
   if (processorError) return NextResponse.json({ error: processorError.message }, { status: 500 });
   if (!processor) return NextResponse.json({ error: 'Processor not found.' }, { status: 404 });
