@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireActiveUser } from '@/lib/api-auth';
-import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const idSchema = z.string().uuid();
 
@@ -16,11 +15,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (auth.profile.role === 'driver' && order.assigned_driver_id !== auth.user.id) return NextResponse.json({ error: 'You can only inspect orders assigned to you.' }, { status: 403 });
   if (auth.profile.role === 'processor' && order.processor_id !== auth.profile.processor_id) return NextResponse.json({ error: 'You can only inspect orders assigned to your facility.' }, { status: 403 });
   const detailClient = auth.client;
-  const photoClient = supabaseAdmin ?? auth.client;
   const [events, handoffs, photos, exceptions, offers, stops, deadlineRevisions] = await Promise.all([
     auth.client.from('order_events').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('order_handoffs').select('*').eq('order_id', id).order('confirmed_at', { ascending: false }),
-    photoClient.from('order_photos').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+    auth.client.from('order_photos').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     detailClient.from('exceptions').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     auth.client.from('processor_offers').select('id,rank,score,score_breakdown,status,rejection_reason,offered_at,responded_at,processors(name)').eq('order_id', id).order('rank'),
     auth.client.from('route_stops').select('id,route_id,route_date,route_type,sequence,status,driver_id,checked_in_at,completed_at,failure_reason,dispatcher_note,route_plans(id,status,route_type,route_date,driver_id)').eq('order_id', id).order('route_date', { ascending: false }),

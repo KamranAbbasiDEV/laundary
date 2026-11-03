@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { CalendarClock, MapPin, Package, Plus, RefreshCw } from 'lucide-react';
+import { CalendarClock, MapPin, Package, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 import type { Order } from '@/lib/types';
-import NewOrderModal, { type OrderForm } from './new-order-modal';
-import type { ServiceCatalogItem } from '@/lib/service-catalog';
 
 const customerLabel = (status: Order['status']) => ({
   Created: 'Request received',
@@ -53,8 +51,7 @@ function CustomerOrderRow({ order, focused }: { order: Order; focused?: boolean 
   );
 }
 
-function CustomerOrders({ orders, onCreateOrder, onRefresh, services }: { orders: Order[]; onCreateOrder: (data: OrderForm) => Promise<void>; notify: (message: string) => void; onRefresh: () => Promise<void>; services: ServiceCatalogItem[] }) {
-  const [showForm, setShowForm] = useState(false);
+function CustomerOrders({ orders, onRefresh }: { orders: Order[]; onRefresh: () => Promise<void> }) {
   const [refreshing, setRefreshing] = useState(false);
   const [focusedOrderId, setFocusedOrderId] = useState<string | null>(null);
   const historyRef = useRef<HTMLDetailsElement>(null);
@@ -80,19 +77,13 @@ function CustomerOrders({ orders, onCreateOrder, onRefresh, services }: { orders
     try { await onRefresh(); } finally { setRefreshing(false); }
   }
 
-  async function createOrder(data: OrderForm) {
-    await onCreateOrder(data);
-    setShowForm(false);
-  }
-
   return <>
-    <div className="page-heading customer-page-heading"><div><div className="eyebrow">Your laundry service</div><h1>Your orders</h1><p>See what is happening now. Detailed history stays available without crowding the page.</p></div><Button onClick={() => setShowForm(true)}><Plus size={15} />Request pickup</Button></div>
-    <section className="panel customer-orders-panel"><div className="panel-heading"><div><h2>Active service</h2><p>The latest customer-safe status for every order currently in progress.</p></div><div className="row-actions"><span className="status status-teal">{activeOrders.length} active</span><Button variant="outline" size="sm" onClick={() => void refreshOrders()} disabled={refreshing}><RefreshCw className={refreshing ? 'spin' : ''} size={14}/></Button></div></div><div className="customer-order-list">{activeOrders.map(order => <CustomerOrderRow key={order.id} order={order} focused={focusedOrderId === (order.internalId ?? order.id)} />)}{!activeOrders.length && <div className="empty customer-empty-state"><Package size={20}/><strong>No active orders</strong><span>Request a pickup whenever you are ready.</span><Button size="sm" onClick={() => setShowForm(true)}><Plus size={14}/>Request pickup</Button></div>}</div></section>
+    <div className="page-heading customer-page-heading"><div><div className="eyebrow">Your laundry service</div><h1>Your orders</h1><p>See what is happening now. Contact the operations team when you need a new pickup.</p></div></div>
+    <section className="panel customer-orders-panel"><div className="panel-heading"><div><h2>Active service</h2><p>The latest customer-safe status for every order currently in progress.</p></div><div className="row-actions"><span className="status status-teal">{activeOrders.length} active</span><Button variant="outline" size="sm" onClick={() => void refreshOrders()} disabled={refreshing}><RefreshCw className={refreshing ? 'spin' : ''} size={14}/></Button></div></div><div className="customer-order-list">{activeOrders.map(order => <CustomerOrderRow key={order.id} order={order} focused={focusedOrderId === (order.internalId ?? order.id)} />)}{!activeOrders.length && <div className="empty customer-empty-state"><Package size={20}/><strong>No active orders</strong><span>Orders linked to this login will appear here.</span></div>}</div></section>
     {completedOrders.length > 0 && <details ref={historyRef} className="panel customer-history-disclosure"><summary><span>Completed orders</span><small>{completedOrders.length} delivered</small></summary><div className="customer-order-list">{completedOrders.map(order => <CustomerOrderRow key={order.id} order={order} focused={focusedOrderId === (order.internalId ?? order.id)} />)}</div></details>}
-    {showForm && <NewOrderModal onClose={() => setShowForm(false)} onCreate={createOrder} services={services} title="Request a pickup" description="Enter your pickup details and we will begin matching your order." submitLabel="Submit pickup request" />}
   </>;
 }
 
-export default function CustomerWorkspace(props: { orders: Order[]; onCreateOrder: (data: OrderForm) => Promise<void>; notify: (message: string) => void; onRefresh: () => Promise<void>; services: ServiceCatalogItem[] }) {
+export default function CustomerWorkspace(props: { orders: Order[]; onRefresh: () => Promise<void> }) {
   return <CustomerOrders {...props} />;
 }

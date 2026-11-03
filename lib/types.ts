@@ -7,7 +7,9 @@ export type Order = {
   customer: string;
   phone: string;
   address: string;
+  deliveryAddress?: string;
   service: string;
+  services?: string[];
   items: string;
   bags: number;
   due: string;
@@ -25,6 +27,7 @@ export type Order = {
   customerNotificationPending?: boolean;
   status: OrderStatus;
   processor: string;
+  processorAddress?: string;
   priority: 'Standard' | 'Priority' | 'Same day';
   exception?: string;
   exceptionMessage?: string;
@@ -35,12 +38,38 @@ export type Order = {
   pickupWindowStartAt?: string;
   pickupWindowEndAt?: string;
   deliveryWindow?: string;
+  deliveryWindowStartAt?: string;
+  deliveryWindowEndAt?: string;
   actualBags?: number;
   processorBags?: number;
   completedBags?: number;
   customerEmail?: string;
   source?: 'Customer portal' | 'Staff entry' | 'CRM/API';
   timeline?: OrderEvent[];
+};
+
+export type CustomerAddress = {
+  id: string;
+  label: string;
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  isDefault: boolean;
+};
+
+export type CustomerAccount = {
+  id: string;
+  type: 'person' | 'company';
+  displayName: string;
+  companyName?: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+  active: boolean;
+  addresses: CustomerAddress[];
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type UserRole = 'super_admin' | 'dispatcher' | 'driver' | 'processor' | 'customer';

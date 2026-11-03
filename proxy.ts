@@ -7,7 +7,9 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export async function proxy(request: NextRequest) {
-  if (!url || !anonKey || request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup') || request.nextUrl.pathname.startsWith('/forgot-password') || request.nextUrl.pathname.startsWith('/reset-password') || request.nextUrl.pathname.startsWith('/apply/processor') || request.nextUrl.pathname.startsWith('/invite') || request.nextUrl.pathname.startsWith('/api')) return NextResponse.next();
+  const pathname = request.nextUrl.pathname;
+  const publicAsset = pathname.startsWith('/fonts/') || pathname.startsWith('/brand/') || /\.(?:svg|png|jpe?g|gif|webp|ico|woff2?|ttf|otf)$/i.test(pathname);
+  if (!url || !anonKey || publicAsset || pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password') || pathname.startsWith('/apply/processor') || pathname.startsWith('/invite') || pathname.startsWith('/api')) return NextResponse.next();
   let response = NextResponse.next({ request });
   const client = createServerClient(url, anonKey, {
     cookies: {

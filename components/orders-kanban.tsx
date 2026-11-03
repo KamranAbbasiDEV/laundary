@@ -28,17 +28,18 @@ export default function OrdersKanban({ orders, onInspect, canMove, showEmpty, on
           {items.length ? items.map(order => {
             const key = order.internalId ?? order.id;
             const isExpanded = expandedIds.has(key);
+            const serviceLabels = (order.services?.length ? order.services : [order.service]).map(service => service.trim()).filter(Boolean);
             const requirementRows = [
-              { label: order.service, detail: order.notes?.trim() || 'Standard handling', count: order.bags },
+              ...serviceLabels.map(service => ({ label: service, detail: 'Selected service', count: undefined as number | undefined })),
               ...(order.items?.trim() && order.items.trim().toLowerCase() !== order.service.trim().toLowerCase() ? [{ label: 'Items', detail: order.items.trim(), count: order.actualBags ?? order.bags }] : [])
-            ].slice(0, 3);
+            ];
             return <article className={`order-card ${isExpanded ? 'is-expanded' : ''} ${order.exception ? 'has-attention' : ''}`} data-tone={statusToneClass(order.status).replace('status-', '')} data-deadline={order.deadlineStatus ?? 'no_deadline'} key={key} draggable={canMove} onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', key); event.dataTransfer.setData('application/x-rinseline-orders', JSON.stringify([key])); setDraggedId(key); }} onDragEnd={() => setDraggedId(null)}>
               <div className="order-card-reference-head">
-                <div className="order-card-reference-title"><strong className="order-card-customer-line"><span>{order.customer}</span>{order.deadlineStatus && order.deadlineStatus !== 'no_deadline' && <DeadlineBadge order={order}/>}</strong><span><button type="button" onClick={() => onInspect(order)}>{order.id}</button><i/><span>{order.bags} bag{order.bags === 1 ? '' : 's'}</span><span>{order.service}</span></span></div>
+                <div className="order-card-reference-title"><strong className="order-card-customer-line"><span>{order.customer}</span>{order.deadlineStatus && order.deadlineStatus !== 'no_deadline' && <DeadlineBadge order={order}/>}</strong><span><button type="button" onClick={() => onInspect(order)}>{order.id}</button><i/><span>{order.bags} bag{order.bags === 1 ? '' : 's'}</span><span>{serviceLabels.length} service{serviceLabels.length === 1 ? '' : 's'}</span></span></div>
                 <div className="order-card-reference-controls">{order.exception && <span className="order-card-alert" title="Needs attention"><img src="/icons/client/alert-triangle2-filled-48x48-1.webp" alt=""/></span>}<button className={`order-card-expand ${isExpanded ? 'is-expanded' : ''}`} type="button" aria-label={`${isExpanded ? 'Collapse' : 'Expand'} services for ${order.id}`} aria-expanded={isExpanded} onClick={() => setExpandedIds(current => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })}><img src="/icons/client/chevron-down-filled-128x128-1.webp" alt=""/></button></div>
               </div>
               <div className="order-card-reference-list">
-                {requirementRows.map((row, index) => <div key={`${key}-requirement-${index}`}><span><strong>{row.label}</strong><small>{row.detail}</small></span><em><img src="/icons/client/bag2-filled-48x48-1.webp" alt=""/>{row.count}</em></div>)}
+                {requirementRows.map((row, index) => <div key={`${key}-requirement-${index}`}><span><strong>{row.label}</strong><small>{row.detail}</small></span>{typeof row.count === 'number' && <em><img src="/icons/client/bag2-filled-48x48-1.webp" alt=""/>{row.count}</em>}</div>)}
               </div>
               <div className="order-card-reference-footer"><div className="order-card-badges"><span className={`status-pill ${statusToneClass(order.status)}`}>{order.status}</span></div><button className="order-card-action" type="button" title="View details" aria-label={`View details for ${order.id}`} onClick={() => onInspect(order)}><img src="/icons/client/eye-open-filled-128x128-1.webp" alt=""/></button></div>
             </article>;

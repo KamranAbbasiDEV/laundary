@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { requireActiveUser } from '@/lib/api-auth';
-import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const auth = await requireActiveUser();
@@ -17,8 +16,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     const { data: order } = await auth.client.from('orders').select('processor_id').eq('id', photo.order_id).maybeSingle();
     if (order?.processor_id !== auth.profile.processor_id) return NextResponse.json({ error: 'Photo access denied.' }, { status: 403 });
   }
-  const storage = supabaseAdmin ?? auth.client;
-  const { data: file, error: downloadError } = await storage.storage.from('order-photos').download(photo.storage_path);
+  const { data: file, error: downloadError } = await auth.client.storage.from('order-photos').download(photo.storage_path);
   if (downloadError || !file) return NextResponse.json({ error: downloadError?.message || 'Photo unavailable.' }, { status: 404 });
   return new NextResponse(file, { headers: { 'Content-Type': photo.mime_type || file.type || 'application/octet-stream', 'Cache-Control': 'private, max-age=3600' } });
 }

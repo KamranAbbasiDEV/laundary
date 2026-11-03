@@ -51,7 +51,7 @@ export default function AdminDashboard({ orders, processors, onNavigate, onCreat
 
   const workflow = [
     { label: 'Intake review', value: intake.length, copy: 'Validate new requests', destination: 'Dispatch' },
-    { label: 'Processor decision', value: processorDecisions.length, copy: 'Match or confirm capacity', destination: 'Dispatch' },
+    { label: 'Processor decision', value: processorDecisions.length, copy: 'Rank and request processor acceptance', destination: 'Dispatch' },
     { label: 'Route planning', value: routeReady.length, copy: 'Schedule pending movement', destination: 'Routes' },
     { label: 'At processor', value: processing.length, copy: 'Facility work in progress', destination: 'Orders' },
     { label: 'Return & delivery', value: returnAndDelivery.length, copy: 'Reconcile and complete', destination: 'Orders' }

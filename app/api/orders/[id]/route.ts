@@ -6,11 +6,19 @@ import { canTransition } from '@/lib/workflow';
 import type { OrderStatus } from '@/lib/types';
 import { logCustomerNotification, logOperationalNotification } from '@/lib/notifications';
 import { blockActiveRouteStatusChange, syncDraftRoutesAfterStatusChange } from '@/lib/route-consistency';
-import { pickupDeadlineError } from '@/lib/order-scheduling';
+import { orderWindowError } from '@/lib/order-scheduling';
 import { serviceIsConfigured } from '@/lib/service-catalog';
 
 const statusSchema = z.enum(['Created', 'Validated', 'Processor ranked', 'Capacity confirmed', 'Pickup scheduled', 'Picked up', 'At processor', 'Processing', 'Ready for pickup', 'Picked up from processor', 'QC / Reconciliation', 'Out for delivery', 'Delivered', 'Processor reviewed']);
-const bodySchema = z.object({ status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional(), deadlineImpact: z.enum(['none','at_risk','delayed']).optional(), customerMessage: z.string().trim().max(1000).optional(), notifyCustomer: z.boolean().optional(), deadlineReason: z.string().trim().max(1000).optional(), customer: z.string().trim().min(2).max(160).optional(), phone: z.string().trim().min(7).max(40).optional(), address: z.string().trim().min(5).max(500).optional(), service: z.string().trim().min(1).max(120).optional(), bags: z.number().int().positive().optional(), due: z.string().trim().max(160).optional(), dueAt: z.string().datetime({ offset: true }).nullable().optional(), originalDueAt: z.string().datetime({ offset: true }).nullable().optional(), notes: z.string().trim().max(2000).nullable().optional() });
+const bodySchema = z.object({
+  status: statusSchema.optional(), exception: z.string().trim().min(1).max(1000).optional(), resolveException: z.boolean().optional(), note: z.string().trim().max(1000).optional(),
+  deadlineImpact: z.enum(['none','at_risk','delayed']).optional(), customerMessage: z.string().trim().max(1000).optional(), notifyCustomer: z.boolean().optional(), deadlineReason: z.string().trim().max(1000).optional(),
+  customer: z.string().trim().min(2).max(160).optional(), phone: z.string().trim().min(7).max(40).optional(),
+  address: z.string().trim().min(5).max(500).optional(), deliveryAddress: z.string().trim().min(5).max(500).optional(), service: z.string().trim().min(1).max(120).optional(), bags: z.number().int().positive().optional(),
+  due: z.string().trim().max(160).optional(), dueAt: z.string().datetime({ offset: true }).nullable().optional(), originalDueAt: z.string().datetime({ offset: true }).nullable().optional(),
+  pickupWindowStartAt: z.string().datetime({ offset: true }).nullable().optional(), pickupWindowEndAt: z.string().datetime({ offset: true }).nullable().optional(), deliveryWindowStartAt: z.string().datetime({ offset: true }).nullable().optional(), deliveryWindowEndAt: z.string().datetime({ offset: true }).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional()
+});
 const displayStatus = (value: string): OrderStatus => ({
   created:'Created',validated:'Validated',processor_ranked:'Processor ranked',capacity_confirmed:'Capacity confirmed',pickup_scheduled:'Pickup scheduled',picked_up:'Picked up',at_processor:'At processor',processing:'Processing',ready_for_pickup:'Ready for pickup',picked_up_from_processor:'Picked up from processor',qc_reconciliation:'QC / Reconciliation',out_for_delivery:'Out for delivery',delivered:'Delivered',processor_reviewed:'Processor reviewed'
 } as Record<string, OrderStatus>)[value] ?? value as OrderStatus;
@@ -33,8 +41,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!actor || actor.status !== 'active' || !['super_admin','dispatcher','driver','processor'].includes(actor.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
 
   const currentQuery = isUuid
-    ? supabase.from('orders').select('id,order_number,phone,customer_user_id,status,assigned_driver_id,processor_id,service_type,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('id', id).maybeSingle()
-    : supabase.from('orders').select('id,order_number,phone,customer_user_id,status,assigned_driver_id,processor_id,service_type,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at').eq('order_number', id).maybeSingle();
+    ? supabase.from('orders').select('id,order_number,phone,customer_user_id,status,assigned_driver_id,processor_id,service_type,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at,delivery_window_start_at,delivery_window_end_at').eq('id', id).maybeSingle()
+    : supabase.from('orders').select('id,order_number,phone,customer_user_id,status,assigned_driver_id,processor_id,service_type,due_at,original_due_at,pickup_window_start_at,pickup_window_end_at,delivery_window_start_at,delivery_window_end_at').eq('order_number', id).maybeSingle();
   const { data: current, error: readError } = await currentQuery;
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
   if (!current) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -42,15 +50,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (actor.role === 'processor' && current.processor_id !== actor.processor_id) return NextResponse.json({ error: 'You can only update orders assigned to your processor.' }, { status: 403 });
   if (body.data.resolveException && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can resolve an exception.' }, { status: 403 });
   if ((body.data.deadlineImpact || body.data.customerMessage || body.data.notifyCustomer) && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can manage customer deadline updates.' }, { status: 403 });
-  const isOrderEdit = body.data.customer !== undefined || body.data.phone !== undefined || body.data.address !== undefined || body.data.service !== undefined || body.data.bags !== undefined || body.data.due !== undefined || body.data.dueAt !== undefined || body.data.originalDueAt !== undefined || body.data.notes !== undefined;
-  if (isOrderEdit && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can edit order details.' }, { status: 403 });
-  if (isOrderEdit && ['delivered', 'processor_reviewed'].includes(current.status)) return NextResponse.json({ error: 'Completed orders are historical records and cannot be edited.' }, { status: 409 });
+  const isIntakeEdit = body.data.customer !== undefined || body.data.phone !== undefined || body.data.address !== undefined || body.data.deliveryAddress !== undefined || body.data.service !== undefined || body.data.bags !== undefined || body.data.pickupWindowStartAt !== undefined || body.data.pickupWindowEndAt !== undefined || body.data.deliveryWindowStartAt !== undefined || body.data.deliveryWindowEndAt !== undefined || body.data.notes !== undefined;
+  const isDeadlineEdit = body.data.due !== undefined || body.data.dueAt !== undefined || body.data.originalDueAt !== undefined;
+  if ((isIntakeEdit || isDeadlineEdit) && !['super_admin', 'dispatcher'].includes(actor.role)) return NextResponse.json({ error: 'Only dispatch can edit order details.' }, { status: 403 });
+  if ((isIntakeEdit || isDeadlineEdit) && ['delivered', 'processor_reviewed'].includes(current.status)) return NextResponse.json({ error: 'Completed orders are historical records and cannot be edited.' }, { status: 409 });
+  if (isIntakeEdit && !['created', 'validated'].includes(current.status)) return NextResponse.json({ error: 'Intake details can only be changed before processor matching begins. Record later changes as an exception instead.' }, { status: 409 });
   const currentDisplay = displayStatus(current.status);
   const allowedByRole: Record<string, OrderStatus[]> = {
     driver: ['Picked up','At processor','Picked up from processor','QC / Reconciliation','Out for delivery','Delivered'],
     processor: ['Processing','Ready for pickup']
   };
-  if (body.data.status && actor.role === 'dispatcher') return NextResponse.json({ error: 'Dispatchers cannot change order status.' }, { status: 403 });
+  if (body.data.status && actor.role === 'dispatcher' && !(current.status === 'delivered' && body.data.status === 'Processor reviewed')) return NextResponse.json({ error: 'Dispatchers may only close delivered orders after processor review.' }, { status: 403 });
   if (body.data.status && allowedByRole[actor.role] && !allowedByRole[actor.role].includes(body.data.status)) return NextResponse.json({ error: 'Your role cannot perform this transition.' }, { status: 403 });
   // Super Admin may repair or reconcile any workflow state; every other role remains bound to the normal transition graph.
   if (body.data.status && actor.role !== 'super_admin' && !canTransition(currentDisplay, body.data.status)) return NextResponse.json({ error: `Invalid transition from ${currentDisplay} to ${body.data.status}` }, { status: 409 });
@@ -61,11 +71,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   }
   if (actor.role === 'driver' && body.data.status) {
     const requiredHandoff: Partial<Record<OrderStatus, string>> = { 'Picked up': 'customer_pickup', 'At processor': 'processor_dropoff', 'Picked up from processor': 'processor_pickup', 'Delivered': 'customer_delivery' };
+    const requiredPhoto: Partial<Record<OrderStatus, string>> = { 'Picked up': 'customer-pickup', 'At processor': 'processor-dropoff', 'Picked up from processor': 'processor-pickup', 'Delivered': 'customer-delivery' };
     const stage = requiredHandoff[body.data.status];
     if (stage) {
-      const { data: handoff, error: handoffError } = await supabase.from('order_handoffs').select('id').eq('order_id', current.id).eq('stage', stage).maybeSingle();
-      if (handoffError) return NextResponse.json({ error: handoffError.message }, { status: 500 });
+      const [{ data: handoff, error: handoffError }, { data: photo, error: photoError }] = await Promise.all([
+        supabase.from('order_handoffs').select('id').eq('order_id', current.id).eq('stage', stage).maybeSingle(),
+        supabase.from('order_photos').select('id').eq('order_id', current.id).eq('kind', requiredPhoto[body.data.status]!).limit(1).maybeSingle()
+      ]);
+      if (handoffError || photoError) return NextResponse.json({ error: handoffError?.message || photoError?.message }, { status: 500 });
       if (!handoff) return NextResponse.json({ error: 'Record the required handoff count before advancing this order.' }, { status: 409 });
+      if (!photo) return NextResponse.json({ error: 'Upload the required handoff photo before advancing this order.' }, { status: 409 });
     }
   }
   if (body.data.status) {
@@ -73,12 +88,24 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (routeBlock) return NextResponse.json({ error: routeBlock.error }, { status: routeBlock.status });
   }
   if (body.data.service !== undefined) {
+    const requestedServices = body.data.service.split(',').map(service => service.trim()).filter(Boolean);
+    if (!requestedServices.length || requestedServices.length > 12 || new Set(requestedServices.map(service => service.toLowerCase())).size !== requestedServices.length) return NextResponse.json({ error: 'Choose between 1 and 12 unique services.' }, { status: 400 });
     const { data: workspaceSettings, error: settingsError } = await supabase.from('workspace_settings').select('services').eq('id', 'default').maybeSingle();
     if (settingsError) return NextResponse.json({ error: settingsError.message }, { status: 500 });
-    if (!serviceIsConfigured(body.data.service, workspaceSettings?.services)) return NextResponse.json({ error: 'Choose a service from the active workspace service catalog.' }, { status: 400 });
+    if (!requestedServices.every(service => serviceIsConfigured(service, workspaceSettings?.services))) return NextResponse.json({ error: 'Choose services from the active workspace service catalog.' }, { status: 400 });
+    body.data.service = requestedServices.join(', ');
   }
-  const pickupError = pickupDeadlineError({ pickupStartAt: current.pickup_window_start_at, pickupEndAt: current.pickup_window_end_at, deadlineAt: body.data.dueAt ?? current.due_at });
-  if (pickupError) return NextResponse.json({ error: pickupError }, { status: 400 });
+  const nextPickupStart = body.data.pickupWindowStartAt ?? current.pickup_window_start_at;
+  const nextPickupEnd = body.data.pickupWindowEndAt ?? current.pickup_window_end_at;
+  const nextDeliveryStart = body.data.deliveryWindowStartAt ?? current.delivery_window_start_at;
+  const nextDeliveryEnd = body.data.deliveryWindowEndAt ?? current.delivery_window_end_at;
+  const nextDeadline = body.data.dueAt ?? current.due_at;
+  const scheduleError = orderWindowError({ pickupStartAt: nextPickupStart, pickupEndAt: nextPickupEnd, deliveryStartAt: nextDeliveryStart, deliveryEndAt: nextDeliveryEnd });
+  if (scheduleError) return NextResponse.json({ error: scheduleError }, { status: 400 });
+  if (isIntakeEdit) {
+    if (!nextPickupStart || !nextPickupEnd || !nextDeliveryStart || !nextDeliveryEnd || !nextDeadline) return NextResponse.json({ error: 'Pickup and delivery windows must be complete before intake can be saved.' }, { status: 400 });
+    if (Math.abs(new Date(nextDeliveryEnd).getTime() - new Date(nextDeadline).getTime()) > 1000) return NextResponse.json({ error: 'The committed deadline must match the delivery window end before validation.' }, { status: 400 });
+  }
 
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.data.status) update.status = dbStatus(body.data.status);
@@ -87,11 +114,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (body.data.customer !== undefined) update.customer_name = body.data.customer;
   if (body.data.phone !== undefined) update.phone = body.data.phone;
   if (body.data.address !== undefined) update.pickup_address = body.data.address;
+  if (body.data.deliveryAddress !== undefined) update.customer_delivery_address = body.data.deliveryAddress;
   if (body.data.service !== undefined) update.service_type = body.data.service;
   if (body.data.bags !== undefined) update.expected_bags = body.data.bags;
   if (body.data.due !== undefined) update.due_at_label = body.data.due || null;
   if (body.data.dueAt !== undefined) update.due_at = body.data.dueAt;
+  if (body.data.pickupWindowStartAt !== undefined) update.pickup_window_start_at = body.data.pickupWindowStartAt;
+  if (body.data.pickupWindowEndAt !== undefined) update.pickup_window_end_at = body.data.pickupWindowEndAt;
+  if (body.data.deliveryWindowStartAt !== undefined) update.delivery_window_start_at = body.data.deliveryWindowStartAt;
+  if (body.data.deliveryWindowEndAt !== undefined) update.delivery_window_end_at = body.data.deliveryWindowEndAt;
   if (body.data.notes !== undefined) update.notes = body.data.notes;
+  if (isIntakeEdit) update.validation_reason = null;
   if (body.data.customerMessage !== undefined) update.customer_exception_message = body.data.customerMessage || null;
   if (body.data.notifyCustomer && body.data.customerMessage?.trim()) update.customer_exception_notified_at = new Date().toISOString();
   if (body.data.originalDueAt !== undefined) update.original_due_at = body.data.originalDueAt;

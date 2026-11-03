@@ -2,6 +2,7 @@ import { Inngest } from 'inngest';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { isSmsAllowed, logSmsNotification, sendOrderNotification } from '@/lib/notifications';
 import { getDeadlineStatus } from '@/lib/deadlines';
+import { reportDateRange } from '@/lib/timezone';
 
 export const inngest = new Inngest({ id: 'rinseline-dispatch' });
 
@@ -41,6 +42,8 @@ export async function notifyPendingProcessorOffers(orderId: string) {
 
 async function queueProcessorReviews() {
   if (!supabaseAdmin) throw new Error('Supabase service role is not configured');
+  const { data: workspace } = await supabaseAdmin.from('workspace_settings').select('timezone').eq('id', 'default').maybeSingle();
+  const timezone = workspace?.timezone || 'UTC';
   const reviewCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data: orders, error } = await supabaseAdmin.from('orders').select('id,order_number,processor_id,updated_at,due_at,has_exception').eq('status', 'delivered').lte('updated_at', reviewCutoff).not('processor_id', 'is', null);
   if (error) throw new Error(error.message);
@@ -54,11 +57,16 @@ async function queueProcessorReviews() {
   }
   const byProcessor = new Map<string, typeof orders>();
   for (const order of orders ?? []) { const rows = byProcessor.get(order.processor_id) ?? []; rows.push(order); byProcessor.set(order.processor_id, rows); }
-  const periodStart = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const periodEnd = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const dateInTimezone = (date: Date) => {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  };
+  const periodStart = dateInTimezone(new Date(Date.now() - 48 * 60 * 60 * 1000));
+  const periodEnd = dateInTimezone(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  const range = reportDateRange(periodStart, periodEnd, timezone);
   for (const [processorId, rows] of byProcessor) {
     const ids = rows.map(row => row.id);
-    const { data: deliveredEvents } = await supabaseAdmin.from('order_events').select('order_id,created_at').in('order_id', ids).eq('to_status', 'delivered').gte('created_at', `${periodStart}T00:00:00.000Z`).lte('created_at', `${periodEnd}T23:59:59.999Z`).order('created_at', { ascending: true });
+    const { data: deliveredEvents } = await supabaseAdmin.from('order_events').select('order_id,created_at').in('order_id', ids).eq('to_status', 'delivered').gte('created_at', range.start).lt('created_at', range.endExclusive).order('created_at', { ascending: true });
     const deliveredAt = new Map<string, string>();
     for (const event of deliveredEvents ?? []) if (!deliveredAt.has(event.order_id)) deliveredAt.set(event.order_id, event.created_at);
     const completed = rows.filter(row => deliveredAt.has(row.id));
@@ -66,10 +74,11 @@ async function queueProcessorReviews() {
     const onTime = measurable.filter(row => new Date(deliveredAt.get(row.id) as string).getTime() <= new Date(row.due_at as string).getTime()).length;
     const onTimeRate = measurable.length ? Math.round((onTime / measurable.length) * 10000) / 100 : 0;
     const completedIds = completed.map(row => row.id);
-    const { data: exceptions } = completedIds.length ? await supabaseAdmin.from('exceptions').select('order_id').in('order_id', completedIds).gte('created_at', `${periodStart}T00:00:00.000Z`).lte('created_at', `${periodEnd}T23:59:59.999Z`) : { data: [] };
-    const issueCount = new Set((exceptions ?? []).map(row => row.order_id)).size;
-    const discrepancyRate = completed.length ? Math.round((issueCount / completed.length) * 10000) / 100 : 0;
-    const score = Math.max(0, Math.round(((measurable.length ? onTimeRate * .6 : 0) + (100 - discrepancyRate) * (measurable.length ? .4 : 1)) * 100) / 100);
+    const { data: exceptions } = completedIds.length ? await supabaseAdmin.from('exceptions').select('order_id').in('order_id', completedIds) : { data: [] };
+    const impactedOrders = new Set((exceptions ?? []).map(row => row.order_id)).size;
+    const issueCount = exceptions?.length ?? 0;
+    const discrepancyRate = completed.length ? Math.round((impactedOrders / completed.length) * 10000) / 100 : 0;
+    const score = completed.length ? Math.max(0, Math.round(((measurable.length ? onTimeRate * .6 : 0) + (100 - discrepancyRate) * (measurable.length ? .4 : 1)) * 100) / 100) : 0;
     await supabaseAdmin.from('processor_scorecards').upsert({ processor_id: processorId, period_start: periodStart, period_end: periodEnd, orders_completed: completed.length, on_time_rate: onTimeRate, discrepancy_rate: discrepancyRate, issue_count: issueCount, score, notes: `Automatically refreshed by the scheduled processor review.${measurable.length ? '' : ' Turnaround is neutral: no completed order in this period had an exact due timestamp.'}`, reviewed_at: new Date().toISOString() }, { onConflict: 'processor_id,period_start,period_end' });
   }
   return { queued };

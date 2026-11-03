@@ -5,6 +5,7 @@ type RouteStop = {
   id: string;
   route_id: string;
   order_id: string;
+  route_type: string;
   sequence: number;
   route_plans: { status: string; route_type: string } | { status: string; route_type: string }[] | null;
 };
@@ -35,14 +36,14 @@ export async function syncDraftRoutesAfterStatusChange(client: RouteClient, orde
   const orderIds = [...orderStatuses.keys()];
   const { data, error } = await client
     .from('route_stops')
-    .select('id,route_id,order_id,sequence,route_plans!inner(status,route_type)')
+    .select('id,route_id,order_id,route_type,sequence,route_plans!inner(status,route_type)')
     .in('order_id', orderIds)
     .eq('route_plans.status', 'draft');
   if (error) return { invalidated: 0, warning: `Order updated, but draft route synchronization failed: ${error.message}` };
 
   const affected = (data ?? []).filter((stop: RouteStop) => {
     const plan = planRecord(stop);
-    return plan && routeStatusForOrder(plan.route_type) !== orderStatuses.get(stop.order_id);
+    return plan && routeStatusForOrder(stop.route_type) !== orderStatuses.get(stop.order_id);
   }) as RouteStop[];
   if (!affected.length) return { invalidated: 0, warning: null as string | null };
 

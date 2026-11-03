@@ -27,6 +27,6 @@ export default function LoginPage() {
     </form>
     <p className="login-note"><ShieldCheck size={13} style={{ verticalAlign: '-2px', marginRight: 5 }} />Your workspace access is based on your approved account role.</p>
     <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)' }}><a href="/forgot-password" style={{ color: 'var(--teal)', fontWeight: 700 }}>Forgot password?</a></p>
-    <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)' }}>Need a customer account? <a href="/signup" style={{ color: 'var(--teal)', fontWeight: 700 }}>Create one</a></p>
+    <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)' }}>Customer access is provisioned by the operations team.</p>
   </section></main>;
 }

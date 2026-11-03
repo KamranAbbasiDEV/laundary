@@ -5,7 +5,9 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { getUserSafely } from '@/lib/supabase-auth';
 
 const coordinateSchema = z.tuple([z.number().finite().min(-180).max(180), z.number().finite().min(-90).max(90)]);
-const routeSchema = z.object({ addresses: z.array(z.string().min(3)).min(1), origin: coordinateSchema.optional() });
+const routeSchema = z.object({ addresses: z.array(z.string().min(3)).min(1).max(25), origin: coordinateSchema.optional() }).superRefine((value, context) => {
+  if (value.origin && value.addresses.length > 24) context.addIssue({ code: z.ZodIssueCode.custom, path: ['addresses'], message: 'A route with a live origin can contain at most 24 destination stops.' });
+});
 
 export async function POST(request: Request) {
   const authClient = await createSupabaseServerClient();
@@ -15,7 +17,7 @@ export async function POST(request: Request) {
   const { data: profile } = await authClient.from('profiles').select('role,status').eq('id', user.id).single();
   if (!profile || profile.status !== 'active' || !['super_admin', 'dispatcher', 'driver'].includes(profile.role)) return NextResponse.json({ error: 'Operations access required' }, { status: 403 });
   const body = routeSchema.safeParse(await request.json());
-  if (!body.success) return NextResponse.json({ error: 'At least one valid address is required' }, { status: 400 });
+  if (!body.success) return NextResponse.json({ error: body.error.issues[0]?.message ?? 'At least one valid address is required' }, { status: 400 });
   try {
     const geocoded = await Promise.all(body.data.addresses.map(geocodeAddress));
     const destinationCoordinates = geocoded.flatMap(item => item.coordinates ? [item.coordinates] : []) as [number, number][];
